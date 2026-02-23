@@ -109,7 +109,7 @@ export interface SaleLineItem {
 export interface Sale {
   id: string;
   customerId: string;
-  confirmedDelivery: boolean;
+  confirmedDeliveryDate?: string;
   customer?: User;
   orderStatus: OrderStatus;
   paymentStatus: PaymentStatus;

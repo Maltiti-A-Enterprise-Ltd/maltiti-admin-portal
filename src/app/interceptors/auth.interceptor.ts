@@ -45,7 +45,6 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
           >(`${environment.apiUrl}/authentication/refresh-token`, {}, { withCredentials: true })
           .pipe(
             switchMap(({ data: accessToken }) => {
-              console.log('New token', accessToken);
               if (accessToken) {
                 StorageService.saveToken(accessToken);
 
@@ -60,7 +59,9 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
               }
 
               // If refresh succeeds, retry the original request
-              return next(clonedRequest);
+              return next(clonedRequest).pipe(
+                catchError((newError: HttpErrorResponse) => throwError(() => newError || error)),
+              );
             }),
             catchError((refreshError: HttpErrorResponse) => {
               // If refresh fails with 401, session is expired

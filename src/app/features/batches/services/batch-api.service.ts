@@ -36,6 +36,15 @@ export class BatchApiService {
   }
 
   /**
+   * Get batches for multiple products
+   * GET /products/batches/products?productIds=...
+   */
+  public getBatchesByProductIds(productIds: string[]): Observable<IResponse<Batch[]>> {
+    const params = { productIds };
+    return this.http.get<IResponse<Batch[]>>(`${this.baseUrl}/products`, { params });
+  }
+
+  /**
    * Get single batch by ID with associated products
    * GET /products/batches/:id
    */

@@ -25,7 +25,6 @@ import { LightProduct } from '../../../products/models/product.model';
 import { Batch } from '../../../batches/models/batch.model';
 import { TooltipModule } from 'primeng/tooltip';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
-import { BatchApiService } from '../../../batches/services/batch-api.service';
 import { combineLatest, merge, Subject, switchMap } from 'rxjs';
 import { Message } from 'primeng/message';
 import { filter, map, startWith } from 'rxjs/operators';
@@ -55,13 +54,13 @@ export class LineItemEditorComponent implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly messageService = inject(MessageService);
   private readonly destroyRef = inject(DestroyRef);
-  private readonly batchApiService = inject(BatchApiService);
-  private readonly availableBatches = signal<Batch[]>([]);
+  public readonly batches = signal<Batch[]>([]);
   private readonly allocationBehavior = new Subject<void>();
   public readonly lineItem = input<SaleLineItemDto | null>(null);
   public readonly products = input<LightProduct[]>([]);
   public readonly isBatchRequired = input<boolean>(false);
   public readonly isPaid = input<boolean>(false);
+  public readonly availableBatches = input<Map<string, Batch[]>>();
   public readonly lineItemChange = output<SaleLineItemDto>();
   public readonly remove = output<void>();
   public readonly validationError = output<boolean>();
@@ -86,7 +85,7 @@ export class LineItemEditorComponent implements OnInit {
         .reduce((a, b) => a + b, 0) ?? 0,
   );
   public readonly batchOptions = computed(() =>
-    this.availableBatches().map((b) => ({ label: b.batchNumber, value: b.id })),
+    this.batches().map((b) => ({ label: b.batchNumber, value: b.id })),
   );
   public priceType: PriceType = 'wholesale';
   public readonly batchControls = signal(new Map<number, FormControl<string | null>>());
@@ -107,10 +106,19 @@ export class LineItemEditorComponent implements OnInit {
       }
     });
     effect(() => this.validateBatchAllocations());
+    effect(() => {
+      const productId = this.productId();
+      const batchesMap = this.availableBatches();
+      if (productId && batchesMap) {
+        this.batches.set(batchesMap.get(productId) || []);
+      } else {
+        this.batches.set([]);
+      }
+    });
     this.lineItemForm
       .get('productId')
       ?.valueChanges.pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe((productId) => productId && this.onProductChange(String(productId)));
+      .subscribe(() => this.onProductChange());
     this.lineItemForm
       .get('requestedQuantity')
       ?.valueChanges.pipe(takeUntilDestroyed(this.destroyRef))
@@ -137,11 +145,6 @@ export class LineItemEditorComponent implements OnInit {
       finalPrice: item.finalPrice ? Number(item.finalPrice) : undefined,
       priceType: 'retail', // Default to retail
     });
-
-    const selectedProduct = this.selectedProduct();
-    if (selectedProduct) {
-      this.loadBatchesForProduct(selectedProduct.id);
-    }
 
     if (item.batchAllocations && item.batchAllocations.length > 0) {
       this.batchControls.update((batchMap) => {
@@ -172,41 +175,14 @@ export class LineItemEditorComponent implements OnInit {
     }
   }
 
-  private onProductChange(productId: string): void {
+  private onProductChange(): void {
     const selectedProduct = this.selectedProduct();
-    if (productId) {
-      this.loadBatchesForProduct(productId);
-    }
     if (selectedProduct && !this.lineItemForm.get('customPrice')?.value) {
       const priceType = this.lineItemForm.get('priceType')?.value || 'wholesale';
       const price = priceType === 'wholesale' ? selectedProduct.wholesale : selectedProduct.retail;
       this.lineItemForm.patchValue({ customPrice: price });
-    } else if (!selectedProduct) {
-      this.availableBatches.set([]);
     }
     this.emitChange();
-  }
-
-  private loadBatchesForProduct(productId: string): void {
-    if (!productId) {
-      return;
-    }
-    this.batchApiService
-      .getBatchesByProduct(productId)
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({
-        next: ({ data }) => {
-          this.availableBatches.set(data);
-        },
-        error: () => {
-          this.messageService.add({
-            severity: 'error',
-            summary: 'Error',
-            detail: 'Failed to load batches for product',
-          });
-          this.availableBatches.set([]);
-        },
-      });
   }
 
   private onPriceTypeChange(priceType: PriceType): void {
@@ -287,7 +263,7 @@ export class LineItemEditorComponent implements OnInit {
         : [...currentAllocations, { batchId, quantity }];
 
     this.lineItemChange.emit({
-      ...(this.lineItemForm.value as SaleLineItemDto),
+      ...(this.lineItemForm.getRawValue() as Omit<SaleLineItemDto, 'batchAllocations'>),
       batchAllocations: updatedAllocations,
     });
     this.validateBatchAllocations();
@@ -356,7 +332,9 @@ export class LineItemEditorComponent implements OnInit {
     if (!this.lineItemForm.valid) {
       return;
     }
-    const lineItemForm = this.lineItemForm.value as SaleLineItemDto & { priceType?: PriceType };
+    const lineItemForm = this.lineItemForm.getRawValue() as SaleLineItemDto & {
+      priceType?: PriceType;
+    };
     delete lineItemForm.priceType;
     const lineItem: SaleLineItemDto = {
       ...lineItemForm,
@@ -382,7 +360,7 @@ export class LineItemEditorComponent implements OnInit {
   public getBatchInfo(
     batchId: string,
   ): { availableQuantity: number; expiryDate: string | null } | null {
-    const batch = this.availableBatches().find((b) => b.id === batchId);
+    const batch = this.batches().find((b) => b.id === batchId);
     if (!batch) {
       return null;
     }

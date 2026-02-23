@@ -30,7 +30,6 @@ export class ProductApiService {
    * GET /products/all-products
    */
   public getAllProducts(params?: ProductQueryParams): Observable<IPaginationResponse<Product>> {
-    console.log(params);
     let httpParams = new HttpParams();
 
     if (params) {

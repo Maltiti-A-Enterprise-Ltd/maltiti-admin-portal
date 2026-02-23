@@ -54,6 +54,8 @@ import { APP_ROUTES } from '@config/routes.config';
 import { combineLatest } from 'rxjs';
 import { map, startWith } from 'rxjs/operators';
 import { lineItemsTotalPrice } from '@shared/utils/totalPriceCalculator';
+import { BatchApiService } from '../../../batches/services/batch-api.service';
+import { Batch } from '../../../batches/models/batch.model';
 
 @Component({
   selector: 'app-sales-form',
@@ -86,6 +88,7 @@ export class SalesFormComponent implements OnInit {
   private readonly confirmationService = inject(ConfirmationService);
   private readonly messageService = inject(MessageService);
   private readonly productApiService = inject(ProductApiService);
+  private readonly batchApiService = inject(BatchApiService);
   private readonly destroyRef = inject(DestroyRef);
   private readonly customerModal =
     viewChild.required<CustomerCreationModalComponent>('customerModal');
@@ -94,6 +97,8 @@ export class SalesFormComponent implements OnInit {
   public readonly loading = this.store.selectSignal(selectLoading);
   public readonly error = this.store.selectSignal(selectError);
   public readonly products = signal<LightProduct[]>([]);
+  public readonly batchesByProductId = signal<Map<string, Batch[]>>(new Map());
+  public readonly confirmDeliveryDate = signal<string | null>(null);
   public readonly lineItemValidationErrors = signal<Map<number, boolean>>(new Map());
   public readonly hasLineItemErrors = signal<boolean>(false);
   // Form
@@ -153,13 +158,48 @@ export class SalesFormComponent implements OnInit {
       .getAllProductsSimple()
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
-        next: (response) => this.products.set(response.data),
+        next: (response) => {
+          this.products.set(response.data);
+          this.loadBatches();
+        },
         error: () =>
           this.messageService.add({
             severity: 'error',
             summary: 'Error',
             detail: 'Failed to load products. Please refresh the page.',
           }),
+      });
+  }
+
+  private loadBatches(): void {
+    const productIds = this.products().map((p) => p.id);
+    if (productIds.length === 0) {
+      return;
+    }
+    this.batchApiService
+      .getBatchesByProductIds(productIds)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (response) => {
+          const batchesMap = new Map<string, Batch[]>();
+          response.data.forEach((batch) => {
+            const productId = batch.product?.id;
+            if (productId) {
+              if (!batchesMap.has(productId)) {
+                batchesMap.set(productId, []);
+              }
+              batchesMap.get(productId)!.push(batch);
+            }
+          });
+          this.batchesByProductId.set(batchesMap);
+        },
+        error: () => {
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Error',
+            detail: 'Failed to load batches. Please refresh the page.',
+          });
+        },
       });
   }
 
@@ -187,6 +227,8 @@ export class SalesFormComponent implements OnInit {
 
     // Set delivery fee
     this.salesForm.controls.deliveryFee.setValue(sale.deliveryFee);
+
+    this.confirmDeliveryDate.set(sale.confirmedDeliveryDate || null);
 
     // Clear existing line items
     this.lineItems.clear();
@@ -280,12 +322,16 @@ export class SalesFormComponent implements OnInit {
       const formValue = this.salesForm.value;
       const lineItems = formValue.line_items as SaleLineItemDto[];
       if (this.isEditMode && this.saleId) {
+        const paymentStatus = this.paymentStatusControl.value as PaymentStatus;
         // Handle update
         const updateData: UpdateSaleDto = {
           customerId: String(this.customerControl.value),
           orderStatus: this.statusControl.value as OrderStatus,
-          paymentStatus: this.paymentStatusControl.value as PaymentStatus,
-          deliveryFee: this.salesForm.value.deliveryFee,
+          paymentStatus,
+          deliveryFee:
+            paymentStatus === PaymentStatus.AWAITING_DELIVERY
+              ? this.salesForm.value.deliveryFee
+              : undefined,
           lineItems: lineItems.map((item: SaleLineItemDto) => ({
             productId: item.productId,
             requestedQuantity: item.requestedQuantity,

@@ -89,6 +89,12 @@
         />
         <small class="form-help">Enter the delivery fee for this sale</small>
       </div>
+      @if (confirmDeliveryDate()) {
+        <div class="form-field">
+          <span>Delivery Confirmed Date</span>
+          <p>{{ confirmDeliveryDate() | date:'medium' }}</p>
+        </div>
+      }
       <div class="total-wrapper">
         <div>Total Amount</div>
         <div class="total-amount">
@@ -114,6 +120,7 @@
     <div class="line-items-container">
       @for (lineItem of lineItems.controls; track $index; let i = $index) {
         <app-line-item-editor
+          [availableBatches]="batchesByProductId()"
           [isBatchRequired]="isBatchRequired"
           [isPaid]="isPaid()"
           [lineItem]="lineItem.value"
