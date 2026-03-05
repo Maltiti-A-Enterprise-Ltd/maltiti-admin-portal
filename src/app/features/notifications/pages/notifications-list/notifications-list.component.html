@@ -1,0 +1,110 @@
+<div class="notifications-page">
+  <div class="page-header">
+    <div class="header-content">
+      <h1 class="page-title">Notifications</h1>
+      @if (unreadCount() > 0) {
+        <p class="unread-count">{{ unreadCount() }} unread</p>
+      }
+    </div>
+    <div class="header-actions">
+      @if (unreadCount() > 0) {
+        <p-button
+          icon="pi pi-check"
+          label="Mark all as read"
+          [outlined]="true"
+          (onClick)="onMarkAllAsRead()"
+        />
+      }
+    </div>
+  </div>
+  <div class="notifications-filters">
+    <p-select
+      class="filter-dropdown"
+      optionLabel="label"
+      optionValue="value"
+      placeholder="Filter by"
+      [options]="filterOptions"
+      [(ngModel)]="selectedFilter"
+      (onChange)="onFilterChange($event.value)"
+    />
+    <span class="p-input-icon-left search-input">
+      <i class="pi pi-search"></i>
+      <input
+        pInputText
+        placeholder="Search notifications..."
+        type="text"
+        [value]="searchQuery()"
+        (input)="onSearchChange($event)"
+      />
+    </span>
+  </div>
+  <div #scrollContainer class="notifications-container">
+    @if (loading() && notifications().length === 0) {
+      @for (item of [1, 2, 3, 4, 5, 6]; track item) {
+        <p-card class="notification-card-skeleton">
+          <div class="notification-skeleton">
+            <p-skeleton shape="circle" size="4rem" />
+            <div class="skeleton-content">
+              <p-skeleton height="1.5rem" width="70%" />
+              <p-skeleton height="1rem" width="100%" />
+              <p-skeleton height="1rem" width="90%" />
+              <p-skeleton height="0.875rem" width="40%" />
+            </div>
+          </div>
+        </p-card>
+      }
+    } @else if (filteredNotifications().length === 0) {
+      <div class="empty-state">
+        <i class="pi pi-bell" style="font-size: 4rem;"></i>
+        <h2>No notifications found</h2>
+        <p>{{ searchQuery() ? 'Try adjusting your search or filter.' : 'You have no notifications at the moment.' }}</p>
+      </div>
+    } @else {
+      @for (notification of filteredNotifications(); track trackByNotification($index, notification)) {
+        <div class="notification-item-wrapper" [class]="getNotificationColor(notification)" [class.unread]="!notification.isRead">
+          <p-card
+            class="notification-card"
+            (click)="onNotificationClick(notification)"
+          >
+            <div class="notification-card-content">
+              <div class="notification-icon-container">
+                <div class="notification-icon">
+                  <i [class]="'pi ' + getNotificationIcon(notification)"></i>
+                  @if (!notification.isRead) {
+                    <span class="unread-dot"></span>
+                  }
+                </div>
+              </div>
+              <div class="notification-details">
+                <div class="notification-header-row">
+                  <h3 class="notification-title">{{ notification.title }}</h3>
+                  <div class="notification-actions">
+                     <span class="notification-topic-badge">{{ formatTopic(notification.topic) }}</span>
+                  </div>
+                </div>
+                <p class="notification-message">{{ notification.message }}</p>
+                <div class="notification-meta">
+                  <span class="notification-time">
+                    <i class="pi pi-clock"></i>
+                    {{ getTimeAgo(notification.createdAt) }}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </p-card>
+        </div>
+      }
+      @if (loading() && notifications().length > 0) {
+        <div class="load-more-indicator">
+          <p-skeleton height="8rem" width="100%" />
+        </div>
+      }
+      @if (!hasMore() && filteredNotifications().length > 0) {
+        <div class="end-of-list">
+          <p-divider />
+          <p>You've reached the end of your notifications</p>
+        </div>
+      }
+    }
+  </div>
+</div>

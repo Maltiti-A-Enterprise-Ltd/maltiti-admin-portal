@@ -58,6 +58,11 @@ export const routes: Routes = [
         path: APP_ROUTES.settings.path,
         loadChildren: () => import('./features/settings/routes').then((m) => m.SETTINGS_ROUTES),
       },
+      {
+        path: 'notifications',
+        loadChildren: () =>
+          import('./features/notifications/routes').then((m) => m.notificationsRoutes),
+      },
     ],
   },
   {

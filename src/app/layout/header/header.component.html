@@ -13,6 +13,9 @@
   </div>
 
   <div class="header-right">
+    <app-notification-panel />
+
+    <!-- User Menu -->
     <p-menu #userMenu [model]="userMenuItems()" [popup]="true" />
        <p-avatar
          shape="circle"

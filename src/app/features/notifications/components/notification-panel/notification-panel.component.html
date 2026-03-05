@@ -1,0 +1,124 @@
+<div class="notification-container">
+  <p-overlay-badge
+    badgeSize="small"
+    severity="danger"
+    styleClass="notification-badge"
+    [badgeDisabled]="!unreadCount()"
+    [value]="unreadCount().toString()"
+    (click)="toggle($event)"
+  >
+    <i class="pi pi-bell" style="font-size: 1.4rem"></i>
+  </p-overlay-badge>
+</div>
+<p-popover
+  #panel
+  appendTo="body"
+  class="notification-panel"
+  [style]="{ width: '400px', 'max-width': '90vw' }"
+>
+  <ng-template pTemplate="content">
+    <div class="notification-panel-content">
+      <div class="notification-header">
+        <h3 class="notification-title">
+          <i class="pi pi-bell" style="margin-right: 0.5rem;"></i>
+          Notifications
+        </h3>
+        @if (unreadCount() > 0) {
+          <p-button
+            class="mark-all-btn"
+            label="Mark all as read"
+            size="small"
+            text
+            (onClick)="onMarkAllAsRead()"
+          />
+        }
+      </div>
+
+      <p-divider class="notification-divider" />
+
+      <!-- Notification List -->
+      <div #scrollContainer class="notification-list">
+        @if (notifications().length === 0 && !loading()) {
+          <div class="notification-empty">
+            <i class="pi pi-inbox" style="font-size: 3rem;"></i>
+            <p class="empty-text">No notifications yet</p>
+            <p class="empty-subtitle">We'll notify you when something important happens.</p>
+          </div>
+        } @else {
+          @for (notification of notifications(); track trackByNotification($index, notification)) {
+            <div class="notification-item-wrapper">
+              <button
+                class="notification-item {{ getNotificationColor(notification) }}"
+                type="button"
+                [class.unread]="!notification.isRead"
+                (click)="onNotificationClick(notification)"
+              >
+                <div class="notification-icon">
+                  <i class="pi" [class]="getNotificationIcon(notification)"></i>
+                  @if (!notification.isRead) {
+                    <span class="unread-dot"></span>
+                  }
+                </div>
+                <div class="notification-content">
+                  <h4 class="notification-item-title">{{ notification.title }}</h4>
+                  <p class="notification-message">{{ notification.message }}</p>
+                  <span class="notification-time">{{ getTimeAgo(notification.createdAt) }}</span>
+                </div>
+              </button>
+              @if (!notification.isRead) {
+                <button
+                  class="dismiss-btn"
+                  pTooltip="Mark as read"
+                  tooltipPosition="left"
+                  type="button"
+                  (click)="onMarkAsRead(notification); $event.stopPropagation()"
+                >
+                  <i class="pi pi-times"></i>
+                </button>
+              }
+            </div>
+          }
+
+          <!-- Loading Skeletons -->
+          @if (loading()) {
+            @for (item of [1, 2, 3]; track item) {
+              <div class="notification-item-skeleton">
+                <p-skeleton shape="circle" size="48px" />
+                <div class="skeleton-content">
+                  <p-skeleton class="mb-2" height="1.2rem" width="80%" />
+                  <p-skeleton class="mb-1" height="0.9rem" width="100%" />
+                  <p-skeleton height="0.8rem" width="60%" />
+                </div>
+              </div>
+            }
+          }
+
+          <!-- Load More Indicator -->
+          @if (loading() && notifications().length > 0) {
+            <div class="load-more-indicator">
+              <p-skeleton height="1rem" width="100%" />
+            </div>
+          }
+
+          <!-- End of List -->
+          @if (!hasMore() && !loading() && notifications().length > 0) {
+            <div class="end-of-list">
+              <small>You're all caught up!</small>
+            </div>
+          }
+        }
+      </div>
+
+      <!-- Footer -->
+      @if (notifications().length > 0) {
+        <div class="notification-footer">
+          <p-button
+            label="View All Notifications"
+            styleClass="view-all-btn"
+            [routerLink]="['/notifications']"
+          />
+        </div>
+      }
+    </div>
+  </ng-template>
+</p-popover>

@@ -1,0 +1,16 @@
+<div class="notification-badge-container">
+  <p-button
+    aria-label="Notifications"
+    severity="secondary"
+    styleClass="notification-button"
+    [rounded]="true"
+    [text]="true"
+    (onClick)="onBadgeClick()"
+  >
+    @if (unreadCount() > 0) {
+      <span class="notification-badge-custom">{{ unreadCount() }}</span>
+    }
+    <i class="pi pi-bell" style="font-size: 1.2rem;"></i>
+  </p-button>
+</div>
+

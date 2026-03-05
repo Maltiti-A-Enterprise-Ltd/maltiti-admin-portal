@@ -1,0 +1,26 @@
+.notification-badge-container {
+  display: inline-flex;
+  align-items: center;
+  position: relative;
+  ::ng-deep .notification-button {
+    position: relative;
+    .notification-badge-custom {
+      position: absolute;
+      top: 0;
+      right: 0;
+      background-color: var(--red-500);
+      color: white;
+      font-size: 0.65rem;
+      font-weight: 600;
+      min-width: 1.2rem;
+      height: 1.2rem;
+      line-height: 1.2rem;
+      border-radius: 0.6rem;
+      padding: 0 0.25rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1;
+    }
+  }
+}
