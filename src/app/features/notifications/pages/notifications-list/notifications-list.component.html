@@ -65,6 +65,7 @@
           <p-card
             class="notification-card"
             (click)="onNotificationClick(notification)"
+            (keydown.enter)="onNotificationClick(notification)"
           >
             <div class="notification-card-content">
               <div class="notification-icon-container">

@@ -6,6 +6,7 @@
     [badgeDisabled]="!unreadCount()"
     [value]="unreadCount().toString()"
     (click)="toggle($event)"
+    (keydown.enter)="toggle($event)"
   >
     <i class="pi pi-bell" style="font-size: 1.4rem"></i>
   </p-overlay-badge>
