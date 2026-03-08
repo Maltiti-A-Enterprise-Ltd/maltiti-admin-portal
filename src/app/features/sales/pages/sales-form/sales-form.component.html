@@ -108,17 +108,19 @@
   <p-card header="Line Items">
     <div class="line-items-header">
       <h3>Products</h3>
-      <app-button
-        icon="pi pi-plus"
-        label="Add Product"
-        severity="primary"
-        [outlined]="true"
-        (click)="addLineItem()"
-      />
+      @if (!isPaid()) {
+        <app-button
+          icon="pi pi-plus"
+          label="Add Product"
+          severity="primary"
+          [outlined]="true"
+          (click)="addLineItem()"
+        />
+      }
     </div>
 
     <div class="line-items-container">
-      @for (lineItem of lineItems.controls; track $index; let i = $index) {
+      @for (lineItem of lineItems.controls; track lineItem; let i = $index) {
         <app-line-item-editor
           [availableBatches]="batchesByProductId()"
           [isBatchRequired]="isBatchRequired"

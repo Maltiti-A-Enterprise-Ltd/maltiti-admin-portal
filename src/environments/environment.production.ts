@@ -5,7 +5,7 @@
 export const environment = {
   production: true,
   environment: 'production',
-  apiUrl: 'https://api.maltitiaenterprise.com/',
+  apiUrl: 'https://api.maltitiaenterprise.com',
   enableDebug: false,
   enableDevTools: false,
   logLevel: 'error',
