@@ -258,7 +258,7 @@ export class SalesFormComponent implements OnInit {
       requestedQuantity: 1,
       batchAllocations: [],
     };
-    this.lineItems.push(this.fb.control(newLineItem));
+    this.lineItems.insert(0, this.fb.control(newLineItem));
   }
 
   public removeLineItem(index: number): void {
