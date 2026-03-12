@@ -81,6 +81,11 @@ export class SidebarComponent {
         icon: 'pi pi-shopping-bag',
         route: APP_ROUTES.sales.fullPath,
       },
+      {
+        label: 'Customers',
+        icon: 'pi pi-users',
+        route: APP_ROUTES.customers.fullPath,
+      },
       // {
       //   label: 'Orders',
       //   icon: 'pi pi-shopping-cart',

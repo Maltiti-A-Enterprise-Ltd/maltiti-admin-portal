@@ -1,56 +1,64 @@
 <p-dialog
-  header="New Customer"
   [closable]="true"
   [draggable]="false"
+  [header]="dialogHeader()"
   [modal]="true"
-  [style]="{ width: '620px', 'max-width': '95vw' }"
+  [style]="{ width: '680px', 'max-width': '95vw' }"
   [(visible)]="visible"
   (onHide)="close()"
 >
-  <form class="customer-form" [formGroup]="customerForm" (ngSubmit)="onSubmit()">
-    <!-- Personal Information -->
+  <form class="customer-form" [formGroup]="form" (ngSubmit)="onSubmit()">
+    <!-- Section: Personal Information -->
     <div class="form-section">
       <div class="section-header">
         <i class="pi pi-user section-icon"></i>
         <span class="section-title">Personal Information</span>
       </div>
+
       <div class="form-grid">
+        <!-- Full Name (full width) -->
         <div class="form-field col-full">
-          <label class="form-label" for="name"
-            >Full Name <span class="required">*</span
-          ></label>
+          <label class="form-label" for="name">
+            Full Name <span class="required">*</span>
+          </label>
           <app-input
             id="name"
             placeholder="Enter customer's full name"
-            [control]="customerForm.controls.name"
+            [control]="form.controls.name"
             [required]="true"
           />
         </div>
+
+        <!-- Primary Phone -->
         <div class="form-field">
           <label class="form-label" for="phone">Primary Phone</label>
           <app-input
             id="phone"
             placeholder="e.g. 0240000000"
             type="tel"
-            [control]="customerForm.controls.phone"
+            [control]="form.controls.phone"
           />
         </div>
+
+        <!-- Alt Phone -->
         <div class="form-field">
           <label class="form-label" for="phoneNumber">Alternative Phone</label>
           <app-input
             id="phoneNumber"
             placeholder="e.g. 0550000000"
             type="tel"
-            [control]="customerForm.controls.phoneNumber"
+            [control]="form.controls.phoneNumber"
           />
         </div>
+
+        <!-- Email (full width) -->
         <div class="form-field col-full">
           <label class="form-label" for="email">Email Address</label>
           <app-input
             id="email"
             placeholder="customer@example.com"
             type="email"
-            [control]="customerForm.controls.email"
+            [control]="form.controls.email"
           />
         </div>
       </div>
@@ -58,44 +66,55 @@
 
     <p-divider />
 
-    <!-- Location -->
+    <!-- Section: Location -->
     <div class="form-section">
       <div class="section-header">
         <i class="pi pi-map-marker section-icon"></i>
         <span class="section-title">Location</span>
       </div>
+
       <div class="form-grid">
+        <!-- Country -->
         <div class="form-field">
           <label class="form-label" for="country">Country</label>
           <app-select
             id="country"
-            [control]="customerForm.controls.country"
-            [options]="countryOptions"
+            [control]="form.controls.country"
+            [options]="countryOptions()"
             [placeholder]="'Select country'"
             [showClear]="true"
           />
         </div>
+
+        <!-- Region / State -->
         <div class="form-field">
           <label class="form-label" for="region">
             Region / State
-            @if (!customerForm.controls.country.value) {
+            @if (!form.controls.country.value) {
               <span class="hint">(select country first)</span>
             }
           </label>
           <app-select
             id="region"
-            [control]="customerForm.controls.region"
+            [control]="form.controls.region"
             [options]="regionOptions()"
-            [placeholder]="regionOptions().length ? 'Select region' : 'No regions'"
+            [placeholder]="regionOptions().length ? 'Select region' : 'No regions available'"
             [showClear]="true"
           />
         </div>
+
+        <!-- City -->
         <div class="form-field">
-          <label class="form-label" for="city">City / Town</label>
+          <label class="form-label" for="city">
+            City / Town
+            @if (form.controls.region.value && !cityOptions().length) {
+              <span class="hint">(type manually below)</span>
+            }
+          </label>
           @if (cityOptions().length > 0) {
             <app-select
               id="select-city"
-              [control]="customerForm.controls.city"
+              [control]="form.controls.city"
               [options]="cityOptions()"
               [placeholder]="'Select city'"
               [showClear]="true"
@@ -104,16 +123,18 @@
             <app-input
               id="input-city"
               placeholder="Enter city or town"
-              [control]="customerForm.controls.city"
+              [control]="form.controls.city"
             />
           }
         </div>
+
+        <!-- Address (full width) -->
         <div class="form-field col-full">
           <label class="form-label" for="address">Street Address</label>
           <app-input
             id="address"
-            placeholder="e.g. 123 Main Street"
-            [control]="customerForm.controls.address"
+            placeholder="e.g. 123 Main Street, Accra"
+            [control]="form.controls.address"
           />
         </div>
       </div>
@@ -121,19 +142,20 @@
 
     <p-divider />
 
-    <!-- Notes -->
+    <!-- Section: Additional Info -->
     <div class="form-section">
       <div class="section-header">
         <i class="pi pi-info-circle section-icon"></i>
-        <span class="section-title">Additional Notes</span>
+        <span class="section-title">Additional Information</span>
       </div>
+
       <div class="form-field">
         <label class="form-label" for="extraInfo">Notes</label>
         <app-textarea
           id="extraInfo"
-          placeholder="e.g. Prefers delivery on weekdays..."
-          [control]="customerForm.controls.extraInfo"
-          [rows]="2"
+          placeholder="e.g. Prefers delivery on weekdays, allergic to..."
+          [control]="form.controls.extraInfo"
+          [rows]="3"
         />
       </div>
     </div>
@@ -149,9 +171,9 @@
         (click)="close()"
       />
       <app-button
-        icon="pi pi-plus"
-        label="Create Customer"
         severity="primary"
+        [icon]="isEditMode() ? 'pi pi-check' : 'pi pi-plus'"
+        [label]="isEditMode() ? 'Save Changes' : 'Create Customer'"
         [loading]="loading()"
         (click)="onSubmit()"
       />

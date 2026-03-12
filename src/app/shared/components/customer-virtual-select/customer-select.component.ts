@@ -70,9 +70,11 @@ export class CustomerSelectComponent implements OnInit {
   private loadCustomers(): void {
     this.store.dispatch(
       loadCustomers({
-        page: this.currentPage,
-        limit: this.pageSize,
-        search: this.currentSearch || undefined,
+        query: {
+          page: this.currentPage,
+          limit: this.pageSize,
+          search: this.currentSearch || undefined,
+        },
       }),
     );
   }

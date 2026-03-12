@@ -1,0 +1,312 @@
+@use '../../../../../styles/variables';
+@use '../../../../../styles/mixins';
+@use 'sass:list';
+
+.customers-list-container {
+  max-width: 100%;
+  margin: 0 auto;
+}
+
+// ── Page Header ───────────────────────────────────────────
+.page-header {
+  @include mixins.flex-between;
+  margin-bottom: variables.$spacing-xl;
+  flex-wrap: wrap;
+  gap: variables.$spacing-md;
+}
+
+.page-title {
+  h1 {
+    font-size: variables.$font-size-3xl;
+    font-weight: variables.$font-weight-bold;
+    color: var(--text-color);
+    margin: 0 0 variables.$spacing-xs 0;
+  }
+  .page-description {
+    font-size: variables.$font-size-base;
+    color: var(--text-color-secondary);
+    margin: 0;
+  }
+}
+
+// ── Filters ───────────────────────────────────────────────
+.filters-section {
+  @include mixins.card;
+  margin-bottom: variables.$spacing-lg;
+  display: flex;
+  flex-direction: column;
+  gap: variables.$spacing-sm;
+}
+
+.filters-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: variables.$spacing-md;
+  align-items: center;
+
+  .search-input { flex: 2; min-width: 220px; }
+  .filter-dropdown { flex: 1; min-width: 160px; }
+  .sort-order-dropdown { max-width: 160px; }
+}
+
+// ── Advanced filter panel ──────────────────────────────────
+.advanced-filters {
+  border-top: 1px solid var(--surface-200);
+  padding-top: variables.$spacing-md;
+  animation: slideDown 0.18s ease;
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.advanced-filters-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: variables.$spacing-md;
+}
+
+.filter-field {
+  display: flex;
+  flex-direction: column;
+  gap: variables.$spacing-xs;
+}
+
+.filter-label {
+  font-size: variables.$font-size-xs;
+  font-weight: variables.$font-weight-semibold;
+  color: var(--text-color-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+
+  i { font-size: 0.75rem; color: var(--primary-500, #0f6938); }
+
+  .filter-hint {
+    font-size: variables.$font-size-xs;
+    color: var(--surface-400);
+    font-weight: variables.$font-weight-normal;
+    text-transform: none;
+  }
+}
+
+.filter-summary {
+  display: flex;
+  align-items: center;
+  gap: variables.$spacing-xs;
+  font-size: variables.$font-size-sm;
+  color: var(--text-color-secondary);
+  padding-top: variables.$spacing-xs;
+  border-top: 1px solid var(--surface-100);
+
+  i { color: var(--primary-500, #0f6938); font-size: 0.8rem; }
+  span { font-weight: variables.$font-weight-medium; }
+}
+
+// ── Table Card ────────────────────────────────────────────
+.table-card {
+  @include mixins.card;
+  padding: 0;
+  overflow: hidden;
+
+  ::ng-deep .p-datatable {
+    .p-datatable-thead > tr > th {
+      background: var(--surface-50);
+      font-weight: variables.$font-weight-semibold;
+      font-size: variables.$font-size-sm;
+      color: var(--text-color-secondary);
+      border-bottom: 1px solid var(--surface-200);
+      padding: variables.$spacing-md variables.$spacing-lg;
+      white-space: nowrap;
+
+      &.th-index { text-align: center; }
+    }
+
+    .p-datatable-tbody > tr > td {
+      padding: variables.$spacing-sm variables.$spacing-lg;
+      border-bottom: 1px solid var(--surface-100);
+      font-size: variables.$font-size-sm;
+      vertical-align: middle;
+    }
+
+    .p-datatable-tbody > tr:last-child > td { border-bottom: none; }
+
+    .p-datatable-tbody > tr:hover > td { background: var(--surface-50); }
+  }
+}
+
+// ── Row index ─────────────────────────────────────────────
+.row-index {
+  color: var(--text-color-secondary);
+  font-size: variables.$font-size-xs;
+  text-align: center;
+}
+
+// ── Avatar colours (6 variants) ───────────────────────────
+$avatar-colors: (
+  0: (#ecfdf5, #065f46),
+  1: (#eff6ff, #1e40af),
+  2: (#fef3c7, #92400e),
+  3: (#fce7f3, #9d174d),
+  4: (#f3e8ff, #6b21a8),
+  5: (#fee2e2, #991b1b),
+);
+
+.avatar {
+  width: 38px;
+  height: 38px;
+  min-width: 38px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: variables.$font-weight-bold;
+  font-size: variables.$font-size-sm;
+
+  @each $i, $colors in $avatar-colors {
+    &.avatar-#{$i} {
+      background: list.nth($colors, 1);
+      color: list.nth($colors, 2);
+    }
+  }
+}
+
+// ── Customer cell ─────────────────────────────────────────
+.customer-cell {
+  display: flex;
+  align-items: center;
+  gap: variables.$spacing-sm;
+  min-width: 160px;
+}
+
+.customer-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.customer-name {
+  font-weight: variables.$font-weight-medium;
+  color: var(--text-color);
+  line-height: 1.2;
+}
+
+.customer-email {
+  font-size: variables.$font-size-xs;
+  color: var(--text-color-secondary);
+  text-decoration: none;
+  &:hover { text-decoration: underline; color: var(--primary-500, #0f6938); }
+}
+
+// ── Contact cell ──────────────────────────────────────────
+.contact-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.contact-link {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: variables.$font-size-sm;
+  color: var(--text-color);
+  text-decoration: none;
+  white-space: nowrap;
+
+  &.secondary { color: var(--text-color-secondary); font-size: variables.$font-size-xs; }
+  &:hover { color: var(--primary-500, #0f6938); }
+}
+
+.contact-icon { font-size: 0.7rem; color: var(--text-color-secondary); }
+
+// ── Location cell ─────────────────────────────────────────
+.location-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.location-city {
+  font-weight: variables.$font-weight-medium;
+  font-size: variables.$font-size-sm;
+  color: var(--text-color);
+}
+
+.location-region {
+  font-size: variables.$font-size-xs;
+  color: var(--text-color-secondary);
+}
+
+::ng-deep .country-tag {
+  font-size: 0.7rem !important;
+  padding: 2px 6px !important;
+}
+
+// ── Address cell ──────────────────────────────────────────
+.address-cell {
+  font-size: variables.$font-size-sm;
+  color: var(--text-color-secondary);
+  max-width: 160px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: block;
+}
+
+// ── Date cell ─────────────────────────────────────────────
+.date-cell {
+  font-size: variables.$font-size-sm;
+  color: var(--text-color-secondary);
+  white-space: nowrap;
+}
+
+// ── No data ───────────────────────────────────────────────
+.no-data { color: var(--surface-400); font-size: variables.$font-size-sm; }
+
+// ── Actions ───────────────────────────────────────────────
+.action-buttons {
+  display: flex;
+  gap: 2px;
+  align-items: center;
+}
+
+// ── Empty state ───────────────────────────────────────────
+.empty-state { text-align: center; padding: variables.$spacing-2xl !important; }
+
+.empty-state-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: variables.$spacing-md;
+  max-width: 360px;
+  margin: 0 auto;
+
+  .empty-icon { font-size: 3rem; color: var(--surface-300); }
+  h3 { font-size: variables.$font-size-xl; font-weight: variables.$font-weight-semibold; margin: 0; }
+  p { font-size: variables.$font-size-base; color: var(--text-color-secondary); margin: 0; }
+}
+
+// ── Confirm dialog ────────────────────────────────────────
+.confirm-message {
+  display: flex;
+  align-items: flex-start;
+  gap: variables.$spacing-sm;
+  .confirm-icon { font-size: 1.5rem; color: var(--orange-500); flex-shrink: 0; }
+}
+
+// ── Responsive ────────────────────────────────────────────
+@media (max-width: 768px) {
+  .page-header { flex-direction: column; align-items: flex-start; }
+
+  .filters-row {
+    flex-direction: column;
+    .search-input, .filter-dropdown, .sort-order-dropdown {
+      width: 100%;
+      max-width: 100%;
+    }
+  }
+}

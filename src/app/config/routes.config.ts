@@ -34,6 +34,7 @@ export interface IAppRoutes {
   reports: IRouteConfig;
   settings: IRouteConfig;
   users: IRouteConfig;
+  customers: IRouteConfig;
   sales: IRouteConfig & {
     list: IRouteConfig;
     create: IRouteConfig;
@@ -83,6 +84,10 @@ export const APP_ROUTES: IAppRoutes = {
   users: {
     path: 'users',
     fullPath: '/users',
+  },
+  customers: {
+    path: 'customers',
+    fullPath: '/customers',
   },
   sales: {
     path: 'sales',

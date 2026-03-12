@@ -8,11 +8,16 @@ import {
   createCustomer,
   createCustomerFailure,
   createCustomerSuccess,
+  deleteCustomer,
+  deleteCustomerFailure,
+  deleteCustomerSuccess,
   loadCustomers,
   loadCustomersFailure,
   loadCustomersSuccess,
+  updateCustomer,
+  updateCustomerFailure,
+  updateCustomerSuccess,
 } from './customers.actions';
-
 @Injectable()
 export class CustomersEffects {
   private readonly customersApi = inject(CustomersApiService);
@@ -22,8 +27,8 @@ export class CustomersEffects {
   public loadCustomers$ = createEffect(() =>
     this.actions$.pipe(
       ofType(loadCustomers),
-      mergeMap(({ page, limit, search }) =>
-        this.customersApi.getCustomers(page, limit, search).pipe(
+      mergeMap(({ query }) =>
+        this.customersApi.getCustomers(query).pipe(
           map(({ data }) => loadCustomersSuccess({ response: data })),
           catchError((error) =>
             of(loadCustomersFailure({ error: error.message || 'Failed to load customers' })),
@@ -38,7 +43,7 @@ export class CustomersEffects {
       ofType(createCustomer),
       mergeMap(({ customerData }) =>
         this.customersApi.createCustomer(customerData).pipe(
-          map((customer) => createCustomerSuccess({ customer })),
+          map(({ data: customer }) => createCustomerSuccess({ customer })),
           catchError((error) =>
             of(createCustomerFailure({ error: error.message || 'Failed to create customer' })),
           ),
@@ -47,11 +52,31 @@ export class CustomersEffects {
     ),
   );
 
-  // Reload customers after successful creation
-  public reloadCustomersAfterCreate$ = createEffect(() =>
+  public updateCustomer$ = createEffect(() =>
     this.actions$.pipe(
-      ofType(createCustomerSuccess),
-      map(() => loadCustomers({ page: 1, limit: 20 })),
+      ofType(updateCustomer),
+      mergeMap(({ customerData }) =>
+        this.customersApi.updateCustomer(customerData).pipe(
+          map((customer) => updateCustomerSuccess({ customer })),
+          catchError((error) =>
+            of(updateCustomerFailure({ error: error.message || 'Failed to update customer' })),
+          ),
+        ),
+      ),
+    ),
+  );
+
+  public deleteCustomer$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(deleteCustomer),
+      mergeMap(({ id }) =>
+        this.customersApi.deleteCustomer(id).pipe(
+          map(() => deleteCustomerSuccess({ id })),
+          catchError((error) =>
+            of(deleteCustomerFailure({ error: error.message || 'Failed to delete customer' })),
+          ),
+        ),
+      ),
     ),
   );
 
@@ -70,10 +95,45 @@ export class CustomersEffects {
     { dispatch: false },
   );
 
+  public updateCustomerSuccess$ = createEffect(
+    () =>
+      this.actions$.pipe(
+        ofType(updateCustomerSuccess),
+        tap(() => {
+          this.messageService.add({
+            severity: 'success',
+            summary: 'Success',
+            detail: 'Customer updated successfully',
+          });
+        }),
+      ),
+    { dispatch: false },
+  );
+
+  public deleteCustomerSuccess$ = createEffect(
+    () =>
+      this.actions$.pipe(
+        ofType(deleteCustomerSuccess),
+        tap(() => {
+          this.messageService.add({
+            severity: 'success',
+            summary: 'Success',
+            detail: 'Customer deleted successfully',
+          });
+        }),
+      ),
+    { dispatch: false },
+  );
+
   public handleError$ = createEffect(
     () =>
       this.actions$.pipe(
-        ofType(loadCustomersFailure, createCustomerFailure),
+        ofType(
+          loadCustomersFailure,
+          createCustomerFailure,
+          updateCustomerFailure,
+          deleteCustomerFailure,
+        ),
         tap(({ error }) => {
           this.messageService.add({
             severity: 'error',
