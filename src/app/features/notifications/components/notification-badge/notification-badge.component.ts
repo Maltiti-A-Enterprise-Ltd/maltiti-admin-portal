@@ -4,14 +4,14 @@
  */
 
 import { ChangeDetectionStrategy, Component, inject, output } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { ButtonModule } from 'primeng/button';
 import { NotificationService } from '@features/notifications';
 
 @Component({
   selector: 'app-notification-badge',
   standalone: true,
-  imports: [CommonModule, ButtonModule],
+  imports: [ButtonModule],
   templateUrl: './notification-badge.component.html',
   styleUrls: ['./notification-badge.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,

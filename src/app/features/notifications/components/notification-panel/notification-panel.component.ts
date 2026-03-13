@@ -13,7 +13,7 @@ import {
   output,
   viewChild,
 } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { RouterModule } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Popover, PopoverModule } from 'primeng/popover';
@@ -38,7 +38,6 @@ import {
   selector: 'app-notification-panel',
   standalone: true,
   imports: [
-    CommonModule,
     RouterModule,
     PopoverModule,
     ButtonModule,

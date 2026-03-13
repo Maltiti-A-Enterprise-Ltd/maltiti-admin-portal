@@ -4,7 +4,7 @@
  */
 
 import { ChangeDetectionStrategy, Component, inject, output, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 
 // PrimeNG Imports
@@ -24,14 +24,7 @@ import { take } from 'rxjs';
   standalone: true,
   templateUrl: './cancel-sale-by-admin-modal.component.html',
   styleUrls: ['./cancel-sale-by-admin-modal.component.scss'],
-  imports: [
-    CommonModule,
-    ReactiveFormsModule,
-    DialogModule,
-    TextareaModule,
-    CheckboxModule,
-    ButtonModule,
-  ],
+  imports: [ReactiveFormsModule, DialogModule, TextareaModule, CheckboxModule, ButtonModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   providers: [MessageService],
 })

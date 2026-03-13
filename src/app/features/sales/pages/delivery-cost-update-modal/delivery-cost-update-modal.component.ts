@@ -4,7 +4,7 @@
  */
 
 import { ChangeDetectionStrategy, Component, inject, output, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 
 // PrimeNG Imports
@@ -23,7 +23,7 @@ import { take } from 'rxjs';
   standalone: true,
   templateUrl: './delivery-cost-update-modal.component.html',
   styleUrls: ['./delivery-cost-update-modal.component.scss'],
-  imports: [CommonModule, ReactiveFormsModule, DialogModule, InputNumberModule, ButtonModule],
+  imports: [ReactiveFormsModule, DialogModule, InputNumberModule, ButtonModule],
   providers: [],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })

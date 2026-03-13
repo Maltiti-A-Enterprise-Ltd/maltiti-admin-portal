@@ -18,7 +18,6 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Store } from '@ngrx/store';
 import { Actions, ofType } from '@ngrx/effects';
-import { CommonModule } from '@angular/common';
 
 // PrimeNG
 import { ButtonModule } from 'primeng/button';
@@ -46,7 +45,6 @@ import { selectLoading } from '@features/sales/store/customers.selectors';
   styleUrl: './customer-form-dialog.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
-    CommonModule,
     ReactiveFormsModule,
     ButtonModule,
     DialogModule,

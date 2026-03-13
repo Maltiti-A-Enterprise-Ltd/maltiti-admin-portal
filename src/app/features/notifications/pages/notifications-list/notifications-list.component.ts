@@ -14,7 +14,7 @@ import {
   signal,
   viewChild,
 } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { FormsModule } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CardModule } from 'primeng/card';
@@ -44,7 +44,6 @@ interface FilterOption {
   selector: 'app-notifications-list',
   standalone: true,
   imports: [
-    CommonModule,
     FormsModule,
     CardModule,
     ButtonModule,

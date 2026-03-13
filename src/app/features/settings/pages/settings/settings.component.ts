@@ -11,7 +11,7 @@ import {
   inject,
   signal,
 } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import {
   FormBuilder,
   FormControl,
@@ -27,7 +27,7 @@ import { MessageModule } from 'primeng/message';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { DialogService, DynamicDialogModule } from 'primeng/dynamicdialog';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { finalize } from 'rxjs';
+import { combineLatest, filter, finalize } from 'rxjs';
 import { ProfileService } from '@services/profile.service';
 import { ProfileResponseDto, UpdateProfileDto } from '@models/profile.model';
 import { Store } from '@ngrx/store';
@@ -36,12 +36,10 @@ import { selectAuthError, selectAuthLoading, selectUserId } from '@auth/store/au
 import { PasswordInputComponent } from '@shared/components/password-input/password-input.component';
 import { InputComponent } from '@shared/components/input/input.component';
 import { CustomValidators } from '@shared/validators/custom-validators';
-import { combineLatest, filter } from 'rxjs';
 
 @Component({
   selector: 'app-settings',
   imports: [
-    CommonModule,
     ReactiveFormsModule,
     ButtonModule,
     CardModule,

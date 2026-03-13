@@ -13,21 +13,21 @@ import {
   output,
   signal,
 } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { FormBuilder, FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Store } from '@ngrx/store';
 import { DialogModule } from 'primeng/dialog';
 import * as UsersActions from '../../store/users.actions';
 import { Actions, ofType } from '@ngrx/effects';
-import { InputComponent } from '../../../../shared/components/input/input.component';
-import { ButtonComponent } from '../../../../shared/components/button/button.component';
+import { InputComponent } from '@shared/components/input/input.component';
+import { ButtonComponent } from '@shared/components/button/button.component';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-invite-admin-dialog',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, DialogModule, ButtonComponent, InputComponent],
+  imports: [ReactiveFormsModule, DialogModule, ButtonComponent, InputComponent],
   templateUrl: './invite-admin-dialog.component.html',
 })
 export class InviteAdminDialogComponent {
