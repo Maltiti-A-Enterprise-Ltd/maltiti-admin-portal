@@ -1,0 +1,172 @@
+<!-- ─── Fully Paid Banner ─────────────────────────────────────────────────────── -->
+@if (fullyPaidBanner()) {
+  <output class="fully-paid-banner">
+    <i class="pi pi-check-circle"></i>
+    🎉 This sale is now <strong>fully paid</strong>!
+    <button
+      aria-label="Dismiss"
+      class="banner-close"
+      type="button"
+      (click)="fullyPaidBanner.set(false)"
+    >
+      <i class="pi pi-times"></i>
+    </button>
+  </output>
+}
+
+<!-- ─── Loading Skeleton ────────────────────────────────────────────────────── -->
+@if (loading()) {
+  <div class="skeleton-wrapper">
+    <p-skeleton class="mb-3" height="120px" />
+    <p-skeleton height="200px" />
+  </div>
+}
+
+<!-- ─── Error State ─────────────────────────────────────────────────────────── -->
+@if (!loading() && loadError()) {
+  <div class="error-state" role="alert">
+    <i class="pi pi-exclamation-triangle"></i>
+    <p>{{ loadError() }}</p>
+    <button class="retry-btn" type="button" (click)="retryLoad()">
+      <i class="pi pi-refresh"></i> Retry
+    </button>
+  </div>
+}
+
+<!-- ─── Summary Card ────────────────────────────────────────────────────────── -->
+@if (!loading() && !loadError() && summary()) {
+  <div class="summary-card">
+    <div class="summary-grid">
+      <div class="summary-row">
+        <span class="summary-label">Grand Total</span>
+        <span class="summary-value">{{ formatGhs(saleTotal()) }}</span>
+      </div>
+      <div class="summary-row">
+        <span class="summary-label">Total Paid</span>
+        <span class="summary-value paid">{{ formatGhs(totalPaid()) }}</span>
+      </div>
+      <div class="summary-row">
+        <span class="summary-label">Balance Remaining</span>
+        <span class="summary-value balance">{{ formatGhs(balanceRemaining()) }}</span>
+      </div>
+      <div class="summary-row">
+        <span class="summary-label">Status</span>
+        @if (isFullyPaid()) {
+          <span class="status-chip fully-paid">
+            <i class="pi pi-check"></i> Fully Paid
+          </span>
+        } @else if (totalPaid() === 0) {
+          <span class="status-chip unpaid">Unpaid</span>
+        } @else {
+          <span class="status-chip partial">Partially Paid</span>
+        }
+      </div>
+    </div>
+
+    <!-- Progress Bar -->
+    <div class="progress-wrapper">
+      <p-progressBar
+        [showValue]="false"
+        [value]="progressPercent()"
+      />
+      <span class="progress-label">{{ progressPercent() }}% paid</span>
+    </div>
+
+    <!-- Add Payment Button -->
+    @if (!isFullyPaid()) {
+      <div class="summary-actions">
+        <button
+          class="add-payment-btn"
+          type="button"
+          (click)="onAddPayment()"
+        >
+          <i class="pi pi-plus"></i> Add Payment
+        </button>
+      </div>
+    } @else {
+      <div class="summary-actions">
+        <button
+          class="add-payment-btn disabled"
+          disabled
+          title="Sale is fully paid"
+          type="button"
+        >
+          <i class="pi pi-check"></i> Add Payment
+        </button>
+      </div>
+    }
+  </div>
+
+  <!-- ─── Payments Table ──────────────────────────────────────────────────── -->
+  <div class="payments-table-wrapper">
+    <h3 class="table-heading">Payment Records</h3>
+
+    @if (payments().length === 0) {
+      <div class="empty-state">
+        <i class="pi pi-credit-card empty-icon"></i>
+        <p>No payments recorded yet.</p>
+      </div>
+    } @else {
+      <p-table
+        styleClass="p-datatable-sm"
+        [sortField]="'createdAt'"
+        [sortOrder]="1"
+        [value]="payments()"
+      >
+        <ng-template pTemplate="header">
+          <tr>
+            <th scope="col">#</th>
+            <th pSortableColumn="createdAt" scope="col">
+              Date <p-sortIcon field="createdAt" />
+            </th>
+            <th scope="col">Amount</th>
+            <th scope="col">Method</th>
+            <th scope="col">Status</th>
+            <th scope="col">Reference</th>
+            <th scope="col">Note</th>
+            <th scope="col">Source</th>
+            <th scope="col">Actions</th>
+          </tr>
+        </ng-template>
+        <ng-template let-i="rowIndex" let-payment pTemplate="body">
+          <tr>
+            <td>{{ i + 1 }}</td>
+            <td>{{ formatDate(payment.createdAt) }}</td>
+            <td class="amount-cell">{{ formatGhs(payment.amount) }}</td>
+            <td>{{ getMethodLabel(payment.paymentMethod) }}</td>
+            <td>
+              <p-tag
+                [severity]="getRecordStatusSeverity(payment.status)"
+                [value]="getRecordStatusLabel(payment.status)"
+              />
+            </td>
+            <td>{{ payment.reference || '—' }}</td>
+            <td class="note-cell">{{ payment.note || '—' }}</td>
+            <td>
+              @if (payment.isCustomerInitiated) {
+                <span class="source-badge customer">Customer</span>
+              } @else {
+                <span class="source-badge admin">Admin</span>
+              }
+            </td>
+            <td>
+              <button
+                aria-label="Update status"
+                class="update-status-btn"
+                type="button"
+                (click)="onUpdateStatus(payment)"
+              >
+                <i class="pi pi-pencil"></i> Update Status
+              </button>
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+    }
+  </div>
+}
+
+<!-- ─── Modals ──────────────────────────────────────────────────────────────── -->
+<app-add-payment-modal (paymentAdded)="onPaymentAdded()" />
+<app-update-payment-status-modal (statusUpdated)="onStatusUpdated($event)" />
+

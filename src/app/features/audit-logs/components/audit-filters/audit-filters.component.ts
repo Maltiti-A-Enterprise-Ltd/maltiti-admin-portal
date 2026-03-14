@@ -4,11 +4,21 @@
  * Provides date range, action type, entity type, user, and role filters
  */
 
-import { ChangeDetectionStrategy, Component, effect, input, output, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  input,
+  OnInit,
+  output,
+  signal,
+} from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
 import { DatePicker } from 'primeng/datepicker';
 import { InputTextModule } from 'primeng/inputtext';
+import { BadgeModule } from 'primeng/badge';
+import { TooltipModule } from 'primeng/tooltip';
 import { SelectComponent } from '@shared/components/select/select.component';
 import {
   AuditActionType,
@@ -27,12 +37,21 @@ interface FilterForm {
 
 @Component({
   selector: 'app-audit-filters',
-  imports: [ReactiveFormsModule, DatePicker, SelectComponent, ButtonModule, InputTextModule],
+  imports: [
+    ReactiveFormsModule,
+    DatePicker,
+    SelectComponent,
+    ButtonModule,
+    InputTextModule,
+    BadgeModule,
+    TooltipModule,
+  ],
   templateUrl: './audit-filters.component.html',
   styleUrl: './audit-filters.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class AuditFiltersComponent {
+export class AuditFiltersComponent implements OnInit {
+  /** Initial filters to seed the form — read only once on init */
   public readonly initialFilters = input<IAuditLogFilters | null>(null);
   public readonly filtersChange = output<IAuditLogFilters>();
   public readonly resetFilters = output<void>();
@@ -44,6 +63,17 @@ export class AuditFiltersComponent {
     userId: new FormControl(null),
     role: new FormControl(null),
   });
+
+  /** Tracks the last successfully applied filters for display purposes */
+  private readonly appliedFilters = signal<IAuditLogFilters>({});
+
+  /** Count of active (applied) filters for badge display */
+  public readonly activeFilterCount = computed(() => {
+    const f = this.appliedFilters();
+    return [f.from, f.actionType, f.entityType, f.userId, f.role].filter(Boolean).length;
+  });
+
+  public readonly hasActiveFilters = computed(() => this.activeFilterCount() > 0);
 
   public readonly actionTypes = signal(
     Object.values(AuditActionType).map((value) => ({
@@ -66,24 +96,23 @@ export class AuditFiltersComponent {
     })),
   );
 
-  constructor() {
-    // Initialize form with input filters
-    effect(() => {
-      const filters = this.initialFilters();
-      if (filters) {
-        this.updateFormFromFilters(filters);
-      }
-    });
+  public ngOnInit(): void {
+    // Seed the form once from initial filters (e.g. on page reload/navigation back)
+    const filters = this.initialFilters();
+    if (filters) {
+      this.patchFormFromFilters(filters);
+      this.appliedFilters.set(filters);
+    }
   }
 
   /**
-   * Apply current filter values
+   * Apply current filter values and emit to parent
    */
   public onApplyFilters(): void {
     const formValue = this.filterForm.value;
     const filters: IAuditLogFilters = {};
 
-    if (formValue.dateRange && formValue.dateRange.length === 2) {
+    if (formValue.dateRange?.length === 2) {
       filters.from = formValue.dateRange[0]?.toISOString();
       filters.to = formValue.dateRange[1]?.toISOString();
     }
@@ -104,21 +133,23 @@ export class AuditFiltersComponent {
       filters.role = formValue.role;
     }
 
+    this.appliedFilters.set(filters);
     this.filtersChange.emit(filters);
   }
 
   /**
-   * Reset all filters
+   * Reset all filters and notify parent
    */
   public onResetFilters(): void {
     this.filterForm.reset();
+    this.appliedFilters.set({});
     this.resetFilters.emit();
   }
 
   /**
-   * Update form from filters object
+   * Patch the form values from a filters object (used for initialization only)
    */
-  private updateFormFromFilters(filters: IAuditLogFilters): void {
+  private patchFormFromFilters(filters: IAuditLogFilters): void {
     const dateRange: Date[] = [];
 
     if (filters.from) {
@@ -130,15 +161,15 @@ export class AuditFiltersComponent {
 
     this.filterForm.patchValue({
       dateRange: dateRange.length === 2 ? dateRange : null,
-      actionType: filters.actionType || null,
-      entityType: filters.entityType || null,
-      userId: filters.userId || null,
-      role: filters.role || null,
+      actionType: filters.actionType ?? null,
+      entityType: filters.entityType ?? null,
+      userId: filters.userId ?? null,
+      role: filters.role ?? null,
     });
   }
 
   /**
-   * Format enum values for display
+   * Format enum values for display (e.g. "LOGIN_FAILED" → "Login Failed")
    */
   private formatEnumLabel(value: string): string {
     return value
@@ -148,7 +179,7 @@ export class AuditFiltersComponent {
   }
 
   /**
-   * Capitalize first letter
+   * Capitalize first letter only
    */
   private capitalizeFirst(value: string): string {
     return value.charAt(0).toUpperCase() + value.slice(1);

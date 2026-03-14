@@ -98,3 +98,27 @@
     gap: variables.$spacing-md;
   }
 }
+
+// Payment Progress Cell
+.payment-progress-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 120px;
+
+  ::ng-deep .payment-progress-bar {
+    height: 6px;
+    border-radius: 3px;
+  }
+
+  .payment-progress-label {
+    font-size: 0.72rem;
+    color: var(--text-color-secondary);
+    white-space: nowrap;
+  }
+
+  .payment-progress-na {
+    color: var(--text-color-secondary);
+  }
+}
+

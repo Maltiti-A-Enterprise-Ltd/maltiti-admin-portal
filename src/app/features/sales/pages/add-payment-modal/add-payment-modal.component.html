@@ -1,0 +1,110 @@
+<p-dialog
+  header="Record Payment"
+  [closable]="true"
+  [modal]="true"
+  [style]="{ width: '520px', maxWidth: '95vw' }"
+  [visible]="visible()"
+  (onHide)="close()"
+>
+  <form class="payment-form" [formGroup]="form" (ngSubmit)="onSubmit()">
+
+    <!-- Error banner -->
+    @if (errorMessage()) {
+      <div class="error-banner" role="alert">
+        <i class="pi pi-exclamation-circle"></i>
+        {{ errorMessage() }}
+      </div>
+    }
+
+    <!-- Amount -->
+    <div class="form-field">
+      <label for="amount">Amount (GHS) <span class="required">*</span></label>
+      <p-inputNumber
+        currency="GHS"
+        id="amount"
+        locale="en-GH"
+        mode="currency"
+        [formControl]="form.controls.amount"
+        [min]="0.01"
+      />
+      @if (form.controls.amount.invalid && form.controls.amount.touched) {
+        <small class="field-error">Amount must be greater than 0.</small>
+      }
+
+      <!-- Overpay warning -->
+      @if (showOverpayWarning()) {
+        <small class="field-warning">
+          <i class="pi pi-exclamation-triangle"></i>
+          This payment exceeds the remaining balance of
+          GHS {{ balanceRemaining().toFixed(2) }}. Do you want to continue?
+        </small>
+      }
+    </div>
+
+    <!-- Payment Method -->
+    <div class="form-field">
+      <label for="paymentMethod">Payment Method <span class="required">*</span></label>
+      <p-select
+        id="paymentMethod"
+        optionLabel="label"
+        optionValue="value"
+        placeholder="Select method"
+        [formControl]="form.controls.paymentMethod"
+        [options]="methodOptions"
+      />
+    </div>
+
+    <!-- Status -->
+    <div class="form-field">
+      <label for="paymentStatus">Status <span class="required">*</span></label>
+      <p-select
+        id="paymentStatus"
+        optionLabel="label"
+        optionValue="value"
+        placeholder="Select status"
+        [formControl]="form.controls.status"
+        [options]="statusOptions"
+      />
+    </div>
+
+    <!-- Reference -->
+    <div class="form-field">
+      <label for="reference">Reference (optional)</label>
+      <input
+        id="reference"
+        pInputText
+        placeholder="e.g. TRF-202603130001"
+        [formControl]="form.controls.reference"
+      />
+    </div>
+
+    <!-- Note -->
+    <div class="form-field">
+      <label for="note">Note (optional)</label>
+      <textarea
+        id="note"
+        pTextarea
+        placeholder="e.g. First instalment"
+        rows="3"
+        [formControl]="form.controls.note"
+      ></textarea>
+    </div>
+  </form>
+
+  <ng-template pTemplate="footer">
+    <p-button
+      label="Cancel"
+      severity="secondary"
+      [outlined]="true"
+      (onClick)="close()"
+    />
+    <p-button
+      icon="pi pi-check"
+      label="Record Payment"
+      severity="success"
+      [loading]="loading()"
+      (onClick)="onSubmit()"
+    />
+  </ng-template>
+</p-dialog>
+

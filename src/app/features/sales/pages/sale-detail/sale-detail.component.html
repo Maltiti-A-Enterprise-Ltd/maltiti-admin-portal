@@ -1,0 +1,109 @@
+<!-- Page Header -->
+<div class="page-header">
+  <div class="page-title">
+    <button aria-label="Back to sales list" class="back-btn" type="button" (click)="onBack()">
+      <i class="pi pi-arrow-left"></i>
+    </button>
+    <div>
+      <h1>Sale Details</h1>
+      @if (saleId()) {
+        <p class="page-description">ID: {{ saleId() }}</p>
+      }
+    </div>
+  </div>
+  <div class="page-actions">
+    <button aria-label="Edit sale" class="edit-btn" type="button" (click)="onEdit()">
+      <i class="pi pi-pencil"></i> Edit Sale
+    </button>
+  </div>
+</div>
+
+<!-- Sale not found -->
+@if (!sale()) {
+  <div class="not-found">
+    <i class="pi pi-inbox"></i>
+    <p>Sale not found.</p>
+    <button type="button" (click)="onBack()">Back to Sales</button>
+  </div>
+}
+
+@if (sale(); as s) {
+  <!-- ─── Sale Info Card ───────────────────────────────────────────────────── -->
+  <p-card class="info-card">
+    <ng-template pTemplate="header">
+      <div class="card-header-row">
+        <span class="card-heading">Sale Information</span>
+        <div class="badge-row">
+          <p-tag
+            [severity]="getOrderStatusSeverity(s.orderStatus)"
+            [value]="formatStatus(s.orderStatus)"
+          />
+          <p-tag
+            [severity]="getPaymentStatusSeverity(s.paymentStatus)"
+            [value]="formatStatus(s.paymentStatus)"
+          />
+        </div>
+      </div>
+    </ng-template>
+
+    <div class="info-grid">
+      <div class="info-item">
+        <span class="info-label">Customer</span>
+        <span class="info-value">{{ customerName() }}</span>
+      </div>
+      <div class="info-item">
+        <span class="info-label">Total Amount</span>
+        <span class="info-value amount">{{ s.total | currency: 'GH₵ ' }}</span>
+      </div>
+      <div class="info-item">
+        <span class="info-label">Delivery Fee</span>
+        <span class="info-value">
+          {{ s.deliveryFee ? (s.deliveryFee | currency: 'GH₵ ') : '—' }}
+        </span>
+      </div>
+      @if (s.confirmedDeliveryDate) {
+        <div class="info-item">
+          <span class="info-label">Confirmed Delivery</span>
+          <span class="info-value">{{ s.confirmedDeliveryDate | date: 'mediumDate' }}</span>
+        </div>
+      }
+      <div class="info-item">
+        <span class="info-label">Created</span>
+        <span class="info-value">{{ s.createdAt | date: 'medium' }}</span>
+      </div>
+      <div class="info-item">
+        <span class="info-label">Last Updated</span>
+        <span class="info-value">{{ s.updatedAt | date: 'medium' }}</span>
+      </div>
+    </div>
+  </p-card>
+
+  <!-- ─── Line Items Card ──────────────────────────────────────────────────── -->
+  <p-card header="Line Items" styleClass="info-card">
+    @if (s.lineItems.length === 0) {
+      <p class="no-items">No line items recorded.</p>
+    } @else {
+      <div class="line-items-list">
+        @for (item of s.lineItems; track item.productId) {
+          <div class="line-item-row">
+            <span class="li-product">
+              {{ item.product?.name ?? item.productId }}
+            </span>
+            <span class="li-qty">Qty: {{ item.requestedQuantity }}</span>
+            <span class="li-price">
+              GH₵ {{ item.finalPrice ?? item.customPrice ?? 0 | number: '1.2-2' }}
+            </span>
+          </div>
+        }
+      </div>
+    }
+  </p-card>
+
+  <p-divider />
+
+  <!-- ─── Payments Section ─────────────────────────────────────────────────── -->
+  <p-card header="Payments" styleClass="info-card">
+    <app-payments-section [saleId]="s.id" />
+  </p-card>
+}
+

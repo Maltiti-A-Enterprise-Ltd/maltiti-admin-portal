@@ -14,7 +14,7 @@ import {
   output,
   signal,
 } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Dialog } from 'primeng/dialog';
 import { Button } from 'primeng/button';
@@ -40,7 +40,6 @@ import { productName } from '@shared/utils/product-name';
   selector: 'app-batch-dialog',
   standalone: true,
   imports: [
-    CommonModule,
     ReactiveFormsModule,
     Dialog,
     Button,

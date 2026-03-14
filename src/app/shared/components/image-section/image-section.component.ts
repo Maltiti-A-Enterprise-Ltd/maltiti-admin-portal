@@ -4,7 +4,7 @@
  */
 
 import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { FileSelectEvent, FileUpload } from 'primeng/fileupload';
 import { InputText } from 'primeng/inputtext';
@@ -13,7 +13,7 @@ import { InputText } from 'primeng/inputtext';
   changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-image-section',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FileUpload, InputText],
+  imports: [ReactiveFormsModule, FileUpload, InputText],
   templateUrl: './image-section.component.html',
   styleUrl: './image-section.component.scss',
 })

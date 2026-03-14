@@ -14,7 +14,7 @@ import {
   signal,
 } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
-import { CommonModule } from '@angular/common';
+
 import { ButtonModule } from 'primeng/button';
 import { Drawer } from 'primeng/drawer';
 import { APP_ROUTES } from '@config/routes.config';
@@ -32,7 +32,7 @@ interface MenuItem {
 @Component({
   selector: 'app-sidebar',
   standalone: true,
-  imports: [CommonModule, RouterLink, ButtonModule, Drawer, RouterLinkActive],
+  imports: [RouterLink, ButtonModule, Drawer, RouterLinkActive],
   templateUrl: './sidebar.component.html',
   styleUrl: './sidebar.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -80,6 +80,11 @@ export class SidebarComponent {
         label: 'Sales',
         icon: 'pi pi-shopping-bag',
         route: APP_ROUTES.sales.fullPath,
+      },
+      {
+        label: 'Customers',
+        icon: 'pi pi-users',
+        route: APP_ROUTES.customers.fullPath,
       },
       // {
       //   label: 'Orders',

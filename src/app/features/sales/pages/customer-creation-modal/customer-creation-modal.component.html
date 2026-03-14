@@ -1,65 +1,160 @@
 <p-dialog
-  header="Create New Customer"
+  header="New Customer"
   [closable]="true"
+  [draggable]="false"
   [modal]="true"
-  [style]="{'width': '500px'}"
+  [style]="{ width: '620px', 'max-width': '95vw' }"
   [(visible)]="visible"
   (onHide)="close()"
 >
-  <form class="customer-form" [formGroup]="customerForm">
-    <div class="form-field">
-      <label for="name">Full Name *</label>
-      <app-input
-        id="name"
-        placeholder="Enter customer's full name"
-        [control]="customerForm.controls.name"
-        [required]="true"
-      />
+  <form class="customer-form" [formGroup]="customerForm" (ngSubmit)="onSubmit()">
+    <!-- Personal Information -->
+    <div class="form-section">
+      <div class="section-header">
+        <i class="pi pi-user section-icon"></i>
+        <span class="section-title">Personal Information</span>
+      </div>
+      <div class="form-grid">
+        <div class="form-field col-full">
+          <label class="form-label" for="name"
+            >Full Name <span class="required">*</span
+          ></label>
+          <app-input
+            id="name"
+            placeholder="Enter customer's full name"
+            [control]="customerForm.controls.name"
+            [required]="true"
+          />
+        </div>
+        <div class="form-field">
+          <label class="form-label" for="phone">Primary Phone</label>
+          <app-input
+            id="phone"
+            placeholder="e.g. 0240000000"
+            type="tel"
+            [control]="customerForm.controls.phone"
+          />
+        </div>
+        <div class="form-field">
+          <label class="form-label" for="phoneNumber">Alternative Phone</label>
+          <app-input
+            id="phoneNumber"
+            placeholder="e.g. 0550000000"
+            type="tel"
+            [control]="customerForm.controls.phoneNumber"
+          />
+        </div>
+        <div class="form-field col-full">
+          <label class="form-label" for="email">Email Address</label>
+          <app-input
+            id="email"
+            placeholder="customer@example.com"
+            type="email"
+            [control]="customerForm.controls.email"
+          />
+        </div>
+      </div>
     </div>
 
-    <div class="form-field">
-      <label for="phone">Phone Number</label>
-      <app-input
-        id="phone"
-        placeholder="Enter phone number"
-        [control]="customerForm.controls.phone"
-      />
+    <p-divider />
+
+    <!-- Location -->
+    <div class="form-section">
+      <div class="section-header">
+        <i class="pi pi-map-marker section-icon"></i>
+        <span class="section-title">Location</span>
+      </div>
+      <div class="form-grid">
+        <div class="form-field">
+          <label class="form-label" for="country">Country</label>
+          <app-select
+            id="country"
+            [control]="customerForm.controls.country"
+            [options]="countryOptions"
+            [placeholder]="'Select country'"
+            [showClear]="true"
+          />
+        </div>
+        <div class="form-field">
+          <label class="form-label" for="region">
+            Region / State
+            @if (!customerForm.controls.country.value) {
+              <span class="hint">(select country first)</span>
+            }
+          </label>
+          <app-select
+            id="region"
+            [control]="customerForm.controls.region"
+            [options]="regionOptions()"
+            [placeholder]="regionOptions().length ? 'Select region' : 'No regions'"
+            [showClear]="true"
+          />
+        </div>
+        <div class="form-field">
+          <label class="form-label" for="city">City / Town</label>
+          @if (cityOptions().length > 0) {
+            <app-select
+              id="select-city"
+              [control]="customerForm.controls.city"
+              [options]="cityOptions()"
+              [placeholder]="'Select city'"
+              [showClear]="true"
+            />
+          } @else {
+            <app-input
+              id="input-city"
+              placeholder="Enter city or town"
+              [control]="customerForm.controls.city"
+            />
+          }
+        </div>
+        <div class="form-field col-full">
+          <label class="form-label" for="address">Street Address</label>
+          <app-input
+            id="address"
+            placeholder="e.g. 123 Main Street"
+            [control]="customerForm.controls.address"
+          />
+        </div>
+      </div>
     </div>
 
-    <div class="form-field">
-      <label for="email">Email Address</label>
-      <app-input
-        id="email"
-        placeholder="Enter customer's email address"
-        type="email"
-        [control]="customerForm.controls.email"
-      />
-    </div>
+    <p-divider />
 
-    <div class="form-field">
-      <label for="address">Address</label>
-      <app-textarea
-        id="address"
-        placeholder="Enter customer's address"
-        [control]="customerForm.controls.address"
-        [rows]="3"
-      />
+    <!-- Notes -->
+    <div class="form-section">
+      <div class="section-header">
+        <i class="pi pi-info-circle section-icon"></i>
+        <span class="section-title">Additional Notes</span>
+      </div>
+      <div class="form-field">
+        <label class="form-label" for="extraInfo">Notes</label>
+        <app-textarea
+          id="extraInfo"
+          placeholder="e.g. Prefers delivery on weekdays..."
+          [control]="customerForm.controls.extraInfo"
+          [rows]="2"
+        />
+      </div>
     </div>
   </form>
 
   <ng-template pTemplate="footer">
-    <app-button
-      label="Cancel"
-      severity="secondary"
-      type="button"
-      [outlined]="true"
-      (click)="close()"
-    />
-    <app-button
-      label="Create Customer"
-      severity="primary"
-      [loading]="loading()"
-      (click)="onSubmit()"
-    />
+    <div class="dialog-footer">
+      <app-button
+        label="Cancel"
+        severity="secondary"
+        type="button"
+        [outlined]="true"
+        (click)="close()"
+      />
+      <app-button
+        icon="pi pi-plus"
+        label="Create Customer"
+        severity="primary"
+        [loading]="loading()"
+        (click)="onSubmit()"
+      />
+    </div>
   </ng-template>
 </p-dialog>

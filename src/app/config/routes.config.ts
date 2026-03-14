@@ -34,10 +34,12 @@ export interface IAppRoutes {
   reports: IRouteConfig;
   settings: IRouteConfig;
   users: IRouteConfig;
+  customers: IRouteConfig;
   sales: IRouteConfig & {
     list: IRouteConfig;
     create: IRouteConfig;
     edit: (id: string) => string;
+    payments: (id: string) => string;
   };
   auditLogs: IRouteConfig & {
     details: (id: string) => string;
@@ -84,6 +86,10 @@ export const APP_ROUTES: IAppRoutes = {
     path: 'users',
     fullPath: '/users',
   },
+  customers: {
+    path: 'customers',
+    fullPath: '/customers',
+  },
   sales: {
     path: 'sales',
     fullPath: '/sales',
@@ -96,6 +102,7 @@ export const APP_ROUTES: IAppRoutes = {
       fullPath: '/sales/create',
     },
     edit: (id: string) => `/sales/${id}`,
+    payments: (id: string) => `/sales/${id}/payments`,
   },
   auditLogs: {
     path: 'audit-logs',

@@ -18,3 +18,6 @@ export * from './pages/audit-log-details/audit-log-details.component';
 
 // Routes
 export * from './routes';
+
+// Utils
+export * from './utils/audit-utils';

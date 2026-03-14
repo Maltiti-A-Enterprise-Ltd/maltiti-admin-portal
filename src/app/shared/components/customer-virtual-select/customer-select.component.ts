@@ -5,7 +5,7 @@
  */
 
 import { ChangeDetectionStrategy, Component, effect, inject, input, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { SelectModule } from 'primeng/select';
 import { Store } from '@ngrx/store';
@@ -18,7 +18,7 @@ import {
 
 @Component({
   selector: 'app-customer-select',
-  imports: [CommonModule, ReactiveFormsModule, SelectModule],
+  imports: [ReactiveFormsModule, SelectModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './customer-select.component.html',
   styleUrls: ['./customer-select.component.scss'],
@@ -70,9 +70,11 @@ export class CustomerSelectComponent implements OnInit {
   private loadCustomers(): void {
     this.store.dispatch(
       loadCustomers({
-        page: this.currentPage,
-        limit: this.pageSize,
-        search: this.currentSearch || undefined,
+        query: {
+          page: this.currentPage,
+          limit: this.pageSize,
+          search: this.currentSearch || undefined,
+        },
       }),
     );
   }

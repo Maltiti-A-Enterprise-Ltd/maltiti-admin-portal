@@ -13,7 +13,7 @@ import {
   OnInit,
   signal,
 } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { Store } from '@ngrx/store';
 
@@ -47,7 +47,6 @@ import { ProductNamePipe } from '@shared/pipes/product-name.pipe';
   selector: 'app-batches-list',
   standalone: true,
   imports: [
-    CommonModule,
     FormsModule,
     ReactiveFormsModule,
     TableModule,

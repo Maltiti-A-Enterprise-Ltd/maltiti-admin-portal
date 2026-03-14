@@ -1,0 +1,24 @@
+.status-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+.form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+.field-error {
+  color: var(--red-500);
+  font-size: 0.75rem;
+}
+.error-banner {
+  background: var(--red-50);
+  border: 1px solid var(--red-300);
+  color: var(--red-700);
+  padding: 0.75rem 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+}

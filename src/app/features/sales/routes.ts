@@ -25,8 +25,13 @@ export const SALES_ROUTES: Routes = [
     loadComponent: () =>
       import('./pages/sales-form/sales-form.component').then((m) => m.SalesFormComponent),
     canActivate: [authGuard],
-    resolve: {
-      sale: saleResolver,
-    },
+    resolve: { sale: saleResolver },
+  },
+  {
+    path: ':id/payments',
+    loadComponent: () =>
+      import('./pages/sale-detail/sale-detail.component').then((m) => m.SaleDetailComponent),
+    canActivate: [authGuard],
+    resolve: { sale: saleResolver },
   },
 ];

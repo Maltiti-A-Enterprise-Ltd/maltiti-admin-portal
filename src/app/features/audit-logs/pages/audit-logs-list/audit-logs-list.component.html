@@ -7,7 +7,7 @@
 
   <!-- Filters Section -->
   <app-audit-filters
-    [initialFilters]="filters()"
+    [initialFilters]="activeFilterParams()"
     (filtersChange)="onFiltersChange($event)"
     (resetFilters)="onFiltersReset()"
   />
@@ -24,7 +24,9 @@
 
     <!-- Error State -->
     @if (error()) {
-      <p-message severity="error" [text]="error()!" />
+      <p-message severity="error">
+        {{error()!}}
+      </p-message>
     }
 
     <!-- Empty State -->
@@ -39,14 +41,13 @@
     <!-- Data Table -->
     @if (hasData() && !isLoading()) {
       <p-table
+        class="p-datatable-striped"
         currentPageReportTemplate="Showing {first} to {last} of {totalRecords} entries"
-        responsiveLayout="scroll"
-        styleClass="p-datatable-striped"
         [paginator]="true"
-        [rows]="filters().limit || 20"
+        [rows]="pageLimit()"
         [rowsPerPageOptions]="[10, 20, 50, 100]"
         [showCurrentPageReport]="true"
-        [totalRecords]="auditLogs().length"
+        [totalRecords]="totalRecords()"
         [value]="auditLogs()"
         (onPage)="onPageChange($event)"
       >
@@ -54,14 +55,14 @@
         <ng-template pTemplate="header">
           <tr>
             @for (col of columns(); track col.field) {
-              <th [pSortableColumn]="col.sortable ? col.field : ''">
+              <th id="sortIcon" [pSortableColumn]="col.sortable ? col.field : ''">
                 {{ col.header }}
                 @if (col.sortable) {
                   <p-sortIcon [field]="col.field" />
                 }
               </th>
             }
-            <th style="width: 80px">Actions</th>
+            <th id="actions" style="width: 80px">Actions</th>
           </tr>
         </ng-template>
 

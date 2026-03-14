@@ -8,6 +8,7 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
+  DestroyRef,
   inject,
   OnInit,
   signal,
@@ -21,8 +22,12 @@ import { TagModule } from 'primeng/tag';
 import { DividerModule } from 'primeng/divider';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { MessageModule } from 'primeng/message';
-import { AuditLogService } from '@features/audit-logs';
-import { AuditActionType, AuditEntityType, IAuditLog } from '@features/audit-logs';
+import {
+  AuditEntityType,
+  AuditLogService,
+  getActionSeverity,
+  IAuditLog,
+} from '@features/audit-logs';
 import { AlertSeverity } from '@app/dashboard/models/dashboard.model';
 import { Severity } from '@shared/models/shared.model';
 
@@ -43,6 +48,7 @@ import { Severity } from '@shared/models/shared.model';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AuditLogDetailsComponent implements OnInit {
+  private readonly destroyRef = inject(DestroyRef);
   private readonly auditLogService = inject(AuditLogService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
@@ -54,10 +60,6 @@ export class AuditLogDetailsComponent implements OnInit {
   );
   public readonly isLoading = signal<boolean>(false);
   public readonly error = signal<string | null>(null);
-
-  constructor() {
-    takeUntilDestroyed();
-  }
 
   public ngOnInit(): void {
     const id = this.route.snapshot.paramMap.get('id');
@@ -77,10 +79,10 @@ export class AuditLogDetailsComponent implements OnInit {
 
     this.auditLogService
       .getAuditLogById(id)
-      .pipe(takeUntilDestroyed())
+      .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
-        next: (log: IAuditLog) => {
-          this.auditLog.set(log);
+        next: ({ data }) => {
+          this.auditLog.set(data);
           this.isLoading.set(false);
         },
         error: (err: { error?: { message?: string } }) => {
@@ -100,22 +102,7 @@ export class AuditLogDetailsComponent implements OnInit {
   /**
    * Get severity class for action type tag
    */
-  public getActionSeverity(actionType: AuditActionType): Severity {
-    const actionMap: Record<string, Severity> = {
-      [AuditActionType.CREATE]: 'success',
-      [AuditActionType.UPDATE]: 'info',
-      [AuditActionType.DELETE]: 'danger',
-      [AuditActionType.LOGIN]: 'success',
-      [AuditActionType.LOGOUT]: 'secondary',
-      [AuditActionType.LOGIN_FAILED]: 'danger',
-      [AuditActionType.PASSWORD_CHANGED]: 'warn',
-      [AuditActionType.PASSWORD_RESET]: 'warn',
-      [AuditActionType.ROLE_CHANGED]: 'warn',
-      [AuditActionType.STATUS_CHANGED]: 'info',
-    };
-
-    return actionMap[actionType] || 'secondary';
-  }
+  public getActionSeverity = getActionSeverity;
 
   /**
    * Get severity class for entity type tag

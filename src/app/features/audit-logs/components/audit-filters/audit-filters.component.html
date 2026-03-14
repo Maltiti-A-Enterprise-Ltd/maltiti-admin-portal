@@ -1,4 +1,21 @@
 <div class="audit-filters">
+  <!-- Filter Header -->
+  <div class="filters-header">
+    <div class="filters-title">
+      <i class="pi pi-filter"></i>
+      <span>Filters</span>
+      @if (hasActiveFilters()) {
+        <span
+          class="active-badge"
+          pTooltip="{{ activeFilterCount() }} filter(s) currently applied"
+          tooltipPosition="right"
+        >
+          {{ activeFilterCount() }}
+        </span>
+      }
+    </div>
+  </div>
+
   <form class="filters-form" [formGroup]="filterForm">
     <div class="filters-grid">
       <!-- Date Range Filter -->
@@ -61,15 +78,20 @@
     <!-- Action Buttons -->
     <div class="filters-actions">
       <p-button
-        icon="pi pi-refresh"
-        label="Reset"
+        icon="pi pi-times"
+        label="Clear Filters"
         severity="secondary"
+        tooltipPosition="top"
+        [disabled]="!hasActiveFilters()"
         [outlined]="true"
+        [pTooltip]="hasActiveFilters() ? 'Clear all ' + activeFilterCount() + ' active filter(s)' : 'No active filters'"
         (onClick)="onResetFilters()"
       />
       <p-button
-        icon="pi pi-filter"
+        icon="pi pi-check"
         label="Apply Filters"
+        pTooltip="Apply the selected filters"
+        tooltipPosition="top"
         (onClick)="onApplyFilters()"
       />
     </div>

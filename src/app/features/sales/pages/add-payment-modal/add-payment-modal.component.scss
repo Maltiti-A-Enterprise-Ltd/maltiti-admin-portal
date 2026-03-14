@@ -1,0 +1,62 @@
+.payment-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  padding: 0.5rem 0;
+}
+
+.form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+
+  label {
+    font-weight: 500;
+    font-size: 0.875rem;
+    color: var(--text-color);
+
+    .required {
+      color: var(--red-500);
+      margin-left: 2px;
+    }
+  }
+
+  p-inputNumber,
+  p-select,
+  input,
+  textarea {
+    width: 100%;
+  }
+}
+
+.readonly-value {
+  font-size: 0.875rem;
+  color: var(--text-color-secondary);
+  padding: 0.5rem 0;
+}
+
+.field-error {
+  color: var(--red-500);
+  font-size: 0.75rem;
+}
+
+.field-warning {
+  color: var(--orange-600);
+  font-size: 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.error-banner {
+  background: var(--red-50);
+  border: 1px solid var(--red-300);
+  border-radius: var(--border-radius);
+  color: var(--red-700);
+  padding: 0.75rem 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+}
+

@@ -23,11 +23,11 @@ import { CardModule } from 'primeng/card';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { MessageModule } from 'primeng/message';
 import { TooltipModule } from 'primeng/tooltip';
-import { AuditLogService } from '@features/audit-logs';
-import { AuditFiltersComponent } from '@features/audit-logs';
 import {
-  AuditActionType,
   AuditEntityType,
+  AuditFiltersComponent,
+  AuditLogService,
+  getActionSeverity,
   IAuditLog,
   IAuditLogFilters,
 } from '@features/audit-logs';
@@ -38,6 +38,9 @@ interface TableColumn {
   header: string;
   sortable?: boolean;
 }
+
+/** Keys that belong to pagination — never passed back to the filter component */
+const PAGINATION_KEYS: (keyof IAuditLogFilters)[] = ['page', 'limit', 'sortOrder'];
 
 @Component({
   selector: 'app-audit-logs-list',
@@ -66,10 +69,29 @@ export class AuditLogsListComponent implements OnInit {
   public readonly auditLogs = signal<IAuditLog[]>([]);
   public readonly isLoading = signal<boolean>(false);
   public readonly error = signal<string | null>(null);
-  public readonly filters = signal<IAuditLogFilters>({
+  public readonly totalRecords = signal<number>(0);
+
+  /** Full query params (filters + pagination) sent to the API */
+  private readonly queryParams = signal<IAuditLogFilters>({
     page: 1,
     limit: 20,
     sortOrder: 'DESC',
+  });
+
+  /**
+   * Filter-only params (no pagination) — passed back to the filter component
+   * so it never gets confused by page/limit/sortOrder changes.
+   */
+  public readonly activeFilterParams = computed<IAuditLogFilters>(() => {
+    const params = this.queryParams();
+    const filterOnly: IAuditLogFilters = {};
+    (Object.keys(params) as (keyof IAuditLogFilters)[]).forEach((key) => {
+      if (!PAGINATION_KEYS.includes(key)) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (filterOnly as any)[key] = params[key];
+      }
+    });
+    return filterOnly;
   });
 
   // Table configuration
@@ -85,24 +107,26 @@ export class AuditLogsListComponent implements OnInit {
   // Computed properties
   public readonly hasData = computed(() => this.auditLogs().length > 0);
   public readonly isEmpty = computed(() => !this.isLoading() && !this.hasData() && !this.error());
+  public readonly pageLimit = computed(() => this.queryParams().limit ?? 20);
 
   public ngOnInit(): void {
     this.loadAuditLogs();
   }
 
   /**
-   * Load audit logs with current filters
+   * Load audit logs with current query params
    */
   public loadAuditLogs(): void {
     this.isLoading.set(true);
     this.error.set(null);
 
     this.auditLogService
-      .getAuditLogs(this.filters())
+      .getAuditLogs(this.queryParams())
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
-        next: (logs) => {
-          this.auditLogs.set(logs);
+        next: ({ data }) => {
+          this.auditLogs.set(data.items);
+          this.totalRecords.set(data.totalItems);
           this.isLoading.set(false);
         },
         error: (err) => {
@@ -113,22 +137,31 @@ export class AuditLogsListComponent implements OnInit {
   }
 
   /**
-   * Handle filter changes
+   * Handle filter changes from the filter component.
+   * Replaces all filter keys (not pagination) with the new filter values.
    */
   public onFiltersChange(newFilters: IAuditLogFilters): void {
-    this.filters.update((current) => ({
-      ...current,
-      ...newFilters,
-      page: 1, // Reset to first page on filter change
-    }));
+    this.queryParams.update((current) => {
+      // Start from a clean slate of pagination-only params
+      const pagination: IAuditLogFilters = {};
+      PAGINATION_KEYS.forEach((key) => {
+        if (current[key] !== undefined) {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          (pagination as any)[key] = current[key];
+        }
+      });
+
+      // Merge clean pagination + new filter values, resetting to page 1
+      return { ...pagination, ...newFilters, page: 1 };
+    });
     this.loadAuditLogs();
   }
 
   /**
-   * Handle filter reset
+   * Handle filter reset — go back to pagination-only defaults
    */
   public onFiltersReset(): void {
-    this.filters.set({
+    this.queryParams.set({
       page: 1,
       limit: 20,
       sortOrder: 'DESC',
@@ -148,7 +181,7 @@ export class AuditLogsListComponent implements OnInit {
    */
   public onPageChange(event: { first: number; rows: number }): void {
     const newPage = Math.floor(event.first / event.rows) + 1;
-    this.filters.update((current) => ({
+    this.queryParams.update((current) => ({
       ...current,
       page: newPage,
       limit: event.rows,
@@ -159,22 +192,7 @@ export class AuditLogsListComponent implements OnInit {
   /**
    * Get severity class for action type tag
    */
-  public getActionSeverity(actionType: AuditActionType): Severity {
-    const actionMap: Record<string, Severity> = {
-      [AuditActionType.CREATE]: 'success',
-      [AuditActionType.UPDATE]: 'info',
-      [AuditActionType.DELETE]: 'danger',
-      [AuditActionType.LOGIN]: 'success',
-      [AuditActionType.LOGOUT]: 'secondary',
-      [AuditActionType.LOGIN_FAILED]: 'danger',
-      [AuditActionType.PASSWORD_CHANGED]: 'warn',
-      [AuditActionType.PASSWORD_RESET]: 'warn',
-      [AuditActionType.ROLE_CHANGED]: 'warn',
-      [AuditActionType.STATUS_CHANGED]: 'info',
-    };
-
-    return actionMap[actionType] || 'secondary';
-  }
+  public getActionSeverity = getActionSeverity;
 
   /**
    * Get severity class for entity type tag

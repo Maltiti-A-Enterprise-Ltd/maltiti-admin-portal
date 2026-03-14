@@ -9,6 +9,7 @@ import { inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '@environments/environment';
 import { IAuditLog, IAuditLogFilters, IAuditStatistics } from '@features/audit-logs';
+import { IPaginationResponse, IResponse } from '@models/response.model';
 
 @Injectable({
   providedIn: 'root',
@@ -22,40 +23,46 @@ export class AuditLogService {
    * Endpoint: GET /audits
    * Operation ID: AuditController_findAll
    */
-  public getAuditLogs(filters?: IAuditLogFilters): Observable<IAuditLog[]> {
+  public getAuditLogs(filters?: IAuditLogFilters): Observable<IPaginationResponse<IAuditLog>> {
+    const params = this.buildAuditLogParams(filters);
+    return this.http.get<IPaginationResponse<IAuditLog>>(this.baseUrl, { params });
+  }
+
+  /**
+   * Build HttpParams from audit log filters
+   */
+  private buildAuditLogParams(filters?: IAuditLogFilters): HttpParams {
     let params = new HttpParams();
 
-    if (filters) {
-      if (filters.from) {
-        params = params.set('from', filters.from);
-      }
-      if (filters.to) {
-        params = params.set('to', filters.to);
-      }
-      if (filters.actionType) {
-        params = params.set('actionType', filters.actionType);
-      }
-      if (filters.entityType) {
-        params = params.set('entityType', filters.entityType);
-      }
-      if (filters.userId) {
-        params = params.set('userId', filters.userId);
-      }
-      if (filters.role) {
-        params = params.set('role', filters.role);
-      }
-      if (filters.page !== undefined) {
-        params = params.set('page', filters.page.toString());
-      }
-      if (filters.limit !== undefined) {
-        params = params.set('limit', filters.limit.toString());
-      }
-      if (filters.sortOrder) {
-        params = params.set('sortOrder', filters.sortOrder);
+    if (!filters) {
+      return params;
+    }
+
+    const mappings: {
+      key: keyof IAuditLogFilters;
+      param: string;
+      transform?: (value: unknown) => string;
+    }[] = [
+      { key: 'from', param: 'from' },
+      { key: 'to', param: 'to' },
+      { key: 'actionType', param: 'actionType' },
+      { key: 'entityType', param: 'entityType' },
+      { key: 'userId', param: 'userId' },
+      { key: 'role', param: 'role' },
+      { key: 'page', param: 'page', transform: (v) => (v as number).toString() },
+      { key: 'limit', param: 'limit', transform: (v) => (v as number).toString() },
+      { key: 'sortOrder', param: 'sortOrder' },
+    ];
+
+    for (const mapping of mappings) {
+      const value = filters[mapping.key];
+      if (!!value && (typeof value !== 'string' || value)) {
+        const paramValue = mapping.transform ? mapping.transform(value) : (value as string);
+        params = params.set(mapping.param, paramValue);
       }
     }
 
-    return this.http.get<IAuditLog[]>(this.baseUrl, { params });
+    return params;
   }
 
   /**
@@ -63,8 +70,8 @@ export class AuditLogService {
    * Endpoint: GET /audits/{id}
    * Operation ID: AuditController_findOne
    */
-  public getAuditLogById(id: string): Observable<IAuditLog> {
-    return this.http.get<IAuditLog>(`${this.baseUrl}/${id}`);
+  public getAuditLogById(id: string): Observable<IResponse<IAuditLog>> {
+    return this.http.get<IResponse<IAuditLog>>(`${this.baseUrl}/${id}`);
   }
 
   /**

@@ -8,7 +8,7 @@
       [class]="styleClass()"
       [formControl]="control()"
       [id]="id()"
-      [invalid]="this.control().touched && this.control().invalid"
+      [invalid]="control().touched && control().invalid"
       [maxSelectedLabels]="3"
       [optionLabel]="optionLabel()"
       [optionValue]="optionValue()"
@@ -21,16 +21,15 @@
       [filter]="true"
       [formControl]="control()"
       [id]="id()"
-      [invalid]="this.control().touched && this.control().invalid"
+      [invalid]="control().touched && control().invalid"
       [optionLabel]="optionLabel()"
       [optionValue]="optionValue()"
       [options]="options()"
       [placeholder]="placeholder()"
       [showClear]="showClear()"
-
     />
   }
-  @if (this.control().touched && this.control().invalid) {
+  @if (control().touched && control().invalid) {
     <p-message severity="error" size="small" variant="simple">{{ errorMessage() }}</p-message>
   }
 </div>

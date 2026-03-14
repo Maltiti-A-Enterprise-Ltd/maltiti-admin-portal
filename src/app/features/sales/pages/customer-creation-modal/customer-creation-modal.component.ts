@@ -1,133 +1,144 @@
 /**
  * Customer Creation Modal Component
- * Modal dialog for creating new customers during sale creation
- * Uses reactive forms with validation and NgRx store
+ * Used during sale creation to quickly create a new customer
+ * Cascading country → region → city selects
  */
-
-import { ChangeDetectionStrategy, Component, effect, inject, output, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  DestroyRef,
+  inject,
+  OnInit,
+  output,
+  signal,
+} from '@angular/core';
+import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Store } from '@ngrx/store';
 import { Actions, ofType } from '@ngrx/effects';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
-// PrimeNG Imports
+// PrimeNG
 import { ButtonModule } from 'primeng/button';
-import { InputTextModule } from 'primeng/inputtext';
 import { DialogModule } from 'primeng/dialog';
-import { MessageService } from 'primeng/api';
+import { DividerModule } from 'primeng/divider';
 
-// Local imports
+// Local
 import { ButtonComponent } from '@shared/components/button/button.component';
 import { InputComponent } from '@shared/components/input/input.component';
 import { TextareaComponent } from '@shared/components/textarea/textarea.component';
+import { SelectComponent } from '@shared/components/select/select.component';
+import { GeographyService, GeoOption } from '@shared/services/geography.service';
 import { CreateCustomerDto, Customer } from '@models/customer.model';
 import { createCustomer, createCustomerSuccess } from '../../store/customers.actions';
-import { selectError, selectLoading } from '../../store/customers.selectors';
+import { selectLoading } from '../../store/customers.selectors';
 
 @Component({
   selector: 'app-customer-creation-modal',
-  standalone: true,
   templateUrl: './customer-creation-modal.component.html',
   styleUrls: ['./customer-creation-modal.component.scss'],
   imports: [
-    CommonModule,
     ReactiveFormsModule,
     ButtonModule,
-    InputTextModule,
     DialogModule,
+    DividerModule,
     ButtonComponent,
     InputComponent,
     TextareaComponent,
+    SelectComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  providers: [MessageService],
 })
-export class CustomerCreationModalComponent {
+export class CustomerCreationModalComponent implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly store = inject(Store);
   private readonly actions$ = inject(Actions);
-  private readonly messageService = inject(MessageService);
+  private readonly destroyRef = inject(DestroyRef);
+  private readonly geoService = inject(GeographyService);
 
-  // Outputs
   public readonly customerCreated = output<Customer>();
-
-  // Signals from store
   public readonly loading = this.store.selectSignal(selectLoading);
-  public readonly error = this.store.selectSignal(selectError);
+  // eslint-disable-next-line @angular-eslint/prefer-signals
+  public visible = signal(false);
 
-  // State
-  public readonly visible = signal(false);
+  // Geo options
+  public readonly countryOptions = this.geoService.getCountries();
+  public readonly regionOptions = signal<GeoOption[]>([]);
+  public readonly cityOptions = signal<GeoOption[]>([]);
 
-  // Form
-  public customerForm = this.fb.group({
+  public readonly customerForm = this.fb.group({
     name: ['', [Validators.required, Validators.minLength(1), Validators.maxLength(200)]],
     phone: [''],
+    phoneNumber: [''],
     email: ['', [Validators.email]],
+    country: [''],
+    region: [''],
+    city: [''],
     address: [''],
+    extraInfo: [''],
   });
 
-  constructor() {
-    // Watch for successful customer creation
+  public ngOnInit(): void {
+    // Cascade: country → states/regions
+    this.customerForm.controls.country.valueChanges
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((country) => {
+        this.customerForm.controls.region.reset('');
+        this.customerForm.controls.city.reset('');
+        this.cityOptions.set([]);
+        this.regionOptions.set(country ? this.geoService.getStates(country) : []);
+      });
+
+    // Cascade: region → cities
+    this.customerForm.controls.region.valueChanges
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((region) => {
+        this.customerForm.controls.city.reset('');
+        const country = this.customerForm.controls.country.value ?? '';
+        this.cityOptions.set(region && country ? this.geoService.getCities(country, region) : []);
+      });
+
+    // Close on success
     this.actions$
-      .pipe(ofType(createCustomerSuccess), takeUntilDestroyed())
+      .pipe(ofType(createCustomerSuccess), takeUntilDestroyed(this.destroyRef))
       .subscribe(({ customer }) => {
-        this.messageService.add({
-          severity: 'success',
-          summary: 'Success',
-          detail: 'Customer created successfully',
-        });
         this.customerCreated.emit(customer);
         this.close();
       });
-
-    // Watch for errors and show messages
-    effect(() => {
-      const errorMessage = this.error();
-      if (errorMessage) {
-        this.messageService.add({
-          severity: 'error',
-          summary: 'Error',
-          detail: errorMessage,
-        });
-      }
-    });
   }
 
   public open(): void {
-    this.visible.set(true);
     this.customerForm.reset();
+    // Default to Ghana
+    this.customerForm.controls.country.setValue('Ghana', { emitEvent: false });
+    this.regionOptions.set(this.geoService.getStates('Ghana'));
+    this.cityOptions.set([]);
+    this.visible.set(true);
   }
 
   public close(): void {
     this.visible.set(false);
     this.customerForm.reset();
+    this.regionOptions.set([]);
+    this.cityOptions.set([]);
   }
 
   public onSubmit(): void {
-    if (this.customerForm.valid) {
-      const formValue = this.customerForm.value;
-      const customerData: CreateCustomerDto = {
-        name: formValue.name || '',
-        phone: formValue.phone || undefined,
-        email: formValue.email || undefined,
-        address: formValue.address || undefined,
-      };
-      this.store.dispatch(createCustomer({ customerData }));
-    } else {
-      this.markFormGroupTouched(this.customerForm);
-      this.messageService.add({
-        severity: 'error',
-        summary: 'Error',
-        detail: 'Please fill in all required fields',
-      });
+    if (this.customerForm.invalid) {
+      this.customerForm.markAllAsTouched();
+      return;
     }
-  }
-
-  private markFormGroupTouched(formGroup: FormGroup): void {
-    Object.keys(formGroup.controls).forEach((key) => {
-      const control = formGroup.get(key);
-      control?.markAsTouched();
-    });
+    const v = this.customerForm.value;
+    const customerData: CreateCustomerDto = {
+      name: v.name ?? '',
+      phone: v.phone || undefined,
+      phoneNumber: v.phoneNumber || undefined,
+      email: v.email || undefined,
+      country: v.country || undefined,
+      region: v.region || undefined,
+      city: v.city || undefined,
+      address: v.address || undefined,
+      extraInfo: v.extraInfo || undefined,
+    };
+    this.store.dispatch(createCustomer({ customerData }));
   }
 }

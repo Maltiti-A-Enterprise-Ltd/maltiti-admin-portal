@@ -5,7 +5,7 @@
  */
 
 import { ChangeDetectionStrategy, Component, inject, output, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { take } from 'rxjs';
 
@@ -27,7 +27,6 @@ import { GenerateWaybillDto } from '../../models/sale.model';
   templateUrl: './waybill-generation-modal.component.html',
   styleUrls: ['./waybill-generation-modal.component.scss'],
   imports: [
-    CommonModule,
     ReactiveFormsModule,
     DialogModule,
     InputTextModule,
@@ -133,12 +132,12 @@ export class WaybillGenerationModalComponent {
         .subscribe({
           next: (blob: Blob) => {
             // Create a download link for the PDF
-            const url = window.URL.createObjectURL(blob);
+            const url = globalThis.URL.createObjectURL(blob);
             const link = document.createElement('a');
             link.href = url;
             link.download = `waybill-${saleId}-${Date.now()}.pdf`;
             link.click();
-            window.URL.revokeObjectURL(url);
+            globalThis.URL.revokeObjectURL(url);
 
             this.messageService.add({
               severity: 'success',

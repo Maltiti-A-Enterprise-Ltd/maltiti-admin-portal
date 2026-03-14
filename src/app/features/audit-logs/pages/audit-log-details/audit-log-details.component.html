@@ -10,7 +10,7 @@
   <!-- Error State -->
   @if (error()) {
     <p-card>
-      <p-message severity="error" [text]="error()!" />
+      <p-message severity="error" >{{error()}}</p-message>
       <div class="error-actions">
         <p-button
           icon="pi pi-arrow-left"
@@ -39,7 +39,7 @@
       </div>
 
       <!-- Main Information Card -->
-      <p-card styleClass="main-info-card">
+      <p-card class="main-info-card">
         <ng-template pTemplate="header">
           <div class="card-header">
             <h2>General Information</h2>
@@ -92,7 +92,7 @@
       </p-card>
 
       <!-- User Information Card -->
-      <p-card styleClass="user-info-card">
+      <p-card class="user-info-card">
         <ng-template pTemplate="header">
           <div class="card-header">
             <h2>User Information</h2>
@@ -126,7 +126,7 @@
       </p-card>
 
       <!-- Technical Information Card -->
-      <p-card styleClass="technical-info-card">
+      <p-card class="technical-info-card">
         <ng-template pTemplate="header">
           <div class="card-header">
             <h2>Technical Information</h2>
@@ -186,7 +186,7 @@
           }
 
           <!-- Full Metadata -->
-          <div class="full-metadata">
+          <div class="full-metadata">W
             <h3>Raw Metadata</h3>
             <pre class="json-display">{{ formatJson(auditLog()!.metadata) }}</pre>
           </div>

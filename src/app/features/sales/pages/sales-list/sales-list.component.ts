@@ -13,7 +13,7 @@ import {
   signal,
   viewChild,
 } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, DecimalPipe } from '@angular/common';
 import { Router } from '@angular/router';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { first } from 'rxjs';
@@ -28,6 +28,7 @@ import { ConfirmationService, MenuItem, MessageService } from 'primeng/api';
 import { TooltipModule } from 'primeng/tooltip';
 import { MenuModule } from 'primeng/menu';
 import { InputTextModule } from 'primeng/inputtext';
+import { ProgressBarModule } from 'primeng/progressbar';
 
 // Local imports
 import { Store } from '@ngrx/store';
@@ -54,6 +55,12 @@ import { WaybillGenerationModalComponent } from '../waybill-generation-modal/way
 import { DeliveryCostUpdateModalComponent } from '../delivery-cost-update-modal/delivery-cost-update-modal.component';
 import { CancelSaleByAdminModalComponent } from '../cancel-sale-by-admin-modal/cancel-sale-by-admin-modal.component';
 import { Role } from '@models/user.model';
+import {
+  getNextStatuses,
+  getPaymentStatusSeverity,
+  getStatusLabel,
+  getStatusSeverity,
+} from '@shared/utils/sales.utils';
 
 @Component({
   selector: 'app-sales-list',
@@ -71,6 +78,8 @@ import { Role } from '@models/user.model';
     TooltipModule,
     MenuModule,
     InputTextModule,
+    ProgressBarModule,
+    DecimalPipe,
     ButtonComponent,
     SelectComponent,
     ReceiptGenerationModalComponent,
@@ -99,6 +108,8 @@ export class SalesListComponent implements OnInit {
   public readonly totalPages = this.store.selectSignal(selectTotalPages);
   public readonly userRole = this.store.selectSignal(selectUserRole);
   public readonly menuItems = signal<MenuItem[]>([]);
+
+  protected readonly lineItemsTotalPrice = lineItemsTotalPrice;
 
   // ViewChild references
   public readonly receiptModal = viewChild.required(ReceiptGenerationModalComponent);
@@ -186,6 +197,10 @@ export class SalesListComponent implements OnInit {
     void this.router.navigate([APP_ROUTES.sales.edit(sale.id)]);
   }
 
+  public onViewPayments(sale: Sale): void {
+    void this.router.navigate([APP_ROUTES.sales.payments(sale.id)]);
+  }
+
   public onUpdateStatus(sale: Sale, newStatus: OrderStatus): void {
     this.confirmationService.confirm({
       message: `Are you sure you want to change the status to ${newStatus.replace('_', ' ')}?`,
@@ -248,53 +263,12 @@ export class SalesListComponent implements OnInit {
     this.loadSales();
   }
 
-  public getStatusSeverity(status: OrderStatus): 'success' | 'info' | 'warn' | 'danger' {
-    switch (status) {
-      case OrderStatus.DELIVERED:
-        return 'success';
-      case OrderStatus.IN_TRANSIT:
-      case OrderStatus.PACKAGING:
-        return 'info';
-      case OrderStatus.PENDING:
-        return 'warn';
-      default:
-        return 'info';
+  public getPaymentProgress(sale: Sale): number {
+    const totalPaid = sale.totalPaid;
+    if (!sale.total || sale.total <= 0 || !totalPaid) {
+      return 0;
     }
-  }
-
-  public getStatusLabel(status: OrderStatus): string {
-    return status.replace('_', ' ').replaceAll(/\b\w/g, (l) => l.toUpperCase());
-  }
-
-  public getPaymentStatusSeverity(status: PaymentStatus): 'success' | 'info' | 'warn' | 'danger' {
-    switch (status) {
-      case PaymentStatus.PAID:
-        return 'success';
-      case PaymentStatus.PENDING_PAYMENT:
-        return 'warn';
-      case PaymentStatus.INVOICE_REQUESTED:
-        return 'danger';
-      case PaymentStatus.REFUNDED:
-        return 'info';
-      default:
-        return 'info';
-    }
-  }
-
-  public getPaymentStatusLabel(status: PaymentStatus): string {
-    return status.replace('_', ' ').replaceAll(/\b\w/g, (l) => l.toUpperCase());
-  }
-
-  public getNextStatuses(currentStatus: OrderStatus): OrderStatus[] {
-    // Define allowed transitions
-    const transitions: Record<OrderStatus, OrderStatus[]> = {
-      [OrderStatus.PENDING]: [OrderStatus.PACKAGING],
-      [OrderStatus.PACKAGING]: [OrderStatus.IN_TRANSIT],
-      [OrderStatus.IN_TRANSIT]: [OrderStatus.DELIVERED],
-      [OrderStatus.DELIVERED]: [],
-      [OrderStatus.CANCELLED]: [],
-    };
-    return transitions[currentStatus] || [];
+    return Math.min(100, Math.round((totalPaid / sale.total) * 100));
   }
 
   public getActionMenuItems(sale: Sale): void {
@@ -303,7 +277,7 @@ export class SalesListComponent implements OnInit {
     const canCancel = isAdmin && sale.orderStatus !== OrderStatus.CANCELLED;
 
     // Add status change options
-    const nextStatuses = this.getNextStatuses(sale.orderStatus);
+    const nextStatuses = getNextStatuses(sale.orderStatus);
     const statusItems: MenuItem[] =
       nextStatuses.length > 0
         ? [
@@ -312,7 +286,7 @@ export class SalesListComponent implements OnInit {
               label: 'Change Status',
               icon: 'pi pi-refresh',
               items: nextStatuses.map((status) => ({
-                label: this.getStatusLabel(status),
+                label: getStatusLabel(status),
                 command: (): void => this.onUpdateStatus(sale, status),
               })),
             },
@@ -321,9 +295,14 @@ export class SalesListComponent implements OnInit {
 
     const actionItems: MenuItem[] = [
       {
-        label: 'View',
-        icon: 'pi pi-eye',
+        label: 'View / Edit Sale',
+        icon: 'pi pi-pencil',
         command: (): void => this.onEditSale(sale),
+      },
+      {
+        label: 'View Payments',
+        icon: 'pi pi-credit-card',
+        command: (): void => this.onViewPayments(sale),
       },
       {
         label: 'Generate Invoice',
@@ -394,5 +373,7 @@ export class SalesListComponent implements OnInit {
     );
   }
 
-  protected readonly lineItemsTotalPrice = lineItemsTotalPrice;
+  protected readonly getPaymentStatusSeverity = getPaymentStatusSeverity;
+  protected readonly getStatusLabel = getStatusLabel;
+  protected readonly getStatusSeverity = getStatusSeverity;
 }

@@ -1,0 +1,337 @@
+<div class="customers-list-container">
+  <!-- Page Header -->
+  <div class="page-header">
+    <div class="page-title">
+      <h1>Customers</h1>
+      <p class="page-description">Manage and view all customers in the system</p>
+    </div>
+    <div class="page-actions">
+      <app-button
+        icon="pi pi-plus"
+        label="Add Customer"
+        severity="primary"
+        (click)="onCreateCustomer()"
+      />
+    </div>
+  </div>
+
+  <!-- Filters Section -->
+  <div class="filters-section">
+    <!-- Primary filter row -->
+    <div class="filters-row">
+      <!-- Search -->
+      <app-input
+        class="search-input"
+        [control]="searchControl"
+        [id]="'search'"
+        [placeholder]="'Search by name, email or phone...'"
+        [showPrefixAddon]="true"
+        [type]="'search'"
+        [useInputGroup]="true"
+      >
+        <i class="pi pi-search" prefixAddon></i>
+      </app-input>
+
+      <!-- Sort By -->
+      <app-select
+        id="sortBy"
+        [control]="sortByControl"
+        [options]="sortByOptions"
+        [placeholder]="'Sort By'"
+        [styleClass]="'filter-dropdown'"
+      />
+
+      <!-- Sort Order -->
+      <app-select
+        id="sortOrder"
+        [control]="sortOrderControl"
+        [options]="sortOrderOptions"
+        [placeholder]="'Order'"
+        [styleClass]="'filter-dropdown sort-order-dropdown'"
+      />
+
+      <!-- Toggle advanced filters -->
+      <app-button
+        severity="secondary"
+        [icon]="showAdvancedFilters() ? 'pi pi-chevron-up' : 'pi pi-sliders-h'"
+        [label]="showAdvancedFilters() ? 'Hide Filters' : (activeFiltersCount() > 0 ? 'Filters (' + activeFiltersCount() + ')' : 'More Filters')"
+        [outlined]="true"
+        (click)="toggleAdvancedFilters()"
+      />
+
+      <!-- Clear all -->
+      @if (activeFiltersCount() > 0) {
+        <app-button
+          icon="pi pi-filter-slash"
+          label="Clear All"
+          severity="danger"
+          [outlined]="true"
+          (click)="clearFilters()"
+        />
+      }
+    </div>
+
+    <!-- Advanced filter panel (expandable) -->
+    @if (showAdvancedFilters()) {
+      <div class="advanced-filters">
+        <div class="advanced-filters-grid">
+          <!-- Country -->
+          <div class="filter-field">
+            <app-select
+              id="filterCountry"
+              label="Country"
+              [control]="countryControl"
+              [options]="countryOptions"
+              [placeholder]="'All Countries'"
+              [showClear]="true"
+            />
+          </div>
+
+          <!-- Region / State (cascades from country) -->
+          <div class="filter-field">
+            <app-select
+              id="filterRegion"
+              [control]="regionControl"
+              [label]="'Region / State' + countryControl.value ? '' : '(select country first)'"
+              [options]="regionOptions()"
+              [placeholder]="regionOptions().length ? 'All Regions' : 'No regions'"
+              [showClear]="true"
+            />
+          </div>
+
+          <!-- City (cascades from region, or free-text) -->
+          <div class="filter-field">
+            @if (cityOptions().length > 0) {
+              <app-select
+                id="filterCity"
+                label="City"
+                [control]="cityControl"
+                [options]="cityOptions()"
+                [placeholder]="'All Cities'"
+                [showClear]="true"
+              />
+            } @else {
+              <app-input
+                id="filterCityText"
+                [control]="cityControl"
+                [placeholder]="'Filter by city...'"
+              />
+            }
+          </div>
+
+          <!-- Start Date -->
+          <div class="filter-field">
+            <label class="filter-label" for="filterStartDate">
+              <i class="pi pi-calendar"></i> Joined From
+            </label>
+            <p-date-picker
+              class="w-full"
+              dateFormat="dd M yy"
+              id="filterStartDate"
+              placeholder="Start date"
+              [formControl]="startDateControl"
+              [maxDate]="endDateControl.value ?? undefined"
+              [showButtonBar]="true"
+              [showClear]="true"
+            />
+          </div>
+
+          <!-- End Date -->
+          <div class="filter-field">
+            <label class="filter-label" for="filterEndDate">
+              <i class="pi pi-calendar-times"></i> Joined To
+            </label>
+            <p-date-picker
+              class="w-full"
+              dateFormat="dd M yy"
+              id="filterEndDate"
+              placeholder="End date"
+              [formControl]="endDateControl"
+              [minDate]="startDateControl.value ?? undefined"
+              [showButtonBar]="true"
+              [showClear]="true"
+            />
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- Active filter summary bar -->
+    @if (activeFiltersCount() > 0) {
+      <div class="filter-summary">
+        <i class="pi pi-filter"></i>
+        <span>
+          {{ activeFiltersCount() }} active filter{{ activeFiltersCount() > 1 ? 's' : '' }}
+        </span>
+        &mdash;
+        {{ totalItems() }} result{{ totalItems() !== 1 ? 's' : '' }} found
+      </div>
+    }
+  </div>
+
+  <!-- Table -->
+  <div class="table-card">
+    <p-table
+      currentPageReportTemplate="Showing {first} to {last} of {totalRecords} customers"
+      [lazy]="true"
+      [loading]="loading()"
+      [paginator]="true"
+      [rows]="limit()"
+      [rowsPerPageOptions]="[10, 20, 50]"
+      [showCurrentPageReport]="true"
+      [totalRecords]="totalItems()"
+      [value]="customers()"
+      (onPage)="onPageChange($event)"
+    >
+      <!-- Header -->
+      <ng-template #header>
+        <tr>
+          <th class="th-index" id="#" style="width: 3rem">#</th>
+          <th id="customer">Customer</th>
+          <th id="contact">Contact</th>
+          <th id="location">Location</th>
+          <th id="address">Address</th>
+          <th id="joined">Joined</th>
+          <th id="actions" style="width: 110px">Actions</th>
+        </tr>
+      </ng-template>
+
+      <!-- Body -->
+      <ng-template #body let-customer let-rowIndex="rowIndex">
+        <tr>
+          <!-- Index -->
+          <td class="row-index">{{ (currentPage() - 1) * limit() + rowIndex + 1 }}</td>
+
+          <!-- Customer: avatar + name + email -->
+          <td>
+            <div class="customer-cell">
+              <div class="avatar" [class]="'avatar-' + (rowIndex % 6)">
+                {{ getAvatarInitials(customer.name) }}
+              </div>
+              <div class="customer-info">
+                <span class="customer-name">{{ customer.name }}</span>
+                <span class="customer-email">{{ customer.email || '—' }}</span>
+              </div>
+            </div>
+          </td>
+
+          <!-- Contact: primary phone / alt phone -->
+          <td>
+            <div class="contact-cell">
+              @if (getPrimaryPhone(customer)) {
+                <a class="contact-link" [href]="'tel:' + getPrimaryPhone(customer)">
+                  <i class="pi pi-phone contact-icon"></i>{{ getPrimaryPhone(customer) }}
+                </a>
+              }
+              @if (getSecondaryPhone(customer)) {
+                <a class="contact-link secondary" [href]="'tel:' + getSecondaryPhone(customer)">
+                  <i class="pi pi-mobile contact-icon"></i>{{ getSecondaryPhone(customer) }}
+                </a>
+              }
+              @if (!getPrimaryPhone(customer)) {
+                <span class="no-data">—</span>
+              }
+            </div>
+          </td>
+
+          <!-- Location: city · region · country -->
+          <td>
+            <div class="location-cell">
+              @if (hasLocation(customer)) {
+                <span class="location-parts">{{ getLocationLabel(customer) }}</span>
+              } @else {
+                <span class="no-data">—</span>
+              }
+            </div>
+          </td>
+
+          <!-- Address -->
+          <td>
+            <span class="address-cell" [title]="customer.address || ''">
+              {{ customer.address || '—' }}
+            </span>
+          </td>
+
+          <!-- Joined date -->
+          <td>
+            <span class="date-cell">{{ customer.createdAt | date: 'mediumDate' }}</span>
+          </td>
+
+          <!-- Actions -->
+          <td>
+            <div class="action-buttons">
+              <app-button
+                icon="pi pi-pencil"
+                severity="info"
+                [rounded]="true"
+                [text]="true"
+                [tooltip]="'Edit'"
+                (click)="onEditCustomer(customer)"
+              />
+              <app-button
+                icon="pi pi-trash"
+                severity="danger"
+                [rounded]="true"
+                [text]="true"
+                [tooltip]="'Delete'"
+                (click)="onDeleteCustomer(customer)"
+              />
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+
+      <!-- Loading skeleton -->
+      <ng-template pTemplate="loadingbody">
+        @for (row of skeletonRows; track row) {
+          <tr>
+            @for (col of [1, 2, 3, 4, 5, 6, 7]; track col) {
+              <td><p-skeleton height="1.5rem" /></td>
+            }
+          </tr>
+        }
+      </ng-template>
+
+      <!-- Empty state -->
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td class="empty-state" colspan="7">
+            <div class="empty-state-content">
+              <i class="pi pi-users empty-icon"></i>
+              <h3>No customers found</h3>
+              @if (activeFiltersCount() > 0) {
+                <p>
+                    No customers match your current filters.
+                </p>
+                <app-button label="Clear Filters" severity="secondary" [outlined]="true" (click)="clearFilters()" />
+              } @else {
+
+                <p>No customers yet. Click "Add Customer" to get started</p>
+
+                <app-button icon="pi pi-plus" label="Add Customer" severity="primary" (click)="onCreateCustomer()" />
+              }
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+</div>
+
+<!-- Confirm Delete -->
+<p-confirmDialog>
+  <ng-template let-message pTemplate="message">
+    <div class="confirm-message">
+      <i class="pi pi-exclamation-triangle confirm-icon"></i>
+      <span [innerHTML]="message.message"></span>
+    </div>
+  </ng-template>
+</p-confirmDialog>
+
+<!-- Customer Form Dialog -->
+<app-customer-form-dialog
+  [customer]="selectedCustomer()"
+  (cancelled)="onDialogCancelled()"
+  (saved)="onDialogSaved()"
+/>
+

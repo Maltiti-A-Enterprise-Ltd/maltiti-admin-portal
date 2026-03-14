@@ -67,6 +67,7 @@
         <th scope="col">Customer</th>
         <th scope="col">Order Status</th>
         <th scope="col">Payment Status</th>
+        <th scope="col">Payment Progress</th>
         <th scope="col">Total Amount</th>
         <th scope="col">Delivery Fee</th>
         <th scope="col">Created At</th>
@@ -86,8 +87,24 @@
         <td>
           <p-tag
             [severity]="getPaymentStatusSeverity(sale.paymentStatus)"
-            [value]="getPaymentStatusLabel(sale.paymentStatus)"
+            [value]="getStatusLabel(sale.paymentStatus)"
           />
+        </td>
+        <td>
+          <div class="payment-progress-cell">
+            @if (sale.total > 0 && sale.totalPaid !== null) {
+              <p-progressBar
+                class="payment-progress-bar"
+                [showValue]="false"
+                [value]="getPaymentProgress(sale)"
+              />
+              <span class="payment-progress-label">
+                GH₵ {{ sale.totalPaid | number: '1.2-2' }} / {{ sale.total | number: '1.2-2' }}
+              </span>
+            } @else {
+              <span class="payment-progress-na">—</span>
+            }
+          </div>
         </td>
         <td>{{ lineItemsTotalPrice(sale.lineItems) | currency: 'GH₵ ' }}</td>
         <td>{{ sale.deliveryFee ? (sale.deliveryFee | currency: 'GH₵ ') : 'N/A' }}</td>
