@@ -223,7 +223,7 @@ export class ProductsListComponent {
         });
 
         // Create download link
-        const url = window.URL.createObjectURL(blob);
+        const url = globalThis.URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.href = url;
 
@@ -236,8 +236,8 @@ export class ProductsListComponent {
         link.click();
 
         // Clean up
-        document.body.removeChild(link);
-        window.URL.revokeObjectURL(url);
+        link.remove();
+        globalThis.URL.revokeObjectURL(url);
       },
       error: (error) => {
         console.error('Export failed:', error);
@@ -258,10 +258,6 @@ export class ProductsListComponent {
       default:
         return 'secondary';
     }
-  }
-
-  public getUnitSymbol(unit: UnitOfMeasurement): string {
-    return this.unitSymbols[unit] || '';
   }
 
   public formatCurrency(value: number): string {

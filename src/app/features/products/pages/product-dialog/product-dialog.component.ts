@@ -22,7 +22,7 @@ import { Actions, ofType } from '@ngrx/effects';
 import { Dialog } from 'primeng/dialog';
 import { Button } from 'primeng/button';
 import { FileSelectEvent } from 'primeng/fileupload';
-import { MessageService } from 'primeng/api';
+import { MessageService, PrimeTemplate } from 'primeng/api';
 import { TableModule } from 'primeng/table';
 import { TagModule } from 'primeng/tag';
 import * as ProductsActions from '../../store/products.actions';
@@ -44,7 +44,7 @@ import {
   PRODUCT_STATUS_OPTIONS,
   UNIT_OF_MEASUREMENT_OPTIONS,
 } from '../../constants/product-options.constants';
-import { PrimeTemplate } from 'primeng/api';
+
 import { ProductFormValue } from '../../types/product-form-value.type';
 import { FieldRendererComponent } from '@shared/components/field-renderer/field-renderer.component';
 import { ImageSectionComponent } from '@shared/components/image-section/image-section.component';
@@ -162,9 +162,12 @@ export class ProductDialogComponent {
 
   // Mode helpers
   public readonly isViewMode = computed(() => this.viewMode());
-  public readonly dialogTitle = computed(() =>
-    this.viewMode() ? 'View Product' : this.isEdit() ? 'Edit Product' : 'Add New Product',
-  );
+  public readonly dialogTitle = computed(() => {
+    if (this.isViewMode()) {
+      return 'View Product';
+    }
+    return this.isEdit() ? 'Edit Product' : 'Add New Product';
+  });
   public readonly showFooterActions = computed(() => !this.viewMode());
 
   constructor() {
@@ -194,7 +197,15 @@ export class ProductDialogComponent {
     let lastPatchedProductId: string | null = null;
 
     effect(() => {
+      const visible = this.visible();
       const product = this.product();
+
+      // Reset tracking when dialog is hidden so re-opening for the same product re-patches the form
+      if (!visible) {
+        lastPatchedProductId = null;
+        return;
+      }
+
       // Only patch form if product actually changed
       // This is a workaround to avoid duplicate form patching when product changes
       if (product?.id === lastPatchedProductId && product !== null) {
@@ -205,6 +216,7 @@ export class ProductDialogComponent {
       if (product) {
         this.productForm.patchValue({
           ...product,
+          minOrderQuantity: product.minOrderQuantity || 1,
           ingredients: product.ingredients.map(({ id }) => id),
           costPrice: product.costPrice ?? null,
         });

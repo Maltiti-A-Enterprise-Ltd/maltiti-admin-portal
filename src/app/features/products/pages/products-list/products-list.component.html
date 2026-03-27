@@ -79,16 +79,16 @@
       <!-- Image Column -->
       <ng-template #header>
         <tr>
-          <th style="width: 80px">Image</th>
-          <th pSortableColumn="name">
+          <th id="image" style="width: 80px">Image</th>
+          <th id="name" pSortableColumn="name">
             Name <p-sortIcon field="name" />
           </th>
-          <th>Category</th>
-          <th pSortableColumn="retail">
+          <th id="product-category">Category</th>
+          <th id="retail" pSortableColumn="retail">
             Retail Price <p-sortIcon field="retail" />
           </th>
-          <th>Status</th>
-          <th style="width: 150px">Actions</th>
+          <th id="product-status">Status</th>
+          <th id="actions" style="width: 150px">Actions</th>
         </tr>
       </ng-template>
 
