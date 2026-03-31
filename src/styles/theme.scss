@@ -24,6 +24,12 @@
 
 /* Override button primary styles */
 .p-button {
+  &.p-button-outlined:not(.p-button-secondary):not(.p-button-success):not(.p-button-info):not(.p-button-warn):not(.p-button-danger):not(.p-button-help):not(.p-button-contrast) {
+    &:hover {
+      color: white !important;
+    }
+  }
+
   //&:not(.p-button-outlined):not(.p-button-text) {
   //  background: var(--primary-500);
   //  border-color: var(--primary-500);
