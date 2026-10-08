@@ -54,6 +54,7 @@ import { ReceiptGenerationModalComponent } from '../receipt-generation-modal/rec
 import { WaybillGenerationModalComponent } from '../waybill-generation-modal/waybill-generation-modal.component';
 import { DeliveryCostUpdateModalComponent } from '../delivery-cost-update-modal/delivery-cost-update-modal.component';
 import { CancelSaleByAdminModalComponent } from '../cancel-sale-by-admin-modal/cancel-sale-by-admin-modal.component';
+import { InvoicePreviewModalComponent } from '../invoice-preview-modal/invoice-preview-modal.component';
 import { Role } from '@models/user.model';
 import {
   getNextStatuses,
@@ -84,6 +85,7 @@ import { customerFullLabel } from '@shared/utils/customer-name';
     DecimalPipe,
     ButtonComponent,
     SelectComponent,
+    InvoicePreviewModalComponent,
     ReceiptGenerationModalComponent,
     WaybillGenerationModalComponent,
     DeliveryCostUpdateModalComponent,
@@ -114,6 +116,7 @@ export class SalesListComponent implements OnInit {
   protected readonly lineItemsTotalPrice = lineItemsTotalPrice;
 
   // ViewChild references
+  public readonly invoicePreviewModal = viewChild.required(InvoicePreviewModalComponent);
   public readonly receiptModal = viewChild.required(ReceiptGenerationModalComponent);
   public readonly waybillModal = viewChild.required(WaybillGenerationModalComponent);
   public readonly deliveryCostModal = viewChild.required(DeliveryCostUpdateModalComponent);
@@ -213,32 +216,9 @@ export class SalesListComponent implements OnInit {
   }
 
   public onGenerateInvoice(sale: Sale): void {
-    this.salesApiService
-      .generateInvoice(sale.id, { discount: 0, transportation: 0 })
-      .pipe(first())
-      .subscribe({
-        next: (blob: Blob) => {
-          // Create a download link for the PDF
-          const url = globalThis.URL.createObjectURL(blob);
-          const link = document.createElement('a');
-          link.href = url;
-          link.download = `invoice-${sale.id}.pdf`;
-          link.click();
-          globalThis.URL.revokeObjectURL(url);
-
-          this.messageService.add({
-            severity: 'success',
-            summary: 'Success',
-            detail: 'Invoice generated successfully',
-          });
-        },
-        error: () =>
-          this.messageService.add({
-            severity: 'error',
-            summary: 'Error',
-            detail: 'Failed to generate invoice',
-          }),
-      });
+    // Preview first: downloading or emailing is the admin's call, not a side
+    // effect of asking to see the invoice.
+    this.invoicePreviewModal().open(sale.id, sale.customer?.email);
   }
 
   public onGenerateReceipt(sale: Sale): void {
