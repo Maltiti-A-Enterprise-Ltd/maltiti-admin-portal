@@ -200,6 +200,18 @@
         />
 
         <app-field-renderer
+          id="quantityUnit"
+          [control]="productForm.controls.quantityUnit"
+          [hint]="'What a quantity counts on invoices and waybills — e.g. 11 pieces, 4 boxes.'"
+          [label]="'Sold In'"
+          [mode]="isViewMode() ? 'view' : 'edit'"
+          [options]="quantityUnitOptions"
+          [placeholder]="'Select how it is counted'"
+          [type]="'select'"
+          [value]="productForm.value.quantityUnit"
+        />
+
+        <app-field-renderer
           id="ingredients"
           [control]="productForm.controls.ingredients"
           [label]="'Ingredients'"
