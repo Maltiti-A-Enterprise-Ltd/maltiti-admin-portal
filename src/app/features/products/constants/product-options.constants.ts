@@ -44,6 +44,24 @@ export const UNIT_OF_MEASUREMENT_OPTIONS = [
   { label: 'Millilitre', value: 'millilitre' },
 ];
 
+// How a product is counted when sold. Separate from unit of measurement, which
+// describes how much product is inside one of these.
+export const QUANTITY_UNIT_OPTIONS = [
+  { label: 'Pieces', value: 'piece' },
+  { label: 'Boxes', value: 'box' },
+  { label: 'Cartons', value: 'carton' },
+  { label: 'Bags', value: 'bag' },
+  { label: 'Sachets', value: 'sachet' },
+  { label: 'Bottles', value: 'bottle' },
+  { label: 'Gallons', value: 'gallon' },
+  { label: 'Jerry Cans', value: 'jerry_can' },
+  { label: 'Jars', value: 'jar' },
+  { label: 'Tubs', value: 'tub' },
+  { label: 'Drums', value: 'drum' },
+  { label: 'Kegs', value: 'keg' },
+  { label: 'Pallets', value: 'pallet' },
+];
+
 // Ingredient Options
 export const INGREDIENT_OPTIONS = [
   'Shea Butter',
@@ -79,5 +97,6 @@ export type ProductCategoryOption = (typeof PRODUCT_CATEGORIES)[number];
 export type ProductStatusOption = (typeof PRODUCT_STATUS_OPTIONS)[number];
 export type ProductGradeOption = (typeof PRODUCT_GRADE_OPTIONS)[number];
 export type UnitOfMeasurementOption = (typeof UNIT_OF_MEASUREMENT_OPTIONS)[number];
+export type QuantityUnitOption = (typeof QUANTITY_UNIT_OPTIONS)[number];
 export type IngredientOption = (typeof INGREDIENT_OPTIONS)[number];
 export type CertificationOption = (typeof CERTIFICATION_OPTIONS)[number];
