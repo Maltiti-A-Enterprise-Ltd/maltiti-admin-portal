@@ -119,10 +119,18 @@ export class LineItemEditorComponent implements OnInit {
       .get('productId')
       ?.valueChanges.pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe(() => this.onProductChange());
-    this.lineItemForm
-      .get('requestedQuantity')
-      ?.valueChanges.pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe(() => this.validateBatchAllocations());
+    // One subscription on the group, not per control. The parent builds its
+    // request from what this component emits, so anything edited here that is
+    // not emitted simply never ships — and a per-control list is exactly how
+    // quantity and custom price came to be missing from it.
+    //
+    // It has to be the group: Angular emits a child control's valueChanges
+    // *before* recalculating the group's status, so `lineItemForm.invalid` read
+    // from a child subscription is stale by one edit — which would drop the
+    // very change that makes an invalid line item valid again.
+    this.lineItemForm.valueChanges
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => this.syncWithParent());
     this.lineItemForm
       .get('priceType')
       ?.valueChanges.pipe(takeUntilDestroyed(this.destroyRef))
@@ -182,7 +190,6 @@ export class LineItemEditorComponent implements OnInit {
       const price = priceType === 'wholesale' ? selectedProduct.wholesale : selectedProduct.retail;
       this.lineItemForm.patchValue({ customPrice: price });
     }
-    this.emitChange();
   }
 
   private onPriceTypeChange(priceType: PriceType): void {
@@ -191,7 +198,6 @@ export class LineItemEditorComponent implements OnInit {
     if (selectedProduct) {
       const price = priceType === 'wholesale' ? selectedProduct.wholesale : selectedProduct.retail;
       this.lineItemForm.patchValue({ customPrice: price });
-      this.emitChange();
     }
   }
 
@@ -304,7 +310,11 @@ export class LineItemEditorComponent implements OnInit {
     } else {
       this.clearBatchErrors(quantityControl);
     }
-    this.validationError.emit(hasError);
+
+    // Report the form's own validity too, not just batch problems. The parent
+    // builds its request from the last *valid* value this component emitted, so
+    // without this an incomplete line item submits silently with stale data.
+    this.validationError.emit(hasError || this.lineItemForm.invalid);
   }
 
   private clearBatchErrors(control: FormControl | null): void {
@@ -326,6 +336,16 @@ export class LineItemEditorComponent implements OnInit {
       price = priceType === 'wholesale' ? selectedProduct.wholesale : selectedProduct.retail;
     }
     return quantity * price;
+  }
+
+  /**
+   * Re-check this line item and hand the result to the parent: the fresh values
+   * when it is valid, and either way an up-to-date validity signal so the
+   * parent can refuse to submit a line item it would otherwise send stale.
+   */
+  private syncWithParent(): void {
+    this.validateBatchAllocations();
+    this.emitChange();
   }
 
   private emitChange(): void {

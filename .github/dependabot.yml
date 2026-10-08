@@ -1,0 +1,74 @@
+# Dependabot keeps dependencies current without drowning the repo in PRs.
+#
+# Strategy: minor and patch updates only, batched into a handful of grouped PRs
+# each week. Major bumps are ignored here on purpose — an Angular major is a
+# migration (`ng update`), not something to merge off a bot PR. Do those
+# deliberately.
+#
+# Security updates are NOT governed by this file. GitHub raises those regardless
+# of the `ignore` rules below, including for majors. Make sure
+# Settings → Code security → Dependabot security updates is enabled.
+version: 2
+
+updates:
+  - package-ecosystem: npm
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:00"
+      timezone: Africa/Accra
+    open-pull-requests-limit: 5
+    labels:
+      - dependencies
+    commit-message:
+      prefix: chore
+      prefix-development: chore
+      include: scope
+
+    groups:
+      # Angular packages must move together — the CLI, compiler and framework
+      # validate each other's versions and refuse to build when they diverge.
+      angular:
+        patterns:
+          - "@angular/*"
+          - angular-eslint
+          - zone.js
+        update-types:
+          - minor
+          - patch
+
+      ngrx:
+        patterns:
+          - "@ngrx/*"
+        update-types:
+          - minor
+          - patch
+
+      primeng:
+        patterns:
+          - primeng
+          - "@primeng/*"
+          - primeicons
+        update-types:
+          - minor
+          - patch
+
+      production:
+        dependency-type: production
+        update-types:
+          - minor
+          - patch
+
+      development:
+        dependency-type: development
+        update-types:
+          - minor
+          - patch
+
+    ignore:
+      # Majors are opt-in. Angular majors in particular should go through
+      # `ng update`, which runs the migration schematics a bot PR cannot.
+      - dependency-name: "*"
+        update-types:
+          - version-update:semver-major
