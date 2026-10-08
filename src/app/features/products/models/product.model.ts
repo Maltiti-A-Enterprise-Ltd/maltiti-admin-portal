@@ -109,7 +109,14 @@ export interface CreateProductDto {
   costPrice?: number;
 }
 
-export type UpdateProductDto = Partial<CreateProductDto>;
+export type UpdateProductDto = Partial<CreateProductDto> & {
+  /**
+   * Email every customer the old and new prices. Opt-in: price edits are silent
+   * unless this is true, and it is ignored when no price actually changed.
+   * Describes the save, not the product — the API does not store it.
+   */
+  notifyPriceChange?: boolean;
+};
 
 export interface ProductQueryParams {
   page?: number;

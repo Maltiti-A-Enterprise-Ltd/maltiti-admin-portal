@@ -129,6 +129,20 @@
           [value]="productForm.value.costPrice"
         />
       </div>
+
+      <!-- Opt-in: price edits are silent unless this is ticked. Only on edit;
+           a brand new product has no price change to announce. -->
+      @if (isEdit() && !isViewMode()) {
+        <app-field-renderer
+          id="notifyPriceChange"
+          [control]="productForm.controls.notifyPriceChange"
+          [hint]="'Emails every customer the old and new prices. Leave unticked for corrections and typos. Ignored if no price actually changed.'"
+          [label]="'Email customers about this price change'"
+          [mode]="'edit'"
+          [type]="'checkbox'"
+          [value]="productForm.value.notifyPriceChange"
+        />
+      }
     </div>
 
     <!-- Inventory Section -->

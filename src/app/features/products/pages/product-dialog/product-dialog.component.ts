@@ -145,6 +145,10 @@ export class ProductDialogComponent {
       validators: [Validators.required, Validators.minLength(1)],
     }),
 
+    // Opt-in notification. Describes the save action, not the product, so it
+    // is never seeded from the loaded product and resets with the form.
+    notifyPriceChange: this.fb.control(false),
+
     // Features
     isFeatured: this.fb.control(false),
     isOrganic: this.fb.control(false),
@@ -310,7 +314,12 @@ export class ProductDialogComponent {
       this.store.dispatch(
         ProductsActions.updateProduct({
           id: this.product()!.id,
-          dto: productData as UpdateProductDto,
+          dto: {
+            ...(productData as UpdateProductDto),
+            // Update-only: CreateProductDto does not declare it, and the API
+            // rejects unknown properties.
+            notifyPriceChange: this.productForm.value.notifyPriceChange || undefined,
+          },
         }),
       );
     } else {
@@ -370,6 +379,7 @@ export class ProductDialogComponent {
       quantityUnit: QuantityUnit.PIECE,
       isFeatured: false,
       isOrganic: false,
+      notifyPriceChange: false,
       ingredients: [],
       certifications: [],
       images: [],
