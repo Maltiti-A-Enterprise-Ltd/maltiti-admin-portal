@@ -34,6 +34,7 @@ import { map, take } from 'rxjs/operators';
 import { Actions, ofType } from '@ngrx/effects';
 import { createBatchFailure, createBatchSuccess } from '../../store/batches.actions';
 import { productName } from '@shared/utils/product-name';
+import { DialogFormSeeder } from '@shared/utils/dialog-form-seeder';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -99,9 +100,24 @@ export class BatchDialogComponent {
   });
 
   constructor() {
+    // This effect re-runs while the dialog is open, so the form must be seeded
+    // once per open — otherwise every pass wipes the user's input.
+    const seeder = new DialogFormSeeder();
+
     effect(() => {
+      const visible = this.visible();
       const batch = this.batch();
-      if (batch && this.visible()) {
+
+      if (!visible) {
+        seeder.markClosed();
+        return;
+      }
+
+      if (!seeder.shouldSeed(batch?.id ?? null)) {
+        return;
+      }
+
+      if (batch) {
         this.batchForm.patchValue({
           productId: batch.product?.id || '',
           quantity: batch.quantity || 0,
@@ -111,7 +127,7 @@ export class BatchDialogComponent {
           qualityCheckStatus: batch.qualityCheckStatus || '',
           notes: batch.notes || '',
         });
-      } else if (!batch && this.visible()) {
+      } else {
         this.batchForm.reset({
           quantity: 0,
         });
