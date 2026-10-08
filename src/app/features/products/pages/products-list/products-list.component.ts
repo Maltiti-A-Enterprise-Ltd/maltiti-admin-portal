@@ -42,7 +42,6 @@ import {
   ProductCategory,
   ProductQueryParams,
   ProductStatus,
-  UnitOfMeasurement,
 } from '../../models/product.model';
 import { InputComponent } from '@shared/components/input/input.component';
 import { ButtonComponent } from '@shared/components/button/button.component';
@@ -82,14 +81,6 @@ export class ProductsListComponent {
   private readonly store = inject(Store);
   private readonly confirmationService = inject(ConfirmationService);
   private readonly productApiService = inject(ProductApiService);
-
-  // Unit of measurement symbols
-  public readonly unitSymbols: Record<UnitOfMeasurement, string> = {
-    [UnitOfMeasurement.KILOGRAM]: 'kg',
-    [UnitOfMeasurement.GRAM]: 'g',
-    [UnitOfMeasurement.LITRE]: 'L',
-    [UnitOfMeasurement.MILLILITRE]: 'mL',
-  };
 
   // Store signals
   public readonly products = this.store.selectSignal(selectAllProducts);
