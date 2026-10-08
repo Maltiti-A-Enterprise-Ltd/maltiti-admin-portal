@@ -308,7 +308,7 @@ export class SalesFormComponent implements OnInit {
         severity: 'error',
         summary: 'Validation Error',
         detail:
-          'One or more line items have batch allocation errors. Please fix them before submitting.',
+          'One or more line items are incomplete or have batch allocation errors. Please fix them before submitting.',
       });
       return;
     }
