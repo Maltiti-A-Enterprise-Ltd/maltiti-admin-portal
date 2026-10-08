@@ -12,6 +12,26 @@ export enum UnitOfMeasurement {
   MILLILITRE = 'millilitre',
 }
 
+/**
+ * How a product is counted when sold — the thing a quantity of 11 is eleven
+ * *of*. Distinct from UnitOfMeasurement, which says how much is inside one.
+ */
+export enum QuantityUnit {
+  PIECE = 'piece',
+  BOX = 'box',
+  CARTON = 'carton',
+  BAG = 'bag',
+  SACHET = 'sachet',
+  BOTTLE = 'bottle',
+  GALLON = 'gallon',
+  JERRY_CAN = 'jerry_can',
+  JAR = 'jar',
+  TUB = 'tub',
+  DRUM = 'drum',
+  KEG = 'keg',
+  PALLET = 'pallet',
+}
+
 export type ProductCategory =
   | 'Shea Butter'
   | 'Black Soap'
@@ -35,6 +55,7 @@ export interface Product {
   ingredients: Ingredient[];
   weight: string;
   unitOfMeasurement: UnitOfMeasurement;
+  quantityUnit: QuantityUnit;
   category: ProductCategory;
   description: string;
   status: ProductStatus;
@@ -60,7 +81,7 @@ export interface Product {
 
 export type LightProduct = Pick<
   Product,
-  'id' | 'name' | 'wholesale' | 'retail' | 'unitOfMeasurement' | 'weight'
+  'id' | 'name' | 'wholesale' | 'retail' | 'unitOfMeasurement' | 'weight' | 'quantityUnit'
 >;
 
 export interface CreateProductDto {
@@ -69,6 +90,7 @@ export interface CreateProductDto {
   ingredients: string[];
   weight?: string;
   unitOfMeasurement?: UnitOfMeasurement;
+  quantityUnit?: QuantityUnit;
   category: ProductCategory;
   description: string;
   status?: ProductStatus;

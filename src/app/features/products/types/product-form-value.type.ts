@@ -4,6 +4,7 @@ import {
   ProductCategory,
   ProductGrade,
   ProductStatus,
+  QuantityUnit,
   UnitOfMeasurement,
 } from '../models/product.model';
 import { FormControl, FormGroup } from '@angular/forms';
@@ -21,6 +22,7 @@ export interface ProductFormValue {
   quantityInBox: number | null;
   minOrderQuantity: number | null;
   unitOfMeasurement: UnitOfMeasurement | null;
+  quantityUnit: QuantityUnit | null;
   grade: ProductGrade | null;
   weight: string | null;
   ingredients: string[] | null;
@@ -45,6 +47,7 @@ export type ProductFormGroup = FormGroup<{
   quantityInBox: FormControl<number | null>;
   minOrderQuantity: FormControl<number | null>;
   unitOfMeasurement: FormControl<UnitOfMeasurement | null>;
+  quantityUnit: FormControl<QuantityUnit | null>;
   grade: FormControl<ProductGrade | null>;
   weight: FormControl<string | null>;
   ingredients: FormControl<string[] | null>;

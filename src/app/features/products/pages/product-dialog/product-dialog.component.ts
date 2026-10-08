@@ -34,6 +34,7 @@ import {
   ProductCategory,
   ProductGrade,
   ProductStatus,
+  QuantityUnit,
   UnitOfMeasurement,
   UpdateProductDto,
 } from '../../models/product.model';
@@ -42,6 +43,7 @@ import {
   PRODUCT_CATEGORIES,
   PRODUCT_GRADE_OPTIONS,
   PRODUCT_STATUS_OPTIONS,
+  QUANTITY_UNIT_OPTIONS,
   UNIT_OF_MEASUREMENT_OPTIONS,
 } from '../../constants/product-options.constants';
 
@@ -133,6 +135,7 @@ export class ProductDialogComponent {
 
     // Product Details
     unitOfMeasurement: this.fb.control<UnitOfMeasurement | null>(null),
+    quantityUnit: this.fb.control<QuantityUnit>(QuantityUnit.PIECE),
     grade: this.fb.control<ProductGrade | null>(null),
     // Numbers only — the unit lives in `unitOfMeasurement`, and the two are
     // joined for display ("500" + Gram → "500g"). A unit typed in here would
@@ -160,6 +163,7 @@ export class ProductDialogComponent {
   public readonly statusOptions = PRODUCT_STATUS_OPTIONS;
   public readonly gradeOptions = PRODUCT_GRADE_OPTIONS;
   public readonly unitOfMeasurementOptions = UNIT_OF_MEASUREMENT_OPTIONS;
+  public readonly quantityUnitOptions = QUANTITY_UNIT_OPTIONS;
   public readonly certificationOptions = CERTIFICATION_OPTIONS.map((option) => ({
     label: option,
     value: option,
@@ -253,6 +257,7 @@ export class ProductDialogComponent {
       sku: formValue.sku || undefined,
       status: formValue.status as ProductStatus,
       unitOfMeasurement: formValue.unitOfMeasurement || undefined,
+      quantityUnit: formValue.quantityUnit || undefined,
       grade: formValue.grade || undefined,
       weight: formValue.weight || undefined,
       ingredients: formValue.ingredients || [],
@@ -362,6 +367,7 @@ export class ProductDialogComponent {
       inBoxPrice: 0,
       quantityInBox: 1,
       minOrderQuantity: 1,
+      quantityUnit: QuantityUnit.PIECE,
       isFeatured: false,
       isOrganic: false,
       ingredients: [],
