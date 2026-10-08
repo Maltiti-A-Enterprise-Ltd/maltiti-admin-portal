@@ -81,7 +81,15 @@ export interface Product {
 
 export type LightProduct = Pick<
   Product,
-  'id' | 'name' | 'wholesale' | 'retail' | 'unitOfMeasurement' | 'weight' | 'quantityUnit'
+  | 'id'
+  | 'name'
+  | 'wholesale'
+  | 'retail'
+  | 'unitOfMeasurement'
+  | 'weight'
+  | 'quantityUnit'
+  | 'grade'
+  | 'category'
 >;
 
 export interface CreateProductDto {
