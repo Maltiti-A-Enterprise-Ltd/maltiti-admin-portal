@@ -75,6 +75,20 @@
           [value]="productForm.value.status"
         />
       </div>
+
+      <!-- Opt-in: adding a product is silent unless this is ticked. Only on
+           create; an existing product is no longer news. -->
+      @if (!isEdit() && !isViewMode()) {
+        <app-field-renderer
+          id="notifyNewProduct"
+          [control]="productForm.controls.notifyNewProduct"
+          [hint]="'Announces the product to every customer by email. Leave unticked for drafts and catalogue tidy-ups.'"
+          [label]="'Email customers about this new product'"
+          [mode]="'edit'"
+          [type]="'checkbox'"
+          [value]="productForm.value.notifyNewProduct"
+        />
+      }
     </div>
 
     <!-- Pricing Section -->

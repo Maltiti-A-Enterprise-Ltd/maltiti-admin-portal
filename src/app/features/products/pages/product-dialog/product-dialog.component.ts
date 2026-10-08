@@ -148,6 +148,7 @@ export class ProductDialogComponent {
     // Opt-in notification. Describes the save action, not the product, so it
     // is never seeded from the loaded product and resets with the form.
     notifyPriceChange: this.fb.control(false),
+    notifyNewProduct: this.fb.control(false),
 
     // Features
     isFeatured: this.fb.control(false),
@@ -323,7 +324,15 @@ export class ProductDialogComponent {
         }),
       );
     } else {
-      this.store.dispatch(ProductsActions.createProduct({ dto: productData as CreateProductDto }));
+      this.store.dispatch(
+        ProductsActions.createProduct({
+          dto: {
+            ...(productData as CreateProductDto),
+            // Create-only; omitted when unticked so the API sees nothing.
+            notifyNewProduct: this.productForm.value.notifyNewProduct || undefined,
+          },
+        }),
+      );
     }
   }
 
@@ -380,6 +389,7 @@ export class ProductDialogComponent {
       isFeatured: false,
       isOrganic: false,
       notifyPriceChange: false,
+      notifyNewProduct: false,
       ingredients: [],
       certifications: [],
       images: [],

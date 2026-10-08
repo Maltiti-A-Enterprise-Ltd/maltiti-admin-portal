@@ -85,6 +85,11 @@ export type LightProduct = Pick<
 >;
 
 export interface CreateProductDto {
+  /**
+   * Announce the product to every customer by email. Opt-in: creating is silent
+   * unless this is true. Describes the save, not the product — not stored.
+   */
+  notifyNewProduct?: boolean;
   sku?: string;
   name: string;
   ingredients: string[];
