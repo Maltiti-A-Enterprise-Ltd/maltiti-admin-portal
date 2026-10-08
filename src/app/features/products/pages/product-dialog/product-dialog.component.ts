@@ -54,6 +54,7 @@ import { map, take } from 'rxjs/operators';
 import { BatchApiService } from '../../../batches/services/batch-api.service';
 import { Batch } from '../../../batches/models/batch.model';
 import { getQualityStatusSeverity } from '@shared/utils/quality-status.util';
+import { DialogFormSeeder } from '@shared/utils/dialog-form-seeder';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -193,26 +194,23 @@ export class ProductDialogComponent {
       }
     });
 
-    // Track the last processed product for form patching
-    let lastPatchedProductId: string | null = null;
+    // This effect re-runs while the dialog is open, so the form must be seeded
+    // once per open — otherwise every pass wipes the user's input.
+    const seeder = new DialogFormSeeder();
 
     effect(() => {
       const visible = this.visible();
       const product = this.product();
 
-      // Reset tracking when dialog is hidden so re-opening for the same product re-patches the form
       if (!visible) {
-        lastPatchedProductId = null;
+        seeder.markClosed();
         return;
       }
 
-      // Only patch form if product actually changed
-      // This is a workaround to avoid duplicate form patching when product changes
-      if (product?.id === lastPatchedProductId && product !== null) {
+      if (!seeder.shouldSeed(product?.id ?? null)) {
         return;
       }
 
-      lastPatchedProductId = product?.id ?? null;
       if (product) {
         this.productForm.patchValue({
           ...product,
