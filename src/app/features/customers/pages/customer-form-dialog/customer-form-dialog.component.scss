@@ -40,6 +40,13 @@
   }
 }
 
+// Explains an "either/or" rule that spans more than one field.
+.section-hint {
+  margin: -#{variables.$spacing-sm} 0 variables.$spacing-md;
+  font-size: variables.$font-size-xs;
+  color: var(--text-color-secondary);
+}
+
 // ── Two-column grid ────────────────────────────────────────
 .form-grid {
   display: grid;

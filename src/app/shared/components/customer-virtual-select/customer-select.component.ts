@@ -4,7 +4,15 @@
  * Uses PrimeNG Select with virtual scroll and filter
  */
 
-import { ChangeDetectionStrategy, Component, effect, inject, input, OnInit } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  effect,
+  inject,
+  input,
+  OnInit,
+} from '@angular/core';
 
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { SelectModule } from 'primeng/select';
@@ -15,6 +23,7 @@ import {
   selectHasMore,
   selectLoading,
 } from '@features/sales/store/customers.selectors';
+import { customerFullLabel } from '@shared/utils/customer-name';
 
 @Component({
   selector: 'app-customer-select',
@@ -37,6 +46,17 @@ export class CustomerSelectComponent implements OnInit {
   public readonly customers = this.store.selectSignal(selectCustomers);
   public readonly loading = this.store.selectSignal(selectLoading);
   public readonly hasMore = this.store.selectSignal(selectHasMore);
+
+  /**
+   * p-select filters and renders by a flat string, so pre-compute one label
+   * that covers both the contact name and the organization.
+   */
+  public readonly customerOptions = computed(() =>
+    (this.customers() ?? []).map((customer) => ({
+      ...customer,
+      displayLabel: customerFullLabel(customer),
+    })),
+  );
 
   // Local state
   private currentPage = 1;

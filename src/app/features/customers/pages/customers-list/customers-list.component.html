@@ -24,7 +24,7 @@
         class="search-input"
         [control]="searchControl"
         [id]="'search'"
-        [placeholder]="'Search by name, email or phone...'"
+        [placeholder]="'Search by name, organization, email or phone...'"
         [showPrefixAddon]="true"
         [type]="'search'"
         [useInputGroup]="true"
@@ -202,14 +202,19 @@
           <!-- Index -->
           <td class="row-index">{{ (currentPage() - 1) * limit() + rowIndex + 1 }}</td>
 
-          <!-- Customer: avatar + name + email -->
+          <!-- Customer: avatar + name + organization/email -->
           <td>
             <div class="customer-cell">
               <div class="avatar" [class]="'avatar-' + (rowIndex % 6)">
-                {{ getAvatarInitials(customer.name) }}
+                {{ getAvatarInitials(customer) }}
               </div>
               <div class="customer-info">
-                <span class="customer-name">{{ customer.name }}</span>
+                <span class="customer-name">{{ getDisplayName(customer) }}</span>
+                @if (getOrganizationLabel(customer); as organization) {
+                  <span class="customer-organization">
+                    <i class="pi pi-building"></i>{{ organization }}
+                  </span>
+                }
                 <span class="customer-email">{{ customer.email || '—' }}</span>
               </div>
             </div>
