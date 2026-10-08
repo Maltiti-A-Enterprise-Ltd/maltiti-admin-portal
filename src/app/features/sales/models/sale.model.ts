@@ -166,6 +166,12 @@ export interface AssignBatchesDto {
   batchAllocations: BatchAllocationDto[];
 }
 
+/** Body for POST /sales/:id/invoice/email */
+export interface SendInvoiceEmailDto {
+  /** Omit to use the address on the customer record. */
+  email?: string;
+}
+
 export interface GenerateInvoiceDto {
   discount?: number;
   transportation?: number;

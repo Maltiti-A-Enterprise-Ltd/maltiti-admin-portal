@@ -26,6 +26,7 @@ export interface ProductFormValue {
   grade: ProductGrade | null;
   weight: string | null;
   ingredients: string[] | null;
+  notifyPriceChange: boolean | null;
   isFeatured: boolean | null;
   isOrganic: boolean | null;
   images: string[] | null;
@@ -51,6 +52,7 @@ export type ProductFormGroup = FormGroup<{
   grade: FormControl<ProductGrade | null>;
   weight: FormControl<string | null>;
   ingredients: FormControl<string[] | null>;
+  notifyPriceChange: FormControl<boolean | null>;
   isFeatured: FormControl<boolean | null>;
   isOrganic: FormControl<boolean | null>;
   images: FormControl<string[] | null>;

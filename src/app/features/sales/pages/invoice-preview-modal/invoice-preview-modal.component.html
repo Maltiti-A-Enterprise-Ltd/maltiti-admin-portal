@@ -1,0 +1,103 @@
+<p-dialog
+  header="Invoice"
+  [closable]="true"
+  [draggable]="false"
+  [modal]="true"
+  [style]="{ width: '900px', 'max-width': '95vw' }"
+  [visible]="visible()"
+  (onHide)="close()"
+>
+  <div class="invoice-preview">
+    <!-- Preview -->
+    <div class="preview-pane">
+      @if (generating()) {
+        <div class="preview-placeholder">
+          <p-progressSpinner strokeWidth="4" [style]="{ width: '42px', height: '42px' }" />
+          <span>Generating invoice…</span>
+        </div>
+      } @else if (previewUrl(); as url) {
+        <iframe class="preview-frame" title="Invoice preview" [src]="url"></iframe>
+      } @else {
+        <div class="preview-placeholder">
+          <i class="pi pi-file-pdf"></i>
+          <span>No preview available</span>
+        </div>
+      }
+    </div>
+
+    <!-- Send by email -->
+    <form class="send-pane" [formGroup]="form">
+      <h4 class="send-title">Send by email</h4>
+
+      <div class="recipient-options">
+        @if (canUseCustomerEmail()) {
+          <div class="recipient-option">
+            <p-radioButton formControlName="recipient" inputId="toCustomer" value="customer" />
+            <label for="toCustomer">
+              Customer on record
+              <span class="recipient-email">{{ customerEmail() }}</span>
+            </label>
+          </div>
+        } @else {
+          <p class="no-customer-email">
+            <i class="pi pi-info-circle"></i>
+            This customer has no email on record — enter one to send the invoice.
+          </p>
+        }
+
+        <div class="recipient-option">
+          <p-radioButton formControlName="recipient" inputId="toOther" value="other" />
+          <label for="toOther">Another email address</label>
+        </div>
+
+        @if (form.controls.recipient.value === 'other') {
+          <div class="other-email">
+            <input
+              formControlName="email"
+              id="otherEmail"
+              pInputText
+              placeholder="name@example.com"
+              type="email"
+            />
+            @if (showEmailError()) {
+              <small class="email-error">Enter a valid email address</small>
+            }
+          </div>
+        }
+      </div>
+
+      @if (sendError(); as error) {
+        <p class="send-error" role="alert">
+          <i class="pi pi-exclamation-circle"></i>{{ error }}
+        </p>
+      }
+    </form>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <div class="dialog-footer">
+      <p-button
+        label="Close"
+        severity="secondary"
+        [outlined]="true"
+        [text]="true"
+        (onClick)="close()"
+      />
+      <p-button
+        icon="pi pi-download"
+        label="Download"
+        severity="secondary"
+        [disabled]="sendDisabled()"
+        [outlined]="true"
+        (onClick)="download()"
+      />
+      <p-button
+        icon="pi pi-send"
+        label="Send invoice"
+        [disabled]="sendDisabled()"
+        [loading]="sending()"
+        (onClick)="send()"
+      />
+    </div>
+  </ng-template>
+</p-dialog>
