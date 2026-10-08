@@ -58,6 +58,7 @@ import { Batch } from '../../../batches/models/batch.model';
 import { getQualityStatusSeverity } from '@shared/utils/quality-status.util';
 import { DialogFormSeeder } from '@shared/utils/dialog-form-seeder';
 import { CustomValidators } from '@shared/validators/custom-validators';
+import { buildProductPayload } from '../../utils/product-payload';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -248,35 +249,8 @@ export class ProductDialogComponent {
       this.productForm.markAllAsTouched();
       return;
     }
-    const productData = this.buildProductData(this.productForm.value as ProductFormValue);
+    const productData = buildProductPayload(this.productForm.value as ProductFormValue);
     this.performSave(productData);
-  }
-
-  private buildProductData(formValue: ProductFormValue): CreateProductDto | UpdateProductDto {
-    return {
-      name: formValue.name!,
-      description: formValue.description!,
-      category: formValue.category!,
-      wholesale: formValue.wholesale!,
-      retail: formValue.retail!,
-      sku: formValue.sku || undefined,
-      status: formValue.status as ProductStatus,
-      unitOfMeasurement: formValue.unitOfMeasurement || undefined,
-      quantityUnit: formValue.quantityUnit || undefined,
-      grade: formValue.grade || undefined,
-      weight: formValue.weight || undefined,
-      ingredients: formValue.ingredients || [],
-      inBoxPrice: formValue.inBoxPrice || undefined,
-      quantityInBox: formValue.quantityInBox || undefined,
-      minOrderQuantity: formValue.minOrderQuantity || undefined,
-      isFeatured: formValue.isFeatured || false,
-      isOrganic: formValue.isOrganic || false,
-      supplierReference: formValue.supplierReference || undefined,
-      certifications: formValue.certifications || [],
-      images: formValue.images || [],
-      image: formValue.image || undefined,
-      costPrice: formValue.costPrice || undefined,
-    };
   }
 
   private performSave(productData: CreateProductDto | UpdateProductDto): void {
