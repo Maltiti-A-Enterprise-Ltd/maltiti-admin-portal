@@ -35,6 +35,11 @@ import { SelectComponent } from '@shared/components/select/select.component';
 import { GeographyService, GeoOption } from '@shared/services/geography.service';
 import { Customer, CustomerSortBy, SortOrder } from '@models/customer.model';
 import {
+  customerDisplayName,
+  customerInitials,
+  customerSubLabel,
+} from '@shared/utils/customer-name';
+import {
   deleteCustomer,
   loadCustomers,
   setSelectedCustomer,
@@ -116,6 +121,7 @@ export class CustomersListComponent implements OnInit {
   public readonly sortByOptions = [
     { label: 'Date Created', value: CustomerSortBy.CREATED_AT },
     { label: 'Name', value: CustomerSortBy.NAME },
+    { label: 'Organization', value: CustomerSortBy.ORGANIZATION_NAME },
     { label: 'Email', value: CustomerSortBy.EMAIL },
     { label: 'City', value: CustomerSortBy.CITY },
   ];
@@ -261,9 +267,11 @@ export class CustomersListComponent implements OnInit {
   }
 
   public onDeleteCustomer(customer: Customer): void {
+    const label = customerDisplayName(customer);
+
     this.confirmationService.confirm({
       header: 'Delete Customer',
-      message: `Are you sure you want to delete <strong>${customer.name}</strong>? This action cannot be undone.`,
+      message: `Are you sure you want to delete <strong>${label}</strong>? This action cannot be undone.`,
       icon: 'pi pi-exclamation-triangle',
       acceptLabel: 'Yes, Delete',
       rejectLabel: 'Cancel',
@@ -298,12 +306,17 @@ export class CustomersListComponent implements OnInit {
     this.showAdvancedFilters.update((v) => !v);
   }
 
-  public getAvatarInitials(name: string): string {
-    return name
-      .split(' ')
-      .slice(0, 2)
-      .map((w) => w.charAt(0).toUpperCase())
-      .join('');
+  public getAvatarInitials(customer: Customer): string {
+    return customerInitials(customer);
+  }
+
+  public getDisplayName(customer: Customer): string {
+    return customerDisplayName(customer);
+  }
+
+  /** Organization shown as a secondary line only when a person's name is primary. */
+  public getOrganizationLabel(customer: Customer): string {
+    return customerSubLabel(customer);
   }
 
   public getPrimaryPhone(customer: Customer): string {

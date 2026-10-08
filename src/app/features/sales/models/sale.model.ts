@@ -1,4 +1,4 @@
-import { User } from '@models/user.model';
+import { Customer } from '@models/customer.model';
 import { Product } from '../../products/models/product.model';
 
 export enum PaymentStatus {
@@ -214,7 +214,8 @@ export interface Sale {
   id: string;
   customerId: string;
   confirmedDeliveryDate?: string;
-  customer?: User;
+  /** The sale's customer as returned by the API (not the linked user account). */
+  customer?: Customer;
   orderStatus: OrderStatus;
   paymentStatus: PaymentStatus;
   lineItems: SaleLineItem[];

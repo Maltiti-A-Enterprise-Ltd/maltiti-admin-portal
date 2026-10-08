@@ -29,6 +29,7 @@ import { TextareaComponent } from '@shared/components/textarea/textarea.componen
 import { SelectComponent } from '@shared/components/select/select.component';
 import { GeographyService, GeoOption } from '@shared/services/geography.service';
 import { CreateCustomerDto, Customer } from '@models/customer.model';
+import { CustomValidators } from '@shared/validators/custom-validators';
 import { createCustomer, createCustomerSuccess } from '../../store/customers.actions';
 import { selectLoading } from '../../store/customers.selectors';
 
@@ -65,17 +66,23 @@ export class CustomerCreationModalComponent implements OnInit {
   public readonly regionOptions = signal<GeoOption[]>([]);
   public readonly cityOptions = signal<GeoOption[]>([]);
 
-  public readonly customerForm = this.fb.group({
-    name: ['', [Validators.required, Validators.minLength(1), Validators.maxLength(200)]],
-    phone: [''],
-    phoneNumber: [''],
-    email: ['', [Validators.email]],
-    country: [''],
-    region: [''],
-    city: [''],
-    address: [''],
-    extraInfo: [''],
-  });
+  // A customer may be a person, an organization, or both — neither name is
+  // required on its own, but the group validator demands at least one.
+  public readonly customerForm = this.fb.group(
+    {
+      name: ['', [Validators.maxLength(200)]],
+      organizationName: ['', [Validators.maxLength(200)]],
+      phone: [''],
+      phoneNumber: [''],
+      email: ['', [Validators.email]],
+      country: [''],
+      region: [''],
+      city: [''],
+      address: [''],
+      extraInfo: [''],
+    },
+    { validators: CustomValidators.atLeastOneRequired(['name', 'organizationName']) },
+  );
 
   public ngOnInit(): void {
     // Cascade: country → states/regions
@@ -129,7 +136,8 @@ export class CustomerCreationModalComponent implements OnInit {
     }
     const v = this.customerForm.value;
     const customerData: CreateCustomerDto = {
-      name: v.name ?? '',
+      name: v.name?.trim() || undefined,
+      organizationName: v.organizationName?.trim() || undefined,
       phone: v.phone || undefined,
       phoneNumber: v.phoneNumber || undefined,
       email: v.email || undefined,

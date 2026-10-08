@@ -12,20 +12,31 @@
     <div class="form-section">
       <div class="section-header">
         <i class="pi pi-user section-icon"></i>
-        <span class="section-title">Personal Information</span>
+        <span class="section-title">Customer Identity</span>
       </div>
 
+      <p class="section-hint">
+        A customer can be a person, an organization, or both &mdash; fill in at least one.
+      </p>
+
       <div class="form-grid">
-        <!-- Full Name (full width) -->
-        <div class="form-field col-full">
-          <label class="form-label" for="name">
-            Full Name <span class="required">*</span>
-          </label>
+        <!-- Full Name -->
+        <div class="form-field">
+          <label class="form-label" for="name">Full Name</label>
           <app-input
             id="name"
             placeholder="Enter customer's full name"
             [control]="form.controls.name"
-            [required]="true"
+          />
+        </div>
+
+        <!-- Organization Name -->
+        <div class="form-field">
+          <label class="form-label" for="organizationName">Organization Name</label>
+          <app-input
+            id="organizationName"
+            placeholder="e.g. Maltiti Enterprise Ltd"
+            [control]="form.controls.organizationName"
           />
         </div>
 

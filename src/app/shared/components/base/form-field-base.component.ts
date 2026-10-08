@@ -34,6 +34,7 @@ export class FormFieldBaseComponent {
     weakPassword:
       'Password must contain at least 8 characters, 1 lowercase, 1 uppercase, 1 number, and 1 symbol',
     mismatch: 'Passwords do not match',
+    atLeastOneRequired: 'At least one of these fields is required',
   };
 
   constructor() {

@@ -26,6 +26,7 @@ import { DividerModule } from 'primeng/divider';
 import { OrderStatus, PaymentStatus, Sale } from '../../models/sale.model';
 import { PaymentsSectionComponent } from '../payments-section/payments-section.component';
 import { APP_ROUTES } from '@config/routes.config';
+import { customerFullLabel } from '@shared/utils/customer-name';
 
 @Component({
   selector: 'app-sale-detail',
@@ -53,7 +54,9 @@ export class SaleDetailComponent implements OnInit {
 
   public readonly customerName = computed(() => {
     const s = this.sale();
-    return s?.customer?.name ?? s?.customerId ?? '—';
+    return s?.customer
+      ? customerFullLabel(s.customer, s.customerId ?? '—')
+      : (s?.customerId ?? '—');
   });
 
   public ngOnInit(): void {
