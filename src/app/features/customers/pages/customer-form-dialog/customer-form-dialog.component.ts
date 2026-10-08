@@ -38,6 +38,7 @@ import {
   updateCustomerSuccess,
 } from '@features/sales/store/customers.actions';
 import { selectLoading } from '@features/sales/store/customers.selectors';
+import { CustomValidators } from '@shared/validators/custom-validators';
 
 @Component({
   selector: 'app-customer-form-dialog',
@@ -80,17 +81,23 @@ export class CustomerFormDialogComponent implements OnInit {
   public readonly regionOptions = signal<GeoOption[]>([]);
   public readonly cityOptions = signal<GeoOption[]>([]);
 
-  public readonly form = this.fb.group({
-    name: ['', [Validators.required, Validators.minLength(1), Validators.maxLength(200)]],
-    phone: [''],
-    phoneNumber: [''],
-    email: ['', [Validators.email]],
-    country: [''],
-    region: [''],
-    city: [''],
-    address: [''],
-    extraInfo: [''],
-  });
+  // A customer may be a person, an organization, or both — neither name is
+  // required on its own, but the group validator demands at least one.
+  public readonly form = this.fb.group(
+    {
+      name: ['', [Validators.maxLength(200)]],
+      organizationName: ['', [Validators.maxLength(200)]],
+      phone: [''],
+      phoneNumber: [''],
+      email: ['', [Validators.email]],
+      country: [''],
+      region: [''],
+      city: [''],
+      address: [''],
+      extraInfo: [''],
+    },
+    { validators: CustomValidators.atLeastOneRequired(['name', 'organizationName']) },
+  );
 
   public ngOnInit(): void {
     // Load countries once
@@ -146,7 +153,8 @@ export class CustomerFormDialogComponent implements OnInit {
         this.cityOptions.set(this.geoService.getCities(c.country, c.region));
       }
       this.form.patchValue({
-        name: c.name,
+        name: c.name ?? '',
+        organizationName: c.organizationName ?? '',
         phone: c.phone ?? '',
         phoneNumber: c.phoneNumber ?? '',
         email: c.email ?? '',
@@ -183,9 +191,7 @@ export class CustomerFormDialogComponent implements OnInit {
     const val = this.form.value;
     const c = this.customer();
 
-    const payload = {
-      id: c?.id ?? '',
-      name: val.name ?? '',
+    const shared = {
       phone: val.phone || undefined,
       phoneNumber: val.phoneNumber || undefined,
       email: val.email || undefined,
@@ -197,10 +203,20 @@ export class CustomerFormDialogComponent implements OnInit {
     };
 
     if (c) {
-      const updateDto: UpdateCustomerDto = payload;
+      // Send both names verbatim so an emptied field is cleared server-side.
+      const updateDto: UpdateCustomerDto = {
+        ...shared,
+        id: c.id,
+        name: (val.name ?? '').trim(),
+        organizationName: (val.organizationName ?? '').trim(),
+      };
       this.store.dispatch(updateCustomer({ customerData: updateDto }));
     } else {
-      const createDto: CreateCustomerDto = payload;
+      const createDto: CreateCustomerDto = {
+        ...shared,
+        name: val.name?.trim() || undefined,
+        organizationName: val.organizationName?.trim() || undefined,
+      };
       this.store.dispatch(createCustomer({ customerData: createDto }));
     }
   }

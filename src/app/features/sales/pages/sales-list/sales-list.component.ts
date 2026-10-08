@@ -61,6 +61,8 @@ import {
   getStatusLabel,
   getStatusSeverity,
 } from '@shared/utils/sales.utils';
+import { Customer } from '@models/customer.model';
+import { customerFullLabel } from '@shared/utils/customer-name';
 
 @Component({
   selector: 'app-sales-list',
@@ -376,4 +378,8 @@ export class SalesListComponent implements OnInit {
   protected readonly getPaymentStatusSeverity = getPaymentStatusSeverity;
   protected readonly getStatusLabel = getStatusLabel;
   protected readonly getStatusSeverity = getStatusSeverity;
+
+  public getCustomerLabel(customer: Customer | undefined): string {
+    return customer ? customerFullLabel(customer, 'N/A') : 'N/A';
+  }
 }

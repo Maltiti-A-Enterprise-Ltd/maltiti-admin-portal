@@ -194,6 +194,19 @@ $avatar-colors: (
   line-height: 1.2;
 }
 
+// Secondary line: the organization behind a named contact.
+.customer-organization {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: variables.$font-size-xs;
+  color: var(--text-color-secondary);
+
+  i {
+    font-size: 0.7rem;
+  }
+}
+
 .customer-email {
   font-size: variables.$font-size-xs;
   color: var(--text-color-secondary);

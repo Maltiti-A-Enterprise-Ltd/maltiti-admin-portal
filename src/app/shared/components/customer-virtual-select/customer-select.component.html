@@ -1,12 +1,12 @@
 <p-select
-  optionLabel="name"
+  optionLabel="displayLabel"
   optionValue="id"
   [class]="styleClass()"
   [disabled]="disabled()"
   [filter]="true"
   [formControl]="control()"
   [loading]="loading()"
-  [options]="customers()"
+  [options]="customerOptions()"
   [placeholder]="placeholder()"
   [showClear]="true"
   [virtualScroll]="true"
@@ -15,7 +15,7 @@
 >
   <ng-template #item let-customer>
     <div class="customers-wrapper">
-      <div>{{ customer.name }}</div>
+      <div>{{ customer.displayLabel }}</div>
     </div>
   </ng-template>
   <ng-template #emptyFilter>
