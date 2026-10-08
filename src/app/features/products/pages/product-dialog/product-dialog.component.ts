@@ -48,6 +48,7 @@ import {
 } from '../../constants/product-options.constants';
 
 import { ProductFormValue } from '../../types/product-form-value.type';
+import { cleared } from '../../utils/cleared';
 import { FieldRendererComponent } from '@shared/components/field-renderer/field-renderer.component';
 import { ImageSectionComponent } from '@shared/components/image-section/image-section.component';
 import { ScrollToErrorDirective } from '@shared/directives/scroll-to-error.directive';
@@ -258,23 +259,25 @@ export class ProductDialogComponent {
       category: formValue.category!,
       wholesale: formValue.wholesale!,
       retail: formValue.retail!,
-      sku: formValue.sku || undefined,
+      sku: cleared(formValue.sku),
       status: formValue.status as ProductStatus,
-      unitOfMeasurement: formValue.unitOfMeasurement || undefined,
+      unitOfMeasurement: cleared(formValue.unitOfMeasurement),
+      // Not cleared: the column is NOT NULL and defaults to pieces.
       quantityUnit: formValue.quantityUnit || undefined,
-      grade: formValue.grade || undefined,
-      weight: formValue.weight || undefined,
+      grade: cleared(formValue.grade),
+      weight: cleared(formValue.weight),
       ingredients: formValue.ingredients || [],
-      inBoxPrice: formValue.inBoxPrice || undefined,
-      quantityInBox: formValue.quantityInBox || undefined,
+      inBoxPrice: cleared(formValue.inBoxPrice),
+      quantityInBox: cleared(formValue.quantityInBox),
+      // Not cleared: the column is NOT NULL and defaults to 0.
       minOrderQuantity: formValue.minOrderQuantity || undefined,
       isFeatured: formValue.isFeatured || false,
       isOrganic: formValue.isOrganic || false,
-      supplierReference: formValue.supplierReference || undefined,
+      supplierReference: cleared(formValue.supplierReference),
       certifications: formValue.certifications || [],
       images: formValue.images || [],
-      image: formValue.image || undefined,
-      costPrice: formValue.costPrice || undefined,
+      image: cleared(formValue.image),
+      costPrice: cleared(formValue.costPrice),
     };
   }
 
