@@ -101,8 +101,12 @@
       }
       @case ('checkbox') {
         <div class="checkbox-group">
+          <!-- binary: without it PrimeNG treats the control as a multi-value
+               checkbox group and writes [null] instead of true/false, which the
+               API rejects as a non-boolean. -->
           <p-checkbox
             class="form-checkbox"
+            [binary]="true"
             [formControl]="control()!"
             [inputId]="id()"
           />
