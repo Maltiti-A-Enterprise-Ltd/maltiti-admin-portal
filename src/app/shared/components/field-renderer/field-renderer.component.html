@@ -110,5 +110,9 @@
         </div>
       }
     }
+
+    @if (hint()) {
+      <small class="field-hint">{{ hint() }}</small>
+    }
   }
 </div>

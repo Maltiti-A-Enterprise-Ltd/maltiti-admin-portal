@@ -35,6 +35,24 @@ export class CustomValidators {
     };
   }
 
+  /**
+   * Accepts a plain non-negative number, with or without decimals. Use where a
+   * value is only half of a measurement and the other half lives elsewhere —
+   * a product's weight, for instance, which is paired with its unit of
+   * measurement rather than carrying the unit inline.
+   *
+   * Blank passes; combine with `Validators.required` when the field is needed.
+   */
+  public static numeric(control: AbstractControl): ValidationErrors | null {
+    const value = control.value;
+
+    if (value === null || value === undefined || String(value).trim() === '') {
+      return null;
+    }
+
+    return /^\d+(\.\d+)?$/.test(String(value).trim()) ? null : { numeric: true };
+  }
+
   public static strongPassword(control: AbstractControl): ValidationErrors | null {
     const value = control.value;
     // At least one uppercase letter, one lowercase letter, one number, and one special character

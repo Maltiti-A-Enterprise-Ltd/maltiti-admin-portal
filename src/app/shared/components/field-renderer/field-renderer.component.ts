@@ -58,6 +58,8 @@ export class FieldRendererComponent {
   public readonly value = input<Value>(null);
   public readonly options = input<SelectOption[]>([]);
   public readonly placeholder = input<string>('');
+  /** Short guidance shown beneath the field while editing. */
+  public readonly hint = input<string>('');
   public readonly required = input<boolean>(false);
   public readonly styleClass = input<string>('');
   public readonly isMultiSelect = input<boolean>(false);

@@ -55,6 +55,7 @@ import { BatchApiService } from '../../../batches/services/batch-api.service';
 import { Batch } from '../../../batches/models/batch.model';
 import { getQualityStatusSeverity } from '@shared/utils/quality-status.util';
 import { DialogFormSeeder } from '@shared/utils/dialog-form-seeder';
+import { CustomValidators } from '@shared/validators/custom-validators';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -133,7 +134,10 @@ export class ProductDialogComponent {
     // Product Details
     unitOfMeasurement: this.fb.control<UnitOfMeasurement | null>(null),
     grade: this.fb.control<ProductGrade | null>(null),
-    weight: this.fb.control(''),
+    // Numbers only — the unit lives in `unitOfMeasurement`, and the two are
+    // joined for display ("500" + Gram → "500g"). A unit typed in here would
+    // show up twice.
+    weight: this.fb.control('', { validators: [CustomValidators.numeric] }),
     ingredients: this.fb.control<string[]>([], {
       validators: [Validators.required, Validators.minLength(1)],
     }),

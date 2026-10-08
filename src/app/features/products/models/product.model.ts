@@ -7,6 +7,7 @@ import { Ingredient } from '@models/ingredient.model';
 export enum UnitOfMeasurement {
   KILOGRAM = 'kilogram',
   GRAM = 'gram',
+  POUND = 'pound',
   LITRE = 'litre',
   MILLILITRE = 'millilitre',
 }

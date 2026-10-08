@@ -25,6 +25,14 @@
     }
   }
 
+  // Guidance beneath a field, e.g. explaining an input's expected format.
+  .field-hint {
+    margin-top: 0.25rem;
+    font-size: 0.75rem;
+    line-height: 1.4;
+    color: var(--text-color-secondary, #6c757d);
+  }
+
   .checkbox-group {
     display: flex;
     align-items: center;

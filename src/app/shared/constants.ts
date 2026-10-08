@@ -5,6 +5,7 @@ export const SERVER_ERROR = 'Something went wrong. Please try again later.';
 export const unitSymbols: Record<UnitOfMeasurement, string> = {
   [UnitOfMeasurement.KILOGRAM]: 'kg',
   [UnitOfMeasurement.GRAM]: 'g',
+  [UnitOfMeasurement.POUND]: 'lb',
   [UnitOfMeasurement.LITRE]: 'L',
   [UnitOfMeasurement.MILLILITRE]: 'ml',
 };

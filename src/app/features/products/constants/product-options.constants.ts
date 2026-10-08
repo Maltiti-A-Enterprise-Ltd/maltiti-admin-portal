@@ -39,6 +39,7 @@ export const PRODUCT_GRADE_OPTIONS = [
 export const UNIT_OF_MEASUREMENT_OPTIONS = [
   { label: 'Kilogram', value: 'kilogram' },
   { label: 'Gram', value: 'gram' },
+  { label: 'Pound', value: 'pound' },
   { label: 'Litre', value: 'litre' },
   { label: 'Millilitre', value: 'millilitre' },
 ];
