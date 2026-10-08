@@ -191,9 +191,10 @@
         <app-field-renderer
           id="weight"
           [control]="productForm.controls.weight"
+          [hint]="'Numbers only — the unit comes from Unit of Measurement (e.g. 500 + Gram shows as 500g).'"
           [label]="'Weight'"
           [mode]="isViewMode() ? 'view' : 'edit'"
-          [placeholder]="'e.g., 500g, 1kg'"
+          [placeholder]="'e.g. 500'"
           [type]="'input'"
           [value]="productForm.value.weight"
         />
