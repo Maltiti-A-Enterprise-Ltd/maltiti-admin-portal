@@ -19,6 +19,7 @@ import {
   PaymentStatus,
   Sale,
   SaleLineItemDto,
+  SendInvoiceEmailDto,
   UpdateDeliveryCostDto,
   UpdateSaleDto,
   UpdateSaleStatusDto,
@@ -126,6 +127,22 @@ export class SalesApiService {
     return this.http.post(`${this.baseUrl}/${id}/invoice`, dto, {
       responseType: 'blob',
     });
+  }
+
+  /**
+   * Email a sale's invoice, with the PDF attached.
+   * POST /sales/{id}/invoice/email
+   *
+   * Omit `email` to send to the address on the customer record.
+   */
+  public sendInvoiceEmail(
+    id: string,
+    dto: SendInvoiceEmailDto,
+  ): Observable<{ message: string; data: { sentTo: string } }> {
+    return this.http.post<{ message: string; data: { sentTo: string } }>(
+      `${this.baseUrl}/${id}/invoice/email`,
+      dto,
+    );
   }
 
   /**
