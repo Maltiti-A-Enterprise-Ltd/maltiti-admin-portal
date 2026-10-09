@@ -13,6 +13,16 @@ export const routes: Routes = [
     loadComponent: () => import('./auth/login/login.component').then((m) => m.LoginComponent),
   },
   {
+    path: APP_ROUTES.auth.oauthCallback.path,
+    loadComponent: () =>
+      import('./auth/oauth-callback/oauth-callback.component').then((m) => m.OAuthCallbackComponent),
+  },
+  {
+    path: APP_ROUTES.auth.oauthError.path,
+    loadComponent: () =>
+      import('./auth/oauth-error/oauth-error.component').then((m) => m.OAuthErrorComponent),
+  },
+  {
     path: '',
     loadComponent: () =>
       import('./layout/dashboard-layout/dashboard-layout.component').then(

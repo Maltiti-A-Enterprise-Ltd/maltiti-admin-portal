@@ -2,7 +2,7 @@ import { inject, Injectable } from '@angular/core';
 import { Router } from '@angular/router';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
 import { of } from 'rxjs';
-import { catchError, exhaustMap, map, tap } from 'rxjs/operators';
+import { catchError, exhaustMap, map, switchMap, tap } from 'rxjs/operators';
 import { AuthService } from '../services/auth.service';
 import * as AuthActions from './auth.actions';
 import { APP_ROUTES } from '@config/routes.config';
@@ -57,6 +57,34 @@ export class AuthEffects {
         ofType(AuthActions.authLogoutSuccess, AuthActions.sessionExpired),
         tap(() => {
           void this.router.navigate([APP_ROUTES.auth.login.fullPath]);
+        }),
+      ),
+    { dispatch: false },
+  );
+
+  public readonly microsoftAuth$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(AuthActions.microsoftAuthCallback),
+      switchMap(({ accessToken }) =>
+        this.authService.fetchUserProfile().pipe(
+          map((user) => AuthActions.authLoginSuccess({ user, accessToken })),
+          catchError((error) => {
+            const errorMessage = error?.error?.message || 'Microsoft sign-in failed. Please try again.';
+            return of(AuthActions.microsoftAuthFailure({ error: errorMessage }));
+          }),
+        ),
+      ),
+    ),
+  );
+
+  public readonly microsoftAuthFailure$ = createEffect(
+    () =>
+      this.actions$.pipe(
+        ofType(AuthActions.microsoftAuthFailure),
+        tap(({ error }) => {
+          void this.router.navigate([APP_ROUTES.auth.oauthError.fullPath], {
+            queryParams: { message: encodeURIComponent(error) },
+          });
         }),
       ),
     { dispatch: false },
