@@ -1,0 +1,54 @@
+.page-container {
+  padding: 1.5rem;
+}
+
+.page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+
+  h1 {
+    margin: 0 0 0.25rem;
+    font-size: 1.5rem;
+  }
+
+  p {
+    margin: 0;
+    color: var(--text-color-secondary, #64748b);
+    font-size: 0.875rem;
+  }
+}
+
+.table-card {
+  background: var(--surface-card, #fff);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.institution {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.institution-name {
+  font-weight: 500;
+}
+
+.muted {
+  color: var(--text-color-secondary, #94a3b8);
+  font-size: 0.85rem;
+}
+
+.row-actions {
+  display: flex;
+  gap: 0.25rem;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 2.5rem 1rem;
+  color: var(--text-color-secondary, #64748b);
+}

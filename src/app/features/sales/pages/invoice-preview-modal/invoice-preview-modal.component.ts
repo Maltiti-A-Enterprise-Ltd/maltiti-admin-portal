@@ -14,7 +14,7 @@ import {
   inject,
   signal,
 } from '@angular/core';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { take } from 'rxjs';
 
@@ -24,10 +24,16 @@ import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { RadioButtonModule } from 'primeng/radiobutton';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
+import { CheckboxModule } from 'primeng/checkbox';
 import { MessageService } from 'primeng/api';
 
 // Local
 import { SalesApiService } from '../../services/sales-api.service';
+import { PaymentAccountApiService } from '@features/payment-accounts/services/payment-account-api.service';
+import {
+  PaymentAccount,
+  paymentAccountLabel,
+} from '@features/payment-accounts/models/payment-account.model';
 
 /** Where the invoice should go. */
 type Recipient = 'customer' | 'other';
@@ -40,11 +46,13 @@ type Recipient = 'customer' | 'other';
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     ReactiveFormsModule,
+    FormsModule,
     DialogModule,
     ButtonModule,
     InputTextModule,
     RadioButtonModule,
     ProgressSpinnerModule,
+    CheckboxModule,
   ],
 })
 export class InvoicePreviewModalComponent {
@@ -53,9 +61,21 @@ export class InvoicePreviewModalComponent {
   private readonly sanitizer = inject(DomSanitizer);
   private readonly destroyRef = inject(DestroyRef);
   private readonly fb = inject(FormBuilder);
+  private readonly paymentAccountApi = inject(PaymentAccountApiService);
 
   public readonly visible = signal(false);
   public readonly generating = signal(false);
+
+  /** Accounts available to print, and which of them are ticked. */
+  public readonly paymentAccounts = signal<PaymentAccount[]>([]);
+  public readonly selectedAccountIds = signal<string[]>([]);
+  public readonly accountLabel = paymentAccountLabel;
+  public readonly allAccountsSelected = computed(
+    () =>
+      this.paymentAccounts().length > 0 &&
+      this.selectedAccountIds().length === this.paymentAccounts().length,
+  );
+
   public readonly sending = signal(false);
   public readonly previewUrl = signal<SafeResourceUrl | null>(null);
   /**
@@ -107,7 +127,65 @@ export class InvoicePreviewModalComponent {
     });
     this.sendError.set(null);
     this.visible.set(true);
-    this.loadPreview(saleId);
+    this.loadPaymentAccounts(saleId);
+  }
+
+  public isAccountSelected(id: string): boolean {
+    return this.selectedAccountIds().includes(id);
+  }
+
+  public toggleAccount(id: string): void {
+    this.selectedAccountIds.update((ids) =>
+      ids.includes(id) ? ids.filter((existing) => existing !== id) : [...ids, id],
+    );
+    this.regenerate();
+  }
+
+  public toggleAllAccounts(): void {
+    this.selectedAccountIds.set(
+      this.allAccountsSelected() ? [] : this.paymentAccounts().map(({ id }) => id),
+    );
+    this.regenerate();
+  }
+
+  /**
+   * Re-renders the preview so what the admin is looking at is the document
+   * that would actually be sent.
+   */
+  private regenerate(): void {
+    const saleId = this.saleId();
+
+    if (saleId) {
+      this.loadPreview(saleId);
+    }
+  }
+
+  /**
+   * Retired accounts are left out — an invoice must not ask a customer to pay
+   * into an account that is no longer in use.
+   */
+  private loadPaymentAccounts(saleId: string): void {
+    this.generating.set(true);
+
+    this.paymentAccountApi
+      .getAll(true)
+      .pipe(take(1))
+      .subscribe({
+        next: (accounts) => {
+          this.paymentAccounts.set(accounts);
+          this.selectedAccountIds.set(
+            accounts.filter((a) => a.includeOnInvoiceByDefault).map(({ id }) => id),
+          );
+          this.loadPreview(saleId);
+        },
+        // Not being able to list the accounts is no reason to withhold the
+        // invoice; it just means none are offered for this one.
+        error: () => {
+          this.paymentAccounts.set([]);
+          this.selectedAccountIds.set([]);
+          this.loadPreview(saleId);
+        },
+      });
   }
 
   public close(): void {
@@ -115,6 +193,8 @@ export class InvoicePreviewModalComponent {
     this.sendError.set(null);
     this.releasePreview();
     this.saleId.set(null);
+    this.paymentAccounts.set([]);
+    this.selectedAccountIds.set([]);
     this.form.reset({ recipient: 'customer', email: '' });
   }
 
@@ -160,7 +240,11 @@ export class InvoicePreviewModalComponent {
     this.sendError.set(null);
     this.sending.set(true);
     this.salesApiService
-      .sendInvoiceEmail(saleId, toOther ? { email: typed } : {})
+      .sendInvoiceEmail(saleId, {
+        ...(toOther ? { email: typed } : {}),
+        // Send what was previewed, not the defaults.
+        paymentAccountIds: this.selectedAccountIds(),
+      })
       .pipe(take(1))
       .subscribe({
         next: (response) => {
@@ -191,7 +275,11 @@ export class InvoicePreviewModalComponent {
     this.releasePreview();
 
     this.salesApiService
-      .generateInvoice(saleId, { discount: 0, transportation: 0 })
+      .generateInvoice(saleId, {
+        discount: 0,
+        transportation: 0,
+        paymentAccountIds: this.selectedAccountIds(),
+      })
       .pipe(take(1))
       .subscribe({
         next: (blob: Blob) => {

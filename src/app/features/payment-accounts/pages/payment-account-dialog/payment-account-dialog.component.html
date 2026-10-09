@@ -1,0 +1,245 @@
+<p-dialog
+  styleClass="payment-account-dialog"
+  [draggable]="false"
+  [header]="dialogTitle()"
+  [modal]="true"
+  [style]="{ width: '50rem' }"
+  [visible]="visible()"
+  (visibleChange)="!$event && onHide()"
+>
+  <form class="account-form" [formGroup]="form">
+    @if (errorMessage()) {
+      <div class="form-error">{{ errorMessage() }}</div>
+    }
+
+    <div class="form-section">
+      <h3 class="section-title">Account</h3>
+      <div class="form-grid">
+        <app-field-renderer
+          id="type"
+          [control]="form.controls.type"
+          [label]="'Account Type *'"
+          [mode]="'edit'"
+          [options]="typeOptions"
+          [placeholder]="'Select a type'"
+          [type]="'select'"
+          [value]="form.value.type"
+        />
+
+        <app-field-renderer
+          id="accountName"
+          [control]="form.controls.accountName"
+          [label]="'Account Name *'"
+          [mode]="'edit'"
+          [placeholder]="'MALTITI A. ENTERPRISE LTD'"
+          [type]="'input'"
+          [value]="form.value.accountName"
+        />
+
+        <app-field-renderer
+          id="accountNumber"
+          [control]="form.controls.accountNumber"
+          [label]="isMobileMoney() ? 'Phone Number *' : 'Account Number *'"
+          [mode]="'edit'"
+          [placeholder]="isMobileMoney() ? '024 238 1560' : '0600026146400'"
+          [type]="'input'"
+          [value]="form.value.accountNumber"
+        />
+
+        <!-- Mobile money in Ghana settles in cedis, so the choice would be
+             misleading rather than useful. -->
+        @if (!isMobileMoney()) {
+          <app-field-renderer
+            id="currency"
+            [control]="form.controls.currency"
+            [label]="'Currency *'"
+            [mode]="'edit'"
+            [options]="currencyOptions"
+            [placeholder]="'Select a currency'"
+            [type]="'select'"
+            [value]="form.value.currency"
+          />
+        }
+      </div>
+    </div>
+
+    @if (isMobileMoney()) {
+      <div class="form-section">
+        <h3 class="section-title">Mobile Money</h3>
+        <div class="form-grid">
+          <app-field-renderer
+            id="mobileMoneyNetwork"
+            [control]="form.controls.mobileMoneyNetwork"
+            [label]="'Network *'"
+            [mode]="'edit'"
+            [options]="networkOptions"
+            [placeholder]="'Select a network'"
+            [type]="'select'"
+            [value]="form.value.mobileMoneyNetwork"
+          />
+
+          <app-field-renderer
+            id="merchantId"
+            [control]="form.controls.merchantId"
+            [label]="'Merchant ID'"
+            [mode]="'edit'"
+            [placeholder]="'MAL12345'"
+            [type]="'input'"
+            [value]="form.value.merchantId"
+          />
+        </div>
+      </div>
+    } @else {
+      <div class="form-section">
+        <h3 class="section-title">Bank</h3>
+        <div class="form-grid">
+          <app-field-renderer
+            id="bankName"
+            [control]="form.controls.bankName"
+            [label]="'Bank Name *'"
+            [mode]="'edit'"
+            [placeholder]="'Société Générale Ghana PLC'"
+            [type]="'input'"
+            [value]="form.value.bankName"
+          />
+
+          <app-field-renderer
+            id="branchName"
+            [control]="form.controls.branchName"
+            [label]="'Branch'"
+            [mode]="'edit'"
+            [placeholder]="'Tamale Branch'"
+            [type]="'input'"
+            [value]="form.value.branchName"
+          />
+
+          <app-field-renderer
+            id="branchCode"
+            [control]="form.controls.branchCode"
+            [label]="'Branch Code'"
+            [mode]="'edit'"
+            [placeholder]="'90801'"
+            [type]="'input'"
+            [value]="form.value.branchCode"
+          />
+
+          <app-field-renderer
+            id="swiftCode"
+            [control]="form.controls.swiftCode"
+            [label]="'SWIFT Code'"
+            [mode]="'edit'"
+            [placeholder]="'SSEBGHAC'"
+            [type]="'input'"
+            [value]="form.value.swiftCode"
+          />
+
+          <app-field-renderer
+            id="iban"
+            [control]="form.controls.iban"
+            [label]="'IBAN'"
+            [mode]="'edit'"
+            [placeholder]="'GH288000099080160002614640-0'"
+            [type]="'input'"
+            [value]="form.value.iban"
+          />
+
+          <app-field-renderer
+            id="bankAddress"
+            [control]="form.controls.bankAddress"
+            [label]="'Bank Address'"
+            [mode]="'edit'"
+            [placeholder]="'P.O. BOX 13119, ACCRA'"
+            [type]="'input'"
+            [value]="form.value.bankAddress"
+          />
+        </div>
+      </div>
+
+      <div class="form-section">
+        <h3 class="section-title">Correspondent Bank</h3>
+        <p class="section-hint">
+          Only needed for accounts receiving transfers from abroad — the bank the money is
+          routed through before it reaches yours.
+        </p>
+        <div class="form-grid">
+          <app-field-renderer
+            id="correspondentBankName"
+            [control]="form.controls.correspondentBankName"
+            [label]="'Correspondent Bank'"
+            [mode]="'edit'"
+            [placeholder]="'SOCIETE GENERALE'"
+            [type]="'input'"
+            [value]="form.value.correspondentBankName"
+          />
+
+          <app-field-renderer
+            id="correspondentSwiftCode"
+            [control]="form.controls.correspondentSwiftCode"
+            [label]="'Correspondent SWIFT'"
+            [mode]="'edit'"
+            [placeholder]="'SOGERP'"
+            [type]="'input'"
+            [value]="form.value.correspondentSwiftCode"
+          />
+
+          <app-field-renderer
+            id="correspondentIban"
+            [control]="form.controls.correspondentIban"
+            [label]="'Correspondent IBAN'"
+            [mode]="'edit'"
+            [placeholder]="'FR76300030699000101485'"
+            [type]="'input'"
+            [value]="form.value.correspondentIban"
+          />
+
+          <app-field-renderer
+            id="correspondentBankAddress"
+            [control]="form.controls.correspondentBankAddress"
+            [label]="'Correspondent Address'"
+            [mode]="'edit'"
+            [placeholder]="'29 Boulevard Haussmann, 75009 Paris, France'"
+            [type]="'input'"
+            [value]="form.value.correspondentBankAddress"
+          />
+        </div>
+      </div>
+    }
+
+    <div class="form-section">
+      <h3 class="section-title">Invoices</h3>
+      <app-field-renderer
+        id="includeOnInvoiceByDefault"
+        [control]="form.controls.includeOnInvoiceByDefault"
+        [hint]="
+          'Pre-ticks this account when an invoice is generated. It can still be removed for any one invoice.'
+        "
+        [label]="'Include on invoices by default'"
+        [mode]="'edit'"
+        [type]="'checkbox'"
+        [value]="form.value.includeOnInvoiceByDefault"
+      />
+
+      <app-field-renderer
+        id="isActive"
+        [control]="form.controls.isActive"
+        [hint]="
+          'Retired accounts stay on invoices already issued, but are never offered for new ones.'
+        "
+        [label]="'Account is in use'"
+        [mode]="'edit'"
+        [type]="'checkbox'"
+        [value]="form.value.isActive"
+      />
+    </div>
+  </form>
+
+  <ng-template pTemplate="footer">
+    <p-button label="Cancel" severity="secondary" [text]="true" (onClick)="onHide()" />
+    <p-button
+      icon="pi pi-check"
+      [label]="isEdit() ? 'Save Changes' : 'Add Account'"
+      [loading]="saving()"
+      (onClick)="onSave()"
+    />
+  </ng-template>
+</p-dialog>

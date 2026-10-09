@@ -25,6 +25,42 @@
       }
     </div>
 
+    <!-- Which accounts to print. Ticking regenerates the preview, so what is
+         on screen is always the document that would be sent. -->
+    @if (paymentAccounts().length) {
+      <div class="accounts-pane">
+        <div class="accounts-header">
+          <h4 class="send-title">Bank details to include</h4>
+          <button class="select-all" type="button" (click)="toggleAllAccounts()">
+            {{ allAccountsSelected() ? 'Clear all' : 'Select all' }}
+          </button>
+        </div>
+
+        <div class="account-options">
+          @for (account of paymentAccounts(); track account.id) {
+            <div class="account-option">
+              <p-checkbox
+                [ariaLabel]="accountLabel(account)"
+                [binary]="true"
+                [disabled]="generating()"
+                [inputId]="'account-' + account.id"
+                [ngModel]="isAccountSelected(account.id)"
+                [ngModelOptions]="{ standalone: true }"
+                (onChange)="toggleAccount(account.id)"
+              />
+              <label class="account-label" [for]="'account-' + account.id">
+                {{ accountLabel(account) }}
+              </label>
+            </div>
+          }
+        </div>
+
+        @if (!selectedAccountIds().length) {
+          <p class="accounts-hint">No bank details will be shown on this invoice.</p>
+        }
+      </div>
+    }
+
     <!-- Send by email -->
     <form class="send-pane" [formGroup]="form">
       <h4 class="send-title">Send by email</h4>
