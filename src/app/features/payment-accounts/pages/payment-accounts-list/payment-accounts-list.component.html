@@ -1,0 +1,96 @@
+<div class="page-container">
+  <div class="page-header">
+    <div>
+      <h1>Payment Accounts</h1>
+      <p>The bank and mobile money accounts customers are asked to pay into</p>
+    </div>
+    <p-button icon="pi pi-plus" label="Add Account" (onClick)="onAdd()" />
+  </div>
+
+  <div class="table-card">
+    <p-table
+      dataKey="id"
+      [loading]="loading()"
+      [value]="accounts()"
+    >
+      <ng-template pTemplate="header">
+        <tr>
+          <th>Bank / Network</th>
+          <th>Account Name</th>
+          <th>Number</th>
+          <th>Branch</th>
+          <th>Currency</th>
+          <th>On Invoices</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </ng-template>
+
+      <ng-template let-account pTemplate="body">
+        <tr>
+          <td>
+            <div class="institution">
+              <span class="institution-name">{{ institution(account) }}</span>
+              <p-tag
+                [severity]="account.type === AccountType.MOBILE_MONEY ? 'info' : 'secondary'"
+                [value]="account.type === AccountType.MOBILE_MONEY ? 'Mobile Money' : 'Bank'"
+              />
+            </div>
+          </td>
+          <td>{{ account.accountName }}</td>
+          <td>{{ account.accountNumber }}</td>
+          <td>{{ account.type === AccountType.MOBILE_MONEY ? '—' : branch(account) }}</td>
+          <td>{{ account.currency }}</td>
+          <td>
+            @if (account.includeOnInvoiceByDefault) {
+              <p-tag severity="success" value="Default" />
+            } @else {
+              <span class="muted">On request</span>
+            }
+          </td>
+          <td>
+            <p-tag
+              [severity]="account.isActive ? 'success' : 'warn'"
+              [value]="account.isActive ? 'In use' : 'Retired'"
+            />
+          </td>
+          <td>
+            <div class="row-actions">
+              <p-button
+                icon="pi pi-pencil"
+                severity="secondary"
+                [rounded]="true"
+                [text]="true"
+                (onClick)="onEdit(account)"
+              />
+              <p-button
+                icon="pi pi-trash"
+                severity="danger"
+                [rounded]="true"
+                [text]="true"
+                (onClick)="onDelete(account)"
+              />
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td class="empty-state" colspan="8">
+            No payment accounts yet. Add one and it can be printed on your invoices.
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+</div>
+
+<app-payment-account-dialog
+  [account]="selectedAccount()"
+  [visible]="dialogVisible()"
+  (saved)="load()"
+  (visibleChange)="dialogVisible.set($event)"
+/>
+
+<p-confirmDialog />
