@@ -187,3 +187,25 @@
     }
   }
 }
+
+// "Products" and its running count sit on one line, with the Add Product
+// button pushed to the far end of the header.
+.line-items-heading {
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+
+  h3 {
+    margin: 0;
+  }
+}
+
+.line-items-summary {
+  font-size: 0.8rem;
+  color: var(--text-color-secondary, #64748b);
+}
+
+.total-items {
+  font-size: 0.75rem;
+  color: var(--text-color-secondary, #64748b);
+}

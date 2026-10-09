@@ -118,6 +118,15 @@
         <div class="total-amount">
           {{ totalPrice() | currency: 'GH₵ ' }}
         </div>
+        @if (lineItemSummary().productCount) {
+          <div class="total-items">
+            {{ lineItemSummary().productCount }}
+            {{ lineItemSummary().productCount === 1 ? 'product' : 'products' }}
+            &middot;
+            {{ lineItemSummary().totalQuantity | number }}
+            {{ lineItemSummary().totalQuantity === 1 ? 'unit' : 'units' }}
+          </div>
+        }
       </div>
     </div>
   </p-card>
@@ -125,7 +134,20 @@
   <!-- Line Items Section -->
   <p-card header="Line Items">
     <div class="line-items-header">
-      <h3>Products</h3>
+      <div class="line-items-heading">
+        <h3>Products</h3>
+        <!-- A running count, so the number of products on the sale never has
+             to be worked out by scrolling and counting rows. -->
+        @if (lineItemSummary().productCount) {
+          <span class="line-items-summary">
+            {{ lineItemSummary().productCount }}
+            {{ lineItemSummary().productCount === 1 ? 'product' : 'products' }}
+            &middot;
+            {{ lineItemSummary().totalQuantity | number }}
+            {{ lineItemSummary().totalQuantity === 1 ? 'unit' : 'units' }}
+          </span>
+        }
+      </div>
       @if (!isPaid()) {
         <app-button
           icon="pi pi-plus"
