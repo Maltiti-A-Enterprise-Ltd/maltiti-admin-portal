@@ -23,6 +23,8 @@ import { NumberInputComponent } from '@shared/components/number-input/number-inp
 import { SelectComponent } from '@shared/components/select/select.component';
 import { LightProduct } from '../../../products/models/product.model';
 import { Batch } from '../../../batches/models/batch.model';
+import { BoxQuantityLink } from '../../utils/box-quantity-link';
+import { reindexControlMap } from '../../utils/reindex-control-map';
 import { TooltipModule } from 'primeng/tooltip';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { combineLatest, merge, Subject, switchMap } from 'rxjs';
@@ -78,6 +80,15 @@ export class LineItemEditorComponent implements OnInit {
   public readonly selectedProduct: Signal<LightProduct | null> = computed(() => {
     return this.products().find((p) => p.id === this.productId()) || null;
   });
+  /**
+   * Lets the line be entered in boxes. Kept outside `lineItemForm` on purpose:
+   * `emitChange` spreads the whole form into the payload, and the API rejects
+   * properties it does not know.
+   */
+  public readonly boxLink = new BoxQuantityLink(
+    this.lineItemForm.controls.requestedQuantity,
+    this.selectedProduct,
+  );
   public readonly totalAllocatedQuantity = computed(
     () =>
       this.lineItem()
@@ -92,6 +103,8 @@ export class LineItemEditorComponent implements OnInit {
   public readonly quantityControls = signal(new Map<number, FormControl<number | null>>());
 
   constructor() {
+    this.boxLink.connect();
+
     effect(() => {
       if (this.isPaid()) {
         this.lineItemForm.controls.customPrice.disable();
@@ -276,19 +289,8 @@ export class LineItemEditorComponent implements OnInit {
   }
 
   private reindexControlMaps(removedIndex: number): void {
-    const reindexMap = <T>(controlMap: Map<number, T>): Map<number, T> => {
-      const result = new Map<number, T>();
-      controlMap.forEach((value, key) => {
-        if (key < removedIndex) {
-          result.set(key, value);
-        } else if (key > removedIndex) {
-          result.set(key - 1, value);
-        }
-      });
-      return result;
-    };
-    this.batchControls.update((controls) => reindexMap(controls));
-    this.quantityControls.update((controls) => reindexMap(controls));
+    this.batchControls.update((controls) => reindexControlMap(controls, removedIndex));
+    this.quantityControls.update((controls) => reindexControlMap(controls, removedIndex));
   }
 
   private validateBatchAllocations(): void {

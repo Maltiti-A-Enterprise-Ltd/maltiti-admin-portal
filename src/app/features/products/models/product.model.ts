@@ -90,6 +90,7 @@ export type LightProduct = Pick<
   | 'quantityUnit'
   | 'grade'
   | 'category'
+  | 'quantityInBox'
 >;
 
 /**

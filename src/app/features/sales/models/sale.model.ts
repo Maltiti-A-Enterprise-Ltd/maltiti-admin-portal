@@ -140,6 +140,13 @@ export interface CreateSaleDto {
   paymentStatus?: PaymentStatus;
   lineItems: SaleLineItemDto[];
   deliveryFee?: number;
+  /**
+   * Email the customer their order confirmation, and the invoice or receipt
+   * for this sale. Opt-in, so historical and offline sales can be recorded
+   * without reaching the customer. Describes the save, not the sale — the API
+   * does not store it.
+   */
+  notifyCustomer?: boolean;
 }
 
 export interface UpdateSaleLineItemDto {
