@@ -64,6 +64,22 @@
 
     <!-- Quantity and Price -->
     <div class="form-row">
+      <!-- Stock is picked by the box, so a product that records its box size
+           can be ordered that way and have the unit quantity filled in. -->
+      @if (boxLink.isBoxed()) {
+        <div class="form-field">
+          <app-number-input
+            id="boxes"
+            label="Boxes"
+            [control]="boxLink.boxesControl"
+            [min]="0"
+          />
+          <small class="form-help">
+            {{ boxLink.perBox() }} per box. Fills in the quantity below.
+          </small>
+        </div>
+      }
+
       <div>
         <div class="form-field">
           <app-number-input
