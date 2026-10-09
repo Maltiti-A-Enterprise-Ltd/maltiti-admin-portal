@@ -95,6 +95,24 @@
           <p>{{ confirmDeliveryDate() | date:'medium' }}</p>
         </div>
       }
+      <!-- Opt-in: recording a sale is silent unless this is ticked. Only on
+           create; editing a sale has never emailed the customer. -->
+      @if (!isEditMode) {
+        <div class="form-field notify-customer-field">
+          <div class="notify-customer-row">
+            <p-checkbox
+              inputId="notifyCustomer"
+              [binary]="true"
+              [formControl]="notifyCustomerControl"
+            />
+            <label for="notifyCustomer">Email the customer about this sale</label>
+          </div>
+          <small class="form-help">
+            Sends the order confirmation, and the invoice or receipt. Leave unticked when
+            recording a past or offline sale.
+          </small>
+        </div>
+      }
       <div class="total-wrapper">
         <div>Total Amount</div>
         <div class="total-amount">
