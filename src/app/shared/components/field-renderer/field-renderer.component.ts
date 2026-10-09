@@ -95,11 +95,16 @@ export class FieldRendererComponent {
   });
 
   public readonly multiselectDisplay = computed(() => {
-    const opts = this.options();
-    const vals = this.value() as string[];
-    const selectedLabels = opts
-      .filter(({ value }) => vals.includes(value))
+    // A product with no certifications comes back as null, not []. Reading
+    // `includes` off that threw during change detection, which aborted the
+    // whole pass — leaving dialogs unable to close and the page masked.
+    const selected = this.value();
+    const values = Array.isArray(selected) ? selected : [];
+
+    const selectedLabels = this.options()
+      .filter(({ value }) => values.includes(value))
       .map(({ label }) => label);
+
     return selectedLabels.join(', ') || 'None';
   });
 
