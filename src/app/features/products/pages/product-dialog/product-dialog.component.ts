@@ -228,7 +228,12 @@ export class ProductDialogComponent {
         this.productForm.patchValue({
           ...product,
           minOrderQuantity: product.minOrderQuantity || 1,
-          ingredients: product.ingredients.map(({ id }) => id),
+          // These controls are typed as arrays, but the API returns null for an
+          // empty list. Letting null through makes anything that reads them as
+          // arrays throw.
+          ingredients: (product.ingredients ?? []).map(({ id }) => id),
+          certifications: product.certifications ?? [],
+          images: product.images ?? [],
           costPrice: product.costPrice ?? null,
         });
       } else {
