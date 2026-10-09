@@ -11,7 +11,7 @@ import {
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Dialog } from 'primeng/dialog';
 import { Button } from 'primeng/button';
-import { MessageService } from 'primeng/api';
+import { MessageService, PrimeTemplate } from 'primeng/api';
 import { FieldRendererComponent } from '@shared/components/field-renderer/field-renderer.component';
 import { DialogFormSeeder } from '@shared/utils/dialog-form-seeder';
 import { PaymentAccountApiService } from '../../services/payment-account-api.service';
@@ -32,7 +32,9 @@ import { buildPaymentAccountPayload } from '../../utils/payment-account-payload'
   changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-payment-account-dialog',
   standalone: true,
-  imports: [ReactiveFormsModule, Dialog, Button, FieldRendererComponent],
+  // PrimeTemplate is what registers `pTemplate="footer"`. Without it the
+  // template is inert and the dialog renders with no Save or Cancel button.
+  imports: [ReactiveFormsModule, Dialog, Button, PrimeTemplate, FieldRendererComponent],
   templateUrl: './payment-account-dialog.component.html',
   styleUrl: './payment-account-dialog.component.scss',
 })
