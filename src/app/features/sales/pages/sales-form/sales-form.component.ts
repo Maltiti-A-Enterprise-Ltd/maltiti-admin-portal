@@ -55,6 +55,11 @@ import { APP_ROUTES } from '@config/routes.config';
 import { combineLatest } from 'rxjs';
 import { map, startWith } from 'rxjs/operators';
 import { lineItemsTotalPrice } from '@shared/utils/totalPriceCalculator';
+import { lineItemSummarySignal } from '../../utils/line-item-summary';
+import {
+  ORDER_STATUS_OPTIONS,
+  PAYMENT_STATUS_OPTIONS,
+} from '../../constants/sale-status-options';
 import { BatchApiService } from '../../../batches/services/batch-api.service';
 import { Batch } from '../../../batches/models/batch.model';
 
@@ -133,20 +138,11 @@ export class SalesFormComponent implements OnInit {
   public saleId: string | null = null;
 
   // Status options
-  public readonly statusOptions = [
-    { label: 'Pending', value: OrderStatus.PENDING },
-    { label: 'Packaging', value: OrderStatus.PACKAGING },
-    { label: 'In Transit', value: OrderStatus.IN_TRANSIT },
-    { label: 'Delivered', value: OrderStatus.DELIVERED },
-    { label: 'Cancelled', value: OrderStatus.CANCELLED },
-  ];
+  public readonly statusOptions = ORDER_STATUS_OPTIONS;
+  public readonly paymentStatusOptions = PAYMENT_STATUS_OPTIONS;
 
-  public readonly paymentStatusOptions = [
-    { label: 'Invoice Requested', value: PaymentStatus.INVOICE_REQUESTED },
-    { label: 'Pending Payment', value: PaymentStatus.PENDING_PAYMENT },
-    { label: 'Paid', value: PaymentStatus.PAID },
-    { label: 'Refunded', value: PaymentStatus.REFUNDED },
-  ];
+  /** Running count of what has been added, so the total is never a surprise. */
+  public readonly lineItemSummary = lineItemSummarySignal(this.lineItems);
 
   public ngOnInit(): void {
     this.checkEditMode();
