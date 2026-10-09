@@ -22,6 +22,12 @@ export class AuthService {
       .pipe(map((response) => response.data));
   }
 
+  public fetchUserProfile(): Observable<User> {
+    return this.http
+      .get<IResponse<User>>(`${this.apiUrl}/me/profile`)
+      .pipe(map((response) => response.data));
+  }
+
   public logout(): Observable<void> {
     return this.http
       .post<IResponse<void>>(`${this.apiUrl}/auth/logout`, {})

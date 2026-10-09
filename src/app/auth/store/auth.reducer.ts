@@ -52,6 +52,16 @@ export const authReducer = createReducer(
     ...state,
     loading: false,
   })),
+  on(AuthActions.microsoftAuthCallback, (state) => ({
+    ...state,
+    loading: true,
+    error: null,
+  })),
+  on(AuthActions.microsoftAuthFailure, (state, { error }) => ({
+    ...state,
+    loading: false,
+    error,
+  })),
   on(AuthActions.changePassword, (state) => ({
     ...state,
     loading: true,
