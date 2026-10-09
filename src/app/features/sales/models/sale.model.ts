@@ -177,11 +177,18 @@ export interface AssignBatchesDto {
 export interface SendInvoiceEmailDto {
   /** Omit to use the address on the customer record. */
   email?: string;
+  /** Carried through so the emailed PDF matches what was previewed. */
+  paymentAccountIds?: string[];
 }
 
 export interface GenerateInvoiceDto {
   discount?: number;
   transportation?: number;
+  /**
+   * Which payment accounts to print. Omit the property to use the accounts
+   * marked as defaults; send an empty array to print none at all.
+   */
+  paymentAccountIds?: string[];
 }
 
 export interface GenerateReceiptDto {
