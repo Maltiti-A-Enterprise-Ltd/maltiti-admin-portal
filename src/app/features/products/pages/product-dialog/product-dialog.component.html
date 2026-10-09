@@ -105,17 +105,40 @@
           [value]="productForm.value.retail"
         />
 
-        <app-field-renderer
-          id="inBoxPrice"
-          numberMode="currency"
-          [control]="productForm.controls.inBoxPrice"
-          [label]="'In-Box Price (GHS)'"
-          [min]="0"
-          [mode]="isViewMode() ? 'view' : 'edit'"
-          [placeholder]="'0.00'"
-          [type]="'number'"
-          [value]="productForm.value.inBoxPrice"
-        />
+        <!-- Auto-derived from Wholesale x Quantity per Box, but a box is often
+             discounted below the sum of its contents, so a typed amount wins. -->
+        <div class="in-box-price-field">
+          <app-field-renderer
+            id="inBoxPrice"
+            numberMode="currency"
+            [control]="productForm.controls.inBoxPrice"
+            [hint]="
+              isViewMode()
+                ? ''
+                : inBoxPriceOverridden()
+                  ? 'Set by hand. Wholesale Price × Quantity per Box gives ' +
+                    (calculatedInBoxPrice() | number: '1.2-2') +
+                    '.'
+                  : 'Calculated as Wholesale Price × Quantity per Box. Type an amount to override it.'
+            "
+            [label]="'In-Box Price (GHS)'"
+            [min]="0"
+            [mode]="isViewMode() ? 'view' : 'edit'"
+            [placeholder]="'0.00'"
+            [type]="'number'"
+            [value]="productForm.value.inBoxPrice"
+          />
+
+          @if (!isViewMode() && inBoxPriceOverridden() && calculatedInBoxPrice() !== null) {
+            <p-button
+              severity="secondary"
+              styleClass="in-box-price-reset"
+              [label]="'Use calculated price'"
+              [link]="true"
+              (onClick)="resetInBoxPrice()"
+            />
+          }
+        </div>
 
         <app-field-renderer
           id="costPrice"
@@ -132,6 +155,20 @@
 
       <!-- Opt-in: price edits are silent unless this is ticked. Only on edit;
            a brand new product has no price change to announce. -->
+      <!-- Opt-in: adding a product is silent unless this is ticked. Only on
+           add; an existing product has already been announced. -->
+      @if (!isEdit() && !isViewMode()) {
+        <app-field-renderer
+          id="notifyNewProduct"
+          [control]="productForm.controls.notifyNewProduct"
+          [hint]="'Emails every customer to announce this product. Leave unticked for drafts, duplicates and products already on sale.'"
+          [label]="'Email customers about this new product'"
+          [mode]="'edit'"
+          [type]="'checkbox'"
+          [value]="productForm.value.notifyNewProduct"
+        />
+      }
+
       @if (isEdit() && !isViewMode()) {
         <app-field-renderer
           id="notifyPriceChange"
@@ -153,6 +190,7 @@
         <app-field-renderer
           id="quantityInBox"
           [control]="productForm.controls.quantityInBox"
+          [hint]="isViewMode() ? '' : 'How many units a box holds. Sets the In-Box Price.'"
           [label]="'Quantity per Box'"
           [min]="1"
           [mode]="isViewMode() ? 'view' : 'edit'"
