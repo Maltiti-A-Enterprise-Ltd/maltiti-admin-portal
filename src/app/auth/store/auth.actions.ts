@@ -24,6 +24,16 @@ export const restoreUserFromStorage = createAction(
 
 export const noUserInStorage = createAction('[Auth] No User In Storage');
 
+export const microsoftAuthCallback = createAction(
+  '[Auth] Microsoft Auth Callback',
+  props<{ accessToken: string }>(),
+);
+
+export const microsoftAuthFailure = createAction(
+  '[Auth] Microsoft Auth Failure',
+  props<{ error: string }>(),
+);
+
 export const changePassword = createAction(
   '[Auth] Change Password',
   props<{ id: string; currentPassword: string; newPassword: string; confirmPassword: string }>(),

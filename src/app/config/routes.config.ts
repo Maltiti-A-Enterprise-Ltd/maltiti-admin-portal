@@ -25,6 +25,8 @@ export interface INestedRouteConfig {
 export interface IAppRoutes {
   auth: {
     login: IRouteConfig;
+    oauthCallback: IRouteConfig;
+    oauthError: IRouteConfig;
   };
   dashboard: IRouteConfig;
   products: IRouteConfig;
@@ -52,6 +54,14 @@ export const APP_ROUTES: IAppRoutes = {
     login: {
       path: 'login',
       fullPath: '/login',
+    },
+    oauthCallback: {
+      path: 'auth/oauth-callback',
+      fullPath: '/auth/oauth-callback',
+    },
+    oauthError: {
+      path: 'auth/oauth-error',
+      fullPath: '/auth/oauth-error',
     },
   },
   dashboard: {

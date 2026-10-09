@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Store } from '@ngrx/store';
 import { CardModule } from 'primeng/card';
@@ -7,8 +7,10 @@ import { PasswordModule } from 'primeng/password';
 import { ButtonModule } from 'primeng/button';
 import { FloatLabelModule } from 'primeng/floatlabel';
 import { MessageModule } from 'primeng/message';
+import { DividerModule } from 'primeng/divider';
 import { authLogin } from '../store/auth.actions';
-import { selectAuthLoading, selectAuthError } from '../store/auth.selectors';
+import { selectAuthError, selectAuthLoading } from '../store/auth.selectors';
+import { environment } from '@environments/environment';
 
 @Component({
   selector: 'app-login',
@@ -23,6 +25,7 @@ import { selectAuthLoading, selectAuthError } from '../store/auth.selectors';
     ButtonModule,
     FloatLabelModule,
     MessageModule,
+    DividerModule,
   ],
 })
 export class LoginComponent {
@@ -43,6 +46,10 @@ export class LoginComponent {
 
   public get passwordControl() {
     return this.loginForm.controls.password;
+  }
+
+  public loginWithMicrosoft(): void {
+    window.location.href = environment.microsoftAuthUrl;
   }
 
   public onSubmit(): void {
