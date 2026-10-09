@@ -119,6 +119,12 @@ export interface CreateProductDto {
   supplierReference?: string | null;
   minOrderQuantity?: number;
   costPrice?: number | null;
+  /**
+   * Announce this product by email to every customer. Opt-in: a new product is
+   * added silently unless this is true. Describes the save, not the product —
+   * the API does not store it.
+   */
+  notifyNewProduct?: boolean;
 }
 
 export type UpdateProductDto = Partial<CreateProductDto> & {
