@@ -27,6 +27,7 @@ import { ButtonModule } from 'primeng/button';
 import { CardModule } from 'primeng/card';
 import { InputTextModule } from 'primeng/inputtext';
 import { InputNumberModule } from 'primeng/inputnumber';
+import { CheckboxModule } from 'primeng/checkbox';
 import { DialogModule } from 'primeng/dialog';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { ConfirmationService, MessageService } from 'primeng/api';
@@ -69,6 +70,7 @@ import { Batch } from '../../../batches/models/batch.model';
     CardModule,
     InputTextModule,
     InputNumberModule,
+    CheckboxModule,
     DialogModule,
     ConfirmDialogModule,
     ButtonComponent,
@@ -122,6 +124,11 @@ export class SalesFormComponent implements OnInit {
     Validators.required,
   );
   public readonly isPaid = computed(() => this.paymentStatusControl.value === PaymentStatus.PAID);
+  /**
+   * Opt-in notification. Describes the save rather than the sale, so it lives
+   * outside the form group and is never seeded from a loaded sale.
+   */
+  public readonly notifyCustomerControl = new FormControl(false);
   public isEditMode = false;
   public saleId: string | null = null;
 
@@ -354,6 +361,9 @@ export class SalesFormComponent implements OnInit {
             batchAllocations: item.batchAllocations,
             customPrice: item.customPrice || undefined,
           })),
+          // Create-only, and omitted when off: the API rejects unknown
+          // properties, so an older deployment must not see the key at all.
+          notifyCustomer: this.notifyCustomerControl.value || undefined,
         };
 
         this.store.dispatch(createSale({ saleData }));

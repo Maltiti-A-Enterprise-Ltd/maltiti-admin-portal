@@ -172,3 +172,18 @@
     }
   }
 }
+
+// Checkbox and its label share a line; the help text sits under both, matching
+// the other fields in the Sale Details row.
+.notify-customer-field {
+  .notify-customer-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+
+    label {
+      margin: 0;
+      cursor: pointer;
+    }
+  }
+}
