@@ -48,6 +48,9 @@ import {
 } from '../../constants/product-options.constants';
 
 import { ProductFormValue } from '../../types/product-form-value.type';
+import { buildProductPayload } from '../../utils/product-payload';
+import { InBoxPriceLink } from '../../utils/in-box-price-link';
+import { PRODUCT_FORM_DEFAULTS } from '../../utils/product-form-defaults';
 import { FieldRendererComponent } from '@shared/components/field-renderer/field-renderer.component';
 import { ImageSectionComponent } from '@shared/components/image-section/image-section.component';
 import { ScrollToErrorDirective } from '@shared/directives/scroll-to-error.directive';
@@ -148,6 +151,7 @@ export class ProductDialogComponent {
     // Opt-in notification. Describes the save action, not the product, so it
     // is never seeded from the loaded product and resets with the form.
     notifyPriceChange: this.fb.control(false),
+    notifyNewProduct: this.fb.control(false),
 
     // Features
     isFeatured: this.fb.control(false),
@@ -161,6 +165,12 @@ export class ProductDialogComponent {
     supplierReference: this.fb.control(''),
     certifications: this.fb.control<string[]>([]),
   });
+
+  /** Derives In-Box Price from Wholesale Price x Quantity per Box. */
+  private readonly inBoxPriceLink = new InBoxPriceLink(this.productForm.controls);
+
+  public readonly inBoxPriceOverridden = this.inBoxPriceLink.overridden;
+  public readonly calculatedInBoxPrice = this.inBoxPriceLink.calculated;
 
   // Options
   public readonly categoryOptions = PRODUCT_CATEGORIES;
@@ -184,6 +194,8 @@ export class ProductDialogComponent {
   public readonly showFooterActions = computed(() => !this.viewMode());
 
   constructor() {
+    this.inBoxPriceLink.connect();
+
     effect(() => {
       const product = this.product();
       const isView = this.viewMode();
@@ -227,13 +239,26 @@ export class ProductDialogComponent {
         this.productForm.patchValue({
           ...product,
           minOrderQuantity: product.minOrderQuantity || 1,
-          ingredients: product.ingredients.map(({ id }) => id),
+          // These controls are typed as arrays, but the API returns null for an
+          // empty list. Letting null through makes anything that reads them as
+          // arrays throw.
+          ingredients: (product.ingredients ?? []).map(({ id }) => id),
+          certifications: product.certifications ?? [],
+          images: product.images ?? [],
           costPrice: product.costPrice ?? null,
         });
+        // A stored price that does not match the formula was set by hand, so
+        // opening this product for an unrelated edit must not reprice its boxes.
+        this.inBoxPriceLink.resync();
       } else {
         this.resetForm();
       }
     });
+  }
+
+  /** Drops a hand-typed In-Box Price in favour of the calculated one. */
+  public resetInBoxPrice(): void {
+    this.inBoxPriceLink.reset();
   }
 
   public onHide(): void {
@@ -247,35 +272,8 @@ export class ProductDialogComponent {
       this.productForm.markAllAsTouched();
       return;
     }
-    const productData = this.buildProductData(this.productForm.value as ProductFormValue);
+    const productData = buildProductPayload(this.productForm.value as ProductFormValue);
     this.performSave(productData);
-  }
-
-  private buildProductData(formValue: ProductFormValue): CreateProductDto | UpdateProductDto {
-    return {
-      name: formValue.name!,
-      description: formValue.description!,
-      category: formValue.category!,
-      wholesale: formValue.wholesale!,
-      retail: formValue.retail!,
-      sku: formValue.sku || undefined,
-      status: formValue.status as ProductStatus,
-      unitOfMeasurement: formValue.unitOfMeasurement || undefined,
-      quantityUnit: formValue.quantityUnit || undefined,
-      grade: formValue.grade || undefined,
-      weight: formValue.weight || undefined,
-      ingredients: formValue.ingredients || [],
-      inBoxPrice: formValue.inBoxPrice || undefined,
-      quantityInBox: formValue.quantityInBox || undefined,
-      minOrderQuantity: formValue.minOrderQuantity || undefined,
-      isFeatured: formValue.isFeatured || false,
-      isOrganic: formValue.isOrganic || false,
-      supplierReference: formValue.supplierReference || undefined,
-      certifications: formValue.certifications || [],
-      images: formValue.images || [],
-      image: formValue.image || undefined,
-      costPrice: formValue.costPrice || undefined,
-    };
   }
 
   private performSave(productData: CreateProductDto | UpdateProductDto): void {
@@ -323,7 +321,15 @@ export class ProductDialogComponent {
         }),
       );
     } else {
-      this.store.dispatch(ProductsActions.createProduct({ dto: productData as CreateProductDto }));
+      this.store.dispatch(
+        ProductsActions.createProduct({
+          dto: {
+            ...(productData as CreateProductDto),
+            // Create-only: announcing an edit is `notifyPriceChange`'s job.
+            notifyNewProduct: this.productForm.value.notifyNewProduct || undefined,
+          },
+        }),
+      );
     }
   }
 
@@ -369,23 +375,8 @@ export class ProductDialogComponent {
   }
 
   private resetForm(): void {
-    this.productForm.reset({
-      status: 'active',
-      wholesale: 0,
-      retail: 0,
-      inBoxPrice: 0,
-      quantityInBox: 1,
-      minOrderQuantity: 1,
-      quantityUnit: QuantityUnit.PIECE,
-      isFeatured: false,
-      isOrganic: false,
-      notifyPriceChange: false,
-      ingredients: [],
-      certifications: [],
-      images: [],
-      image: '',
-      costPrice: 0,
-    });
+    this.productForm.reset({ ...PRODUCT_FORM_DEFAULTS });
+    this.inBoxPriceLink.resync();
   }
 
   protected readonly getQualityStatusSeverity = getQualityStatusSeverity;

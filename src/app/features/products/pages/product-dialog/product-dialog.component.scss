@@ -176,3 +176,16 @@
 .supplier-reference-input {
   margin-top: 1rem;
 }
+
+// Wraps the In-Box Price field so the "use calculated price" action sits with
+// it, without the extra element breaking the pricing grid's column flow.
+.in-box-price-field {
+  display: flex;
+  flex-direction: column;
+
+  ::ng-deep .in-box-price-reset {
+    align-self: flex-start;
+    padding: 0;
+    font-size: 0.75rem;
+  }
+}

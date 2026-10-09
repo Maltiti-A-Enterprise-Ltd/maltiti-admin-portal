@@ -92,29 +92,39 @@ export type LightProduct = Pick<
   | 'category'
 >;
 
+/**
+ * `| null` on the optional fields is deliberate: emptying one must be sent as
+ * an explicit null. Leaving it out means "unchanged" to the API, not "cleared".
+ */
 export interface CreateProductDto {
-  sku?: string;
+  sku?: string | null;
   name: string;
   ingredients: string[];
-  weight?: string;
-  unitOfMeasurement?: UnitOfMeasurement;
+  weight?: string | null;
+  unitOfMeasurement?: UnitOfMeasurement | null;
   quantityUnit?: QuantityUnit;
   category: ProductCategory;
   description: string;
   status?: ProductStatus;
   images?: string[];
-  image?: string;
+  image?: string | null;
   wholesale: number;
   retail: number;
-  inBoxPrice?: number;
-  quantityInBox?: number;
-  grade?: ProductGrade;
+  inBoxPrice?: number | null;
+  quantityInBox?: number | null;
+  grade?: ProductGrade | null;
   isFeatured?: boolean;
   isOrganic?: boolean;
   certifications?: string[];
-  supplierReference?: string;
+  supplierReference?: string | null;
   minOrderQuantity?: number;
-  costPrice?: number;
+  costPrice?: number | null;
+  /**
+   * Announce this product by email to every customer. Opt-in: a new product is
+   * added silently unless this is true. Describes the save, not the product —
+   * the API does not store it.
+   */
+  notifyNewProduct?: boolean;
 }
 
 export type UpdateProductDto = Partial<CreateProductDto> & {
