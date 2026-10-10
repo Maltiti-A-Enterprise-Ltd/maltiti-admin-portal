@@ -4,13 +4,16 @@ import { TableModule } from 'primeng/table';
 import { TagModule } from 'primeng/tag';
 import { Button } from 'primeng/button';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
+import { TooltipModule } from 'primeng/tooltip';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { PaymentAccountApiService } from '../../services/payment-account-api.service';
 import {
   MOBILE_MONEY_NETWORK_LABELS,
   PaymentAccount,
+  paymentAccountFileName,
   PaymentAccountType,
 } from '../../models/payment-account.model';
+import { downloadBlob } from '@shared/utils/download-blob';
 import { PaymentAccountDialogComponent } from '../payment-account-dialog/payment-account-dialog.component';
 
 @Component({
@@ -23,6 +26,7 @@ import { PaymentAccountDialogComponent } from '../payment-account-dialog/payment
     TagModule,
     Button,
     ConfirmDialogModule,
+    TooltipModule,
     PaymentAccountDialogComponent,
   ],
   templateUrl: './payment-accounts-list.component.html',
@@ -38,6 +42,10 @@ export class PaymentAccountsListComponent implements OnInit {
   public readonly loading = signal(false);
   public readonly dialogVisible = signal(false);
   public readonly selectedAccount = signal<PaymentAccount | null>(null);
+
+  public readonly downloadingAll = signal(false);
+  /** The account whose sheet is being prepared, so only its own button spins. */
+  public readonly downloadingId = signal<string | null>(null);
 
   public readonly AccountType = PaymentAccountType;
 
@@ -98,6 +106,51 @@ export class PaymentAccountsListComponent implements OnInit {
               summary: 'Error',
               detail: 'Could not delete the payment account.',
             }),
+        });
+      },
+    });
+  }
+
+  /**
+   * One sheet listing every account still in use — what gets emailed to a
+   * customer asking where to pay.
+   */
+  public onDownloadAll(): void {
+    this.downloadingAll.set(true);
+
+    this.api.downloadAll().subscribe({
+      next: (blob) => {
+        this.downloadingAll.set(false);
+        downloadBlob(blob, 'maltiti-payment-details.pdf');
+      },
+      error: (error: { status?: number }) => {
+        this.downloadingAll.set(false);
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Nothing to download',
+          detail:
+            error.status === 404
+              ? 'No accounts are in use. Add one, or put a retired account back in use.'
+              : 'Could not prepare the payment details sheet.',
+        });
+      },
+    });
+  }
+
+  public onDownload(account: PaymentAccount): void {
+    this.downloadingId.set(account.id);
+
+    this.api.downloadOne(account.id).subscribe({
+      next: (blob) => {
+        this.downloadingId.set(null);
+        downloadBlob(blob, paymentAccountFileName(account));
+      },
+      error: () => {
+        this.downloadingId.set(null);
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'Could not prepare the payment details sheet.',
         });
       },
     });
