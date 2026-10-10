@@ -19,6 +19,20 @@ export class PaymentAccountApiService {
       .pipe(map((response) => response.data));
   }
 
+  /**
+   * Every account still in use, as one payment details sheet.
+   *
+   * The API resolves 404 when nothing is in use — there is no sheet to hand a
+   * customer if the business has no live account.
+   */
+  public downloadAll(): Observable<Blob> {
+    return this.http.get(`${this.baseUrl}/download`, { responseType: 'blob' });
+  }
+
+  public downloadOne(id: string): Observable<Blob> {
+    return this.http.get(`${this.baseUrl}/${id}/download`, { responseType: 'blob' });
+  }
+
   public create(dto: SavePaymentAccountDto): Observable<PaymentAccount> {
     return this.http
       .post<IResponse<PaymentAccount>>(this.baseUrl, dto)

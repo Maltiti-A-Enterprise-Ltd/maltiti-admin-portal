@@ -96,3 +96,23 @@ export const paymentAccountLabel = (account: PaymentAccount): string => {
 
   return `${institution} — ${account.accountNumber} (${account.currency})`;
 };
+
+/**
+ * What the downloaded sheet is called on disk.
+ *
+ * Derived here rather than read from the response's `Content-Disposition`:
+ * the API is on a different origin in production, and that header is not one
+ * the browser exposes to script unless the server opts in.
+ */
+export const paymentAccountFileName = (account: PaymentAccount): string => {
+  const institution = paymentAccountLabel(account).split(' — ')[0];
+
+  const slug = `${institution}-${account.accountNumber}`
+    .normalize('NFD')
+    .replace(/\p{Diacritic}/gu, '')
+    .replace(/[^a-z0-9]+/gi, '-')
+    .replace(/^-+|-+$/g, '')
+    .toLowerCase();
+
+  return `payment-details-${slug || 'account'}.pdf`;
+};
