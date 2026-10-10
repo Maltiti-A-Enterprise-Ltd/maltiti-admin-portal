@@ -47,6 +47,12 @@ export interface SalePaymentRecord {
   status: PaymentRecordStatus;
   reference?: string;
   note?: string;
+  /** Which of our accounts received this money. Null for cash, and for
+      payments recorded before the link existed. */
+  paymentAccountId?: string | null;
+  /** Resolved server-side, so a payment still names its account after that
+      account is retired and drops out of the picker. */
+  paymentAccountLabel?: string | null;
   /** true = recorded by customer (e.g. Paystack), false = recorded by admin */
   isCustomerInitiated: boolean;
   createdAt: string;
@@ -76,6 +82,8 @@ export interface RecordPaymentRequest {
   status: PaymentRecordStatus;
   reference?: string;
   note?: string;
+  /** Optional: which of our accounts received the money. */
+  paymentAccountId?: string | null;
   /** When true, records as customer-initiated; defaults to false (admin) */
   isCustomerInitiated?: boolean;
 }

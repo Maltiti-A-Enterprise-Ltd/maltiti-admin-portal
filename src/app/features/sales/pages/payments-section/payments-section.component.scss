@@ -198,6 +198,15 @@
   text-overflow: ellipsis;
 }
 
+/**
+ * Wraps rather than truncates: two accounts at the same bank differ only by
+ * their number, which is the part an ellipsis would eat.
+ */
+.account-cell {
+  max-width: 220px;
+  white-space: normal;
+}
+
 .source-badge {
   display: inline-block;
   padding: 0.15rem 0.5rem;
