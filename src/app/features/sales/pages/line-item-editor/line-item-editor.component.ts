@@ -60,7 +60,6 @@ export class LineItemEditorComponent implements OnInit {
   private readonly allocationBehavior = new Subject<void>();
   public readonly lineItem = input<SaleLineItemDto | null>(null);
   public readonly products = input<LightProduct[]>([]);
-  public readonly isBatchRequired = input<boolean>(false);
   public readonly isPaid = input<boolean>(false);
   public readonly availableBatches = input<Map<string, Batch[]>>();
   public readonly lineItemChange = output<SaleLineItemDto>();
@@ -293,22 +292,24 @@ export class LineItemEditorComponent implements OnInit {
     this.quantityControls.update((controls) => reindexControlMap(controls, removedIndex));
   }
 
+  /**
+   * Batches are optional on every line.
+   *
+   * They are not rolled out across the catalogue, so requiring them stopped
+   * ordinary sales from being recorded at all. Allocating none, or only part
+   * of a line, is fine — the rest simply came from stock that is not tracked
+   * in batches. Allocating *more* than was sold is still wrong, and is the
+   * one thing left to complain about.
+   */
   private validateBatchAllocations(): void {
     const requestedQuantity = this.lineItemForm.get('requestedQuantity')?.value || 0;
     const totalAllocated = this.totalAllocatedQuantity();
     const quantityControl = this.lineItemForm.get('requestedQuantity') as FormControl;
     let hasError = false;
 
-    if (this.isBatchRequired()) {
-      if (totalAllocated > requestedQuantity) {
-        quantityControl?.setErrors({ batchOverAllocated: true });
-        hasError = true;
-      } else if (totalAllocated === requestedQuantity) {
-        this.clearBatchErrors(quantityControl);
-      } else {
-        quantityControl?.setErrors({ batchAllocationMismatch: true });
-        hasError = true;
-      }
+    if (totalAllocated > requestedQuantity) {
+      quantityControl?.setErrors({ batchOverAllocated: true });
+      hasError = true;
     } else {
       this.clearBatchErrors(quantityControl);
     }
