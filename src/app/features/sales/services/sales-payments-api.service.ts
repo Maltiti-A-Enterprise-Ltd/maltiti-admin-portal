@@ -14,6 +14,7 @@ import {
   RecordPaymentRequest,
   SalePaymentRecord,
   SalePaymentSummary,
+  UpdatePaymentRequest,
   UpdatePaymentStatusRequest,
 } from '../models/sale.model';
 
@@ -54,6 +55,25 @@ export class SalesPaymentsApiService {
   public getPaymentRecord(saleId: string, paymentId: string): Observable<SalePaymentRecord> {
     return this.http
       .get<IResponse<SalePaymentRecord>>(`${this.baseUrl}/${saleId}/payments/${paymentId}`)
+      .pipe(map((r) => r.data));
+  }
+
+  /**
+   * Correct a payment record that was entered wrongly.
+   * PATCH /sales/:saleId/payments/:paymentId
+   *
+   * If the correction leaves the confirmed payments short of the sale total,
+   * the API takes the sale back out of PAID.
+   */
+  public updatePayment(
+    saleId: string,
+    paymentId: string,
+    body: UpdatePaymentRequest,
+  ): Observable<SalePaymentRecord> {
+    return this.http
+      .patch<
+        IResponse<SalePaymentRecord>
+      >(`${this.baseUrl}/${saleId}/payments/${paymentId}`, body)
       .pipe(map((r) => r.data));
   }
 
