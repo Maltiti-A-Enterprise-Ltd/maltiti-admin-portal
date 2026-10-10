@@ -67,6 +67,26 @@
       />
     </div>
 
+    <!-- Which account received it. Optional: cash arrives in none, and the
+         list is empty until payment accounts have been set up. -->
+    @if (accountOptions().length) {
+      <div class="form-field">
+        <label for="paymentAccountId">Received into (optional)</label>
+        <p-select
+          inputId="paymentAccountId"
+          optionLabel="label"
+          optionValue="value"
+          placeholder="Select an account"
+          [formControl]="form.controls.paymentAccountId"
+          [options]="accountOptions()"
+          [showClear]="true"
+        />
+        <small class="form-help">
+          Which of your accounts the money arrived in. Leave blank for cash.
+        </small>
+      </div>
+    }
+
     <!-- Reference -->
     <div class="form-field">
       <label for="reference">Reference (optional)</label>

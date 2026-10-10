@@ -26,7 +26,10 @@ import { MessageService } from 'primeng/api';
 import { MessageModule } from 'primeng/message';
 
 // Local
+import { take } from 'rxjs';
 import { SalesPaymentsApiService } from '../../services/sales-payments-api.service';
+import { PaymentAccountApiService } from '@features/payment-accounts/services/payment-account-api.service';
+import { paymentAccountLabel } from '@features/payment-accounts/models/payment-account.model';
 import {
   PAYMENT_METHOD_LABELS,
   PaymentMethod,
@@ -64,6 +67,7 @@ interface PaymentStatusOption {
 export class AddPaymentModalComponent {
   private readonly fb = inject(FormBuilder);
   private readonly paymentsApi = inject(SalesPaymentsApiService);
+  private readonly paymentAccountApi = inject(PaymentAccountApiService);
   private readonly messageService = inject(MessageService);
   private readonly destroyRef = inject(DestroyRef);
 
@@ -91,12 +95,18 @@ export class AddPaymentModalComponent {
     status: [PaymentRecordStatus.CONFIRMED, Validators.required],
     reference: [''],
     note: [''],
+    // Optional: cash arrives in no account, and the business may not care to
+    // record one. Only accounts still in use are offered.
+    paymentAccountId: [null as string | null],
   });
 
   // ─── Select options ──────────────────────────────────────────────────────────
   public readonly methodOptions: PaymentMethodOption[] = (
     Object.keys(PAYMENT_METHOD_LABELS) as PaymentMethod[]
   ).map((key) => ({ label: PAYMENT_METHOD_LABELS[key], value: key }));
+
+  /** Accounts still in use, as "Bank — number (currency)". */
+  public readonly accountOptions = signal<{ label: string; value: string }[]>([]);
 
   public readonly statusOptions: PaymentStatusOption[] = [
     { label: 'Confirmed', value: PaymentRecordStatus.CONFIRMED },
@@ -118,8 +128,32 @@ export class AddPaymentModalComponent {
       status: PaymentRecordStatus.CONFIRMED,
       reference: '',
       note: '',
+      paymentAccountId: null,
     });
+    this.loadPaymentAccounts();
     this.visible.set(true);
+  }
+
+  /**
+   * Retired accounts are left out: money cannot arrive in an account that is
+   * no longer in use, and the API refuses one anyway.
+   */
+  private loadPaymentAccounts(): void {
+    this.paymentAccountApi
+      .getAll(true)
+      .pipe(take(1))
+      .subscribe({
+        next: (accounts) =>
+          this.accountOptions.set(
+            accounts.map((account) => ({
+              label: paymentAccountLabel(account),
+              value: account.id,
+            })),
+          ),
+        // Not being able to list accounts should not block recording the
+        // payment — the link is optional.
+        error: () => this.accountOptions.set([]),
+      });
   }
 
   public close(): void {
@@ -135,13 +169,17 @@ export class AddPaymentModalComponent {
       return;
     }
 
-    const { amount, paymentMethod, status, reference, note } = this.form.getRawValue();
+    const { amount, paymentMethod, status, reference, note, paymentAccountId } =
+      this.form.getRawValue();
     const body: RecordPaymentRequest = {
       amount: amount ?? 0,
       paymentMethod: paymentMethod ?? PaymentMethod.BANK_TRANSFER,
       status: status ?? PaymentRecordStatus.CONFIRMED,
       reference: reference || undefined,
       note: note || undefined,
+      // Omitted rather than null when unset: the API rejects unknown shapes
+      // less forgivingly than a missing optional.
+      paymentAccountId: paymentAccountId || undefined,
       isCustomerInitiated: false,
     };
 
