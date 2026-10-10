@@ -16,7 +16,10 @@
     <app-notification-panel />
 
     <!-- User Menu -->
-    <p-menu #userMenu [model]="userMenuItems()" [popup]="true" />
+    <!-- appendTo="body" so the menu escapes the header's stacking context.
+         The header is sticky with z-index 100, which caps anything inside it
+         below the bottom tab bar at 1000 — Logout ended up underneath it. -->
+    <p-menu #userMenu appendTo="body" [model]="userMenuItems()" [popup]="true" />
        <p-avatar
          shape="circle"
          style="cursor:pointer; margin-left: 0.5rem;"
