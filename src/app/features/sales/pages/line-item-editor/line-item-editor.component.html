@@ -122,10 +122,10 @@
     </div>
 
     <!-- Batch Allocations -->
-    @if (product && (isBatchRequired() || (lineItem()?.batchAllocations?.length ?? 0) > 0)) {
+    @if (product) {
       <div class="batch-section">
         <div class="batch-header">
-          <h5>Batch Allocations {{ isBatchRequired() ? '*' : '' }}</h5>
+          <h5>Batch Allocations <span class="optional-note">(optional)</span></h5>
           <app-button
             icon="pi pi-plus"
             label="Add Batch"
@@ -139,10 +139,11 @@
         <div class="batch-allocations">
           @if (batchControls().size === 0) {
             <div class="empty-batches">
-              <p>No batches allocated yet.</p>
-              @if (isBatchRequired()) {
-                <small class="required-note">Batch allocation is required for this sale status.</small>
-              }
+              <p>No batches allocated.</p>
+              <small class="optional-note">
+                This line will not draw from a batch. Add one only if you are tracking
+                this product by batch.
+              </small>
             </div>
           } @else {
             @for (_ of this.batchControls().keys() || []; track $index; let i = $index) {
@@ -188,7 +189,7 @@
           }
         </div>
 
-        @if (isBatchRequired()) {
+        @if (totalAllocatedQuantity() > 0) {
           <div class="allocation-summary">
             <small>
               Allocated: {{ totalAllocatedQuantity() }} / {{ lineItemForm.get('requestedQuantity')?.value || 0 }}

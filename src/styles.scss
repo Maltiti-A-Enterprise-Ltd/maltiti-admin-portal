@@ -40,6 +40,24 @@ html {
   overflow-x: hidden;
 }
 
+/**
+ * The buttons in a page header.
+ *
+ * This had no base rule at all: four pages each declared their own copy, and
+ * the three that did not — payment accounts, customers, users — ran their
+ * buttons flush against each other on anything wider than a phone. The only
+ * `.page-actions` rule in the stylesheet lived inside the mobile media query,
+ * so the spacing appeared on a narrow screen and vanished on a wide one.
+ *
+ * Declared once here so a page header gets sensible spacing by default; the
+ * pages that want a different gap still set their own.
+ */
+.page-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
 /* Utility Classes */
 .w-full {
   width: 100%;

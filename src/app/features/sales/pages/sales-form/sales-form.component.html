@@ -163,7 +163,6 @@
       @for (lineItem of lineItems.controls; track lineItem; let i = $index) {
         <app-line-item-editor
           [availableBatches]="batchesByProductId()"
-          [isBatchRequired]="isBatchRequired"
           [isPaid]="isPaid()"
           [lineItem]="lineItem.value"
           [products]="products()"
