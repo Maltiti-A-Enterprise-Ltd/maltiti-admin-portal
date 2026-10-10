@@ -40,10 +40,20 @@
 // Responsive Design
 @media (max-width: 768px) {
   .header {
-    padding: 0 1rem;
+    padding: 0 0.75rem;
+
+    /* Paints up into the status bar area while keeping the controls below it.
+       Needs viewport-fit=cover in index.html, or env() resolves to 0px. */
+    padding-top: env(safe-area-inset-top, 0px);
+    height: calc(56px + env(safe-area-inset-top, 0px));
   }
 
   .header-title {
-    display: none;
+    display: block;
+
+    h2 {
+      font-size: 1.05rem;
+      font-weight: 600;
+    }
   }
 }

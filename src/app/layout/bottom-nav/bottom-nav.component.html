@@ -1,0 +1,20 @@
+@if (isMobile()) {
+  <nav aria-label="Primary" class="bottom-nav">
+    @for (item of items; track item.route) {
+      <a
+        class="bottom-nav-item"
+        routerLinkActive="active"
+        [routerLink]="item.route"
+        [routerLinkActiveOptions]="{ exact: item.exact }"
+      >
+        <i aria-hidden="true" [class]="item.icon"></i>
+        <span class="bottom-nav-label">{{ item.label }}</span>
+      </a>
+    }
+
+    <button class="bottom-nav-item" type="button" (click)="openMore.emit()">
+      <i aria-hidden="true" class="pi pi-bars"></i>
+      <span class="bottom-nav-label">More</span>
+    </button>
+  </nav>
+}

@@ -1,6 +1,10 @@
 .dashboard-layout {
   display: flex;
-  height: 100vh;
+
+  /* dvh, not vh: 100vh is the viewport with the browser chrome collapsed, so
+     on load the shell overflows by the height of the URL bar and anything
+     pinned to the bottom sits under it. */
+  height: 100dvh;
   overflow: hidden;
 
   &.sidebar-collapsed {
@@ -17,6 +21,7 @@
   margin-left: 250px;
   transition: margin-left 0.3s ease;
   overflow: hidden;
+  min-width: 0; /* lets wide tables scroll instead of stretching the shell */
 }
 
 .dashboard-content {
@@ -26,7 +31,6 @@
   background-color: var(--p-surface-ground);
 }
 
-// Responsive Design
 @media (max-width: 768px) {
   .dashboard-layout {
     &.sidebar-collapsed {
@@ -41,6 +45,14 @@
   }
 
   .dashboard-content {
-    padding: 1rem;
+    padding: 0.875rem;
+
+    /* Clears the fixed bottom tab bar and the home indicator beneath it, so
+       the last row of a list is reachable rather than sitting under the bar. */
+    padding-bottom: calc(4.25rem + env(safe-area-inset-bottom, 0px));
+
+    /* Momentum scrolling that stops at its own ends instead of dragging the
+       page behind it. */
+    overscroll-behavior-y: contain;
   }
 }

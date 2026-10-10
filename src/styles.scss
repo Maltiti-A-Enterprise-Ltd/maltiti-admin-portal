@@ -7,6 +7,14 @@
 @use 'styles/variables';
 @use 'styles/mixins';
 
+/* Platform layer: the declarations that make the app feel installed rather
+   than embedded on a phone. */
+@use 'styles/mobile';
+
+/* Phone-shell overrides for PrimeNG surfaces that are desktop-shaped by
+   default — tables, dialogs, toasts. */
+@use 'styles/responsive';
+
 /* Global Reset */
 * {
   margin: 0;
@@ -21,7 +29,7 @@ body {
   margin: 0;
   padding: 0;
   width: 100%;
-  min-height: 100vh;
+  min-height: 100dvh;
   overflow-x: hidden;
 }
 
