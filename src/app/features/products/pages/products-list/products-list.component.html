@@ -64,6 +64,7 @@
   <!-- Products Table -->
   <div class="table-card">
     <p-table
+    styleClass="table-cards"
       class="p-datatable-sm"
       currentPageReportTemplate="Showing {first} to {last} of {totalRecords} products"
       [lazy]="true"
@@ -95,7 +96,7 @@
       <ng-template #body let-product>
         <tr>
           <!-- Image -->
-          <td>
+          <td data-label="Image">
             <img
               class="product-image"
               [alt]="product.name"
@@ -104,7 +105,7 @@
           </td>
 
           <!-- Name -->
-          <td>
+          <td data-label="Name">
             <div class="product-name-cell">
               <span class="product-name">{{ product | productName }}</span>
               @if (product.isFeatured) {
@@ -117,17 +118,17 @@
           </td>
 
           <!-- Category -->
-          <td>
+          <td data-label="Category">
             <span class="category-tag">{{ product.category | titlecase }}</span>
           </td>
 
           <!-- Retail Price -->
-          <td>
+          <td data-label="Retail">
             <span class="price">{{ formatCurrency(product.retail) }}</span>
           </td>
 
           <!-- Status -->
-          <td>
+          <td data-label="Status">
             <p-tag
               [severity]="getStatusSeverity(product.status)"
               [value]="product.status | titlecase"
@@ -135,7 +136,7 @@
           </td>
 
           <!-- Actions -->
-          <td>
+          <td class="cell-actions" data-label="">
             <div class="action-buttons">
               <app-button
                 [icon]="'pi pi-eye'"

@@ -1,0 +1,276 @@
+/**
+ * Phone-shell overrides for the surfaces PrimeNG ships desktop-shaped.
+ *
+ * Everything here is inside a `max-width: 768px` query — the desktop layout is
+ * unchanged. The breakpoint matches ViewportService.MOBILE_BREAKPOINT_PX.
+ */
+
+@media (max-width: 768px) {
+  /* ───────────────────────── Dialogs become sheets ───────────────────────── */
+
+  /**
+   * A centred modal with a fixed width is a desktop shape. On a phone the same
+   * content should own the screen, enter from the bottom, and keep its footer
+   * reachable above the home indicator — which is what every native app does
+   * with a form this size.
+   */
+  .p-dialog-mask .p-dialog {
+    position: fixed;
+    inset: auto 0 0 0;
+
+    width: 100% !important;
+    max-width: 100% !important;
+    max-height: 92dvh;
+    margin: 0;
+
+    border-radius: 1rem 1rem 0 0;
+    animation: maltiti-sheet-up 240ms cubic-bezier(0.32, 0.72, 0, 1);
+  }
+
+  .p-dialog-header {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    padding: 1rem 1rem 0.75rem;
+    border-radius: 1rem 1rem 0 0;
+
+    .p-dialog-title {
+      font-size: 1.05rem;
+    }
+  }
+
+  .p-dialog-content {
+    padding: 0 1rem 1rem;
+    overscroll-behavior: contain;
+  }
+
+  .p-dialog-footer {
+    position: sticky;
+    bottom: 0;
+    display: flex;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem calc(0.75rem + env(safe-area-inset-bottom, 0px));
+    border-top: 1px solid var(--p-content-border-color, #e7e5e4);
+    background: var(--p-content-background, #fff);
+
+    /* Thumb-sized and sharing the width evenly, rather than small and
+       right-aligned.
+       PrimeNG renders <p-button><button class="p-button">, so the footer's
+       flex children are the wrappers — growing `.p-button` instead sizes the
+       inner element against a wrapper that never grew, and clips the label. */
+    > * {
+      flex: 1 1 0;
+      min-width: 0;
+    }
+
+    .p-button {
+      width: 100%;
+      justify-content: center;
+      min-height: 2.75rem;
+    }
+  }
+
+  @keyframes maltiti-sheet-up {
+    from {
+      transform: translateY(100%);
+    }
+    to {
+      transform: translateY(0);
+    }
+  }
+
+  /* Confirm dialogs are short enough to stay centred, but still need width. */
+  .p-confirmdialog {
+    width: calc(100% - 2rem) !important;
+    max-width: calc(100% - 2rem) !important;
+  }
+
+  /* ─────────────────────────── Toasts clear the tabs ─────────────────────── */
+
+  .p-toast {
+    width: calc(100% - 1.5rem);
+    max-width: calc(100% - 1.5rem);
+    left: 0.75rem;
+    right: 0.75rem;
+  }
+
+  /* ──────────────────────────────── Tables ───────────────────────────────── */
+
+  /**
+   * Default for every table: scroll horizontally rather than squeeze columns
+   * into unreadable slivers or burst out of the viewport. Reporting screens
+   * read fine this way — a grid is the point of them.
+   */
+  .p-datatable-table-container,
+  .p-datatable-wrapper {
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+  }
+
+  /**
+   * Opt-in card mode for the list screens that get used on a phone.
+   *
+   * Each row becomes a card and each cell a labelled line, with the label
+   * coming from the cell's own `data-label`. CSS cannot read the header row,
+   * so the attribute has to be on the cell — see the list templates.
+   */
+  .table-cards {
+    .p-datatable-thead {
+      /* The labels moved into the cells; the header would repeat them. */
+      display: none;
+    }
+
+    .p-datatable-table,
+    .p-datatable-tbody,
+    .p-datatable-tbody > tr,
+    .p-datatable-tbody > tr > td {
+      display: block;
+      width: 100%;
+    }
+
+    .p-datatable-tbody > tr {
+      margin-bottom: 0.75rem;
+      padding: 0.25rem 0.9rem 0.6rem;
+      border: 1px solid var(--p-content-border-color, #e7e5e4);
+      border-radius: 0.75rem;
+      background: var(--p-content-background, #fff);
+      box-shadow: 0 1px 2px rgb(0 0 0 / 4%);
+    }
+
+    .p-datatable-tbody > tr > td {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+
+      padding: 0.45rem 0;
+      border: none;
+      text-align: right;
+
+      &::before {
+        content: attr(data-label);
+        flex: 0 0 auto;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+        color: var(--p-text-muted-color, #78716c);
+        text-align: left;
+      }
+
+      /* A cell with nothing to label — the actions row — spans the card. */
+      &[data-label='']::before {
+        content: none;
+      }
+
+      &:not(:last-child) {
+        border-bottom: 1px solid var(--p-content-border-color, #f5f5f4);
+      }
+    }
+
+    /* Row actions sit as a full-width strip at the foot of the card. */
+    .p-datatable-tbody > tr > td.cell-actions {
+      justify-content: flex-end;
+      padding-top: 0.6rem;
+
+      &::before {
+        content: none;
+      }
+    }
+
+    /* An empty-state row is a message, not a card. */
+    .p-datatable-tbody > tr > td[colspan] {
+      display: block;
+      text-align: center;
+
+      &::before {
+        content: none;
+      }
+    }
+  }
+
+  /* ───────────────────────────── App header ──────────────────────────────── */
+
+  /**
+   * The bottom tab bar carries navigation on a phone and More opens the same
+   * drawer, so the header hamburger is a second control for one destination.
+   *
+   * Lives here rather than in header.component.scss because the element is
+   * PrimeNG's own button: view encapsulation stops a component stylesheet
+   * reaching into a child component's internals.
+   */
+  .header-left > p-button {
+    display: none;
+  }
+
+  /* ──────────────────────── Page headers and actions ─────────────────────── */
+
+  /**
+   * Title over actions rather than beside them, and actions wide enough to hit
+   * without aiming.
+   */
+  .page-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.75rem;
+
+    h1 {
+      font-size: 1.25rem;
+    }
+  }
+
+  /* Action buttons span the width whether they sit in a wrapper or hang
+     directly off the header — both shapes exist across the list screens. */
+  .page-actions,
+  .page-header > .page-actions {
+    display: flex;
+    gap: 0.5rem;
+
+    .p-button,
+    app-button {
+      flex: 1 1 0;
+    }
+  }
+
+  .page-header .p-button,
+  .page-actions .p-button,
+  .page-header > p-button {
+    width: 100%;
+    justify-content: center;
+    min-height: 2.75rem;
+  }
+
+  .page-header > p-button {
+    display: block;
+  }
+
+  /* ──────────────────────────────── Forms ────────────────────────────────── */
+
+  /* One field per line; two columns on a phone leaves neither readable. */
+  .form-grid,
+  .form-row,
+  .sales-details {
+    grid-template-columns: 1fr !important;
+    flex-direction: column;
+  }
+
+  .form-field {
+    width: 100%;
+  }
+
+  /* Full-bleed inputs with a comfortable hit area. */
+  .p-inputtext,
+  .p-select,
+  .p-inputnumber,
+  .p-multiselect,
+  .p-datepicker-input {
+    width: 100%;
+    min-height: 2.75rem;
+  }
+
+  /* ─────────────────────────────── Cards ─────────────────────────────────── */
+
+  .p-card .p-card-body {
+    padding: 0.9rem;
+  }
+}

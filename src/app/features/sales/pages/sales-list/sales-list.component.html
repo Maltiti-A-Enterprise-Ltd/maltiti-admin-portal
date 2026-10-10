@@ -50,6 +50,7 @@
 <!-- Sales Table -->
 <div class="table-container">
   <p-table
+    styleClass="table-cards"
     currentPageReportTemplate="Showing {first} to {last} of {totalRecords} entries"
     [lazy]="true"
     [loading]="loading()"
@@ -76,21 +77,21 @@
     </ng-template>
     <ng-template let-sale pTemplate="body">
       <tr>
-        <td class="sale-id-column">{{ sale.id.split('-')[0] }}</td>
-        <td>{{ getCustomerLabel(sale.customer) }}</td>
-        <td>
+        <td data-label="ID" class="sale-id-column">{{ sale.id.split('-')[0] }}</td>
+        <td data-label="Customer">{{ getCustomerLabel(sale.customer) }}</td>
+        <td data-label="Order Status">
           <p-tag
             [severity]="getStatusSeverity(sale.orderStatus)"
             [value]="getStatusLabel(sale.orderStatus)"
           />
         </td>
-        <td>
+        <td data-label="Payment Status">
           <p-tag
             [severity]="getPaymentStatusSeverity(sale.paymentStatus)"
             [value]="getStatusLabel(sale.paymentStatus)"
           />
         </td>
-        <td>
+        <td data-label="Paid">
           <div class="payment-progress-cell">
             @if (sale.total > 0 && sale.totalPaid !== null) {
               <p-progressBar
@@ -106,10 +107,10 @@
             }
           </div>
         </td>
-        <td>{{ lineItemsTotalPrice(sale.lineItems) | currency: 'GH₵ ' }}</td>
-        <td>{{ sale.deliveryFee ? (sale.deliveryFee | currency: 'GH₵ ') : 'N/A' }}</td>
-        <td>{{ sale.createdAt | date:'short' }}</td>
-        <td>
+        <td data-label="Total">{{ lineItemsTotalPrice(sale.lineItems) | currency: 'GH₵ ' }}</td>
+        <td data-label="Delivery">{{ sale.deliveryFee ? (sale.deliveryFee | currency: 'GH₵ ') : 'N/A' }}</td>
+        <td data-label="Created">{{ sale.createdAt | date:'short' }}</td>
+        <td class="cell-actions" data-label="">
           <div class="action-buttons">
             <p-button
               icon="pi pi-ellipsis-v"

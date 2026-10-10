@@ -172,6 +172,7 @@
   <!-- Table -->
   <div class="table-card">
     <p-table
+    styleClass="table-cards"
       currentPageReportTemplate="Showing {first} to {last} of {totalRecords} customers"
       [lazy]="true"
       [loading]="loading()"
@@ -200,10 +201,10 @@
       <ng-template #body let-customer let-rowIndex="rowIndex">
         <tr>
           <!-- Index -->
-          <td class="row-index">{{ (currentPage() - 1) * limit() + rowIndex + 1 }}</td>
+          <td data-label="#" class="row-index">{{ (currentPage() - 1) * limit() + rowIndex + 1 }}</td>
 
           <!-- Customer: avatar + name + organization/email -->
-          <td>
+          <td data-label="Customer">
             <div class="customer-cell">
               <div class="avatar" [class]="'avatar-' + (rowIndex % 6)">
                 {{ getAvatarInitials(customer) }}
@@ -221,7 +222,7 @@
           </td>
 
           <!-- Contact: primary phone / alt phone -->
-          <td>
+          <td data-label="Contact">
             <div class="contact-cell">
               @if (getPrimaryPhone(customer)) {
                 <a class="contact-link" [href]="'tel:' + getPrimaryPhone(customer)">
@@ -240,7 +241,7 @@
           </td>
 
           <!-- Location: city · region · country -->
-          <td>
+          <td data-label="Location">
             <div class="location-cell">
               @if (hasLocation(customer)) {
                 <span class="location-parts">{{ getLocationLabel(customer) }}</span>
@@ -251,19 +252,19 @@
           </td>
 
           <!-- Address -->
-          <td>
+          <td data-label="Address">
             <span class="address-cell" [title]="customer.address || ''">
               {{ customer.address || '—' }}
             </span>
           </td>
 
           <!-- Joined date -->
-          <td>
+          <td data-label="Joined">
             <span class="date-cell">{{ customer.createdAt | date: 'mediumDate' }}</span>
           </td>
 
           <!-- Actions -->
-          <td>
+          <td class="cell-actions" data-label="">
             <div class="action-buttons">
               <app-button
                 icon="pi pi-pencil"

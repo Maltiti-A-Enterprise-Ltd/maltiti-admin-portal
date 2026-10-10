@@ -9,6 +9,7 @@
 
   <div class="table-card">
     <p-table
+    styleClass="table-cards"
       dataKey="id"
       [loading]="loading()"
       [value]="accounts()"
@@ -28,7 +29,7 @@
 
       <ng-template let-account pTemplate="body">
         <tr>
-          <td>
+          <td data-label="Bank / Network">
             <div class="institution">
               <span class="institution-name">{{ institution(account) }}</span>
               <p-tag
@@ -37,24 +38,24 @@
               />
             </div>
           </td>
-          <td>{{ account.accountName }}</td>
-          <td>{{ account.accountNumber }}</td>
-          <td>{{ account.type === AccountType.MOBILE_MONEY ? '—' : branch(account) }}</td>
-          <td>{{ account.currency }}</td>
-          <td>
+          <td data-label="Account Name">{{ account.accountName }}</td>
+          <td data-label="Number">{{ account.accountNumber }}</td>
+          <td data-label="Branch">{{ account.type === AccountType.MOBILE_MONEY ? '—' : branch(account) }}</td>
+          <td data-label="Currency">{{ account.currency }}</td>
+          <td data-label="On Invoices">
             @if (account.includeOnInvoiceByDefault) {
               <p-tag severity="success" value="Default" />
             } @else {
               <span class="muted">On request</span>
             }
           </td>
-          <td>
+          <td data-label="Status">
             <p-tag
               [severity]="account.isActive ? 'success' : 'warn'"
               [value]="account.isActive ? 'In use' : 'Retired'"
             />
           </td>
-          <td>
+          <td class="cell-actions" data-label="">
             <div class="row-actions">
               <p-button
                 icon="pi pi-pencil"
