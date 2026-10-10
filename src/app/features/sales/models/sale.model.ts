@@ -88,6 +88,22 @@ export interface RecordPaymentRequest {
   isCustomerInitiated?: boolean;
 }
 
+/**
+ * Body for PATCH /sales/:saleId/payments/:paymentId — correcting a payment.
+ *
+ * Every field is optional and anything left out is left alone, so `null` is
+ * the only way to clear a reference, note or account. An emptied box has to
+ * be sent as null rather than omitted, or it would read as "unchanged".
+ */
+export interface UpdatePaymentRequest {
+  amount?: number;
+  paymentMethod?: PaymentMethod;
+  status?: PaymentRecordStatus;
+  reference?: string | null;
+  note?: string | null;
+  paymentAccountId?: string | null;
+}
+
 /** Body for PATCH /sales/:saleId/payments/:paymentId/status */
 export interface UpdatePaymentStatusRequest {
   status: PaymentRecordStatus;

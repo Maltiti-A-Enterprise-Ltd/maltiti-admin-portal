@@ -36,7 +36,7 @@ import {
   SalePaymentRecord,
   SalePaymentSummary,
 } from '../../models/sale.model';
-import { AddPaymentModalComponent } from '../add-payment-modal/add-payment-modal.component';
+import { PaymentFormModalComponent } from '../payment-form-modal/payment-form-modal.component';
 import { UpdatePaymentStatusModalComponent } from '../update-payment-status-modal/update-payment-status-modal.component';
 
 @Component({
@@ -51,7 +51,7 @@ import { UpdatePaymentStatusModalComponent } from '../update-payment-status-moda
     ProgressBarModule,
     SkeletonModule,
     TooltipModule,
-    AddPaymentModalComponent,
+    PaymentFormModalComponent,
     UpdatePaymentStatusModalComponent,
   ],
 })
@@ -64,7 +64,7 @@ export class PaymentsSectionComponent implements OnInit {
   public readonly saleId = input.required<string>();
 
   // ─── Child modals ────────────────────────────────────────────────────────────
-  private readonly addPaymentModal = viewChild.required(AddPaymentModalComponent);
+  private readonly paymentFormModal = viewChild.required(PaymentFormModalComponent);
   private readonly updateStatusModal = viewChild.required(UpdatePaymentStatusModalComponent);
 
   // ─── State ──────────────────────────────────────────────────────────────────
@@ -134,7 +134,12 @@ export class PaymentsSectionComponent implements OnInit {
   }
 
   public onAddPayment(): void {
-    this.addPaymentModal().open(this.saleId(), this.summary());
+    this.paymentFormModal().open(this.saleId(), this.summary());
+  }
+
+  /** Correct a payment that was entered wrongly — amount, method and all. */
+  public onEditPayment(payment: SalePaymentRecord): void {
+    this.paymentFormModal().openForEdit(this.saleId(), payment, this.summary());
   }
 
   public onUpdateStatus(payment: SalePaymentRecord): void {

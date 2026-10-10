@@ -1,6 +1,9 @@
 /**
- * Add Payment Modal Component
- * Modal dialog that allows admins to record a new payment instalment for a sale.
+ * Payment Form Modal
+ *
+ * One dialog for both halves of the job: recording a new instalment against a
+ * sale, and correcting one that was entered wrongly. The form is identical,
+ * so sharing it is what keeps the two from drifting apart.
  */
 
 import {
@@ -35,7 +38,9 @@ import {
   PaymentMethod,
   PaymentRecordStatus,
   RecordPaymentRequest,
+  SalePaymentRecord,
   SalePaymentSummary,
+  UpdatePaymentRequest,
 } from '../../models/sale.model';
 
 interface PaymentMethodOption {
@@ -49,9 +54,9 @@ interface PaymentStatusOption {
 }
 
 @Component({
-  selector: 'app-add-payment-modal',
-  templateUrl: './add-payment-modal.component.html',
-  styleUrls: ['./add-payment-modal.component.scss'],
+  selector: 'app-payment-form-modal',
+  templateUrl: './payment-form-modal.component.html',
+  styleUrls: ['./payment-form-modal.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     ReactiveFormsModule,
@@ -64,14 +69,14 @@ interface PaymentStatusOption {
     MessageModule,
   ],
 })
-export class AddPaymentModalComponent {
+export class PaymentFormModalComponent {
   private readonly fb = inject(FormBuilder);
   private readonly paymentsApi = inject(SalesPaymentsApiService);
   private readonly paymentAccountApi = inject(PaymentAccountApiService);
   private readonly messageService = inject(MessageService);
   private readonly destroyRef = inject(DestroyRef);
 
-  /** Emitted after a payment is successfully recorded; carries the updated summary. */
+  /** Emitted after a payment is recorded or corrected, so the list reloads. */
   public readonly paymentAdded = output<void>();
 
   // ─── State ──────────────────────────────────────────────────────────────────
@@ -81,9 +86,26 @@ export class AddPaymentModalComponent {
   private readonly saleId = signal<string | null>(null);
   private readonly summary = signal<SalePaymentSummary | null>(null);
 
+  /** The payment being corrected, or null when recording a new one. */
+  private readonly editing = signal<SalePaymentRecord | null>(null);
+  public readonly isEditing = computed(() => !!this.editing());
+
+  public readonly heading = computed(() =>
+    this.isEditing() ? 'Edit Payment' : 'Record Payment',
+  );
+  public readonly submitLabel = computed(() =>
+    this.isEditing() ? 'Save Changes' : 'Record Payment',
+  );
+
   public readonly balanceRemaining = computed(() => this.summary()?.balanceRemaining ?? 0);
   public readonly isFullyPaid = computed(() => this.summary()?.isFullyPaid ?? false);
   public readonly showOverpayWarning = computed(() => {
+    // Suppressed while editing: the balance already counts this payment, so
+    // comparing against it would warn about money the sale is not owed.
+    if (this.isEditing()) {
+      return false;
+    }
+
     const amount = this.form.controls.amount.value ?? 0;
     return amount > 0 && amount > this.balanceRemaining() && this.balanceRemaining() > 0;
   });
@@ -119,6 +141,7 @@ export class AddPaymentModalComponent {
    * (used to display balance remaining and overpay warnings).
    */
   public open(saleId: string, summary: SalePaymentSummary | null = null): void {
+    this.editing.set(null);
     this.saleId.set(saleId);
     this.summary.set(summary);
     this.errorMessage.set(null);
@@ -129,6 +152,28 @@ export class AddPaymentModalComponent {
       reference: '',
       note: '',
       paymentAccountId: null,
+    });
+    this.loadPaymentAccounts();
+    this.visible.set(true);
+  }
+
+  /** Open the same form over an existing payment, to correct it. */
+  public openForEdit(
+    saleId: string,
+    payment: SalePaymentRecord,
+    summary: SalePaymentSummary | null = null,
+  ): void {
+    this.editing.set(payment);
+    this.saleId.set(saleId);
+    this.summary.set(summary);
+    this.errorMessage.set(null);
+    this.form.reset({
+      amount: payment.amount,
+      paymentMethod: payment.paymentMethod,
+      status: payment.status,
+      reference: payment.reference ?? '',
+      note: payment.note ?? '',
+      paymentAccountId: payment.paymentAccountId ?? null,
     });
     this.loadPaymentAccounts();
     this.visible.set(true);
@@ -145,15 +190,44 @@ export class AddPaymentModalComponent {
       .subscribe({
         next: (accounts) =>
           this.accountOptions.set(
-            accounts.map((account) => ({
-              label: paymentAccountLabel(account),
-              value: account.id,
-            })),
+            this.withCurrentAccount(
+              accounts.map((account) => ({
+                label: paymentAccountLabel(account),
+                value: account.id,
+              })),
+            ),
           ),
         // Not being able to list accounts should not block recording the
         // payment — the link is optional.
-        error: () => this.accountOptions.set([]),
+        error: () => this.accountOptions.set(this.withCurrentAccount([])),
       });
+  }
+
+  /**
+   * Keeps the account a payment is already linked to in the list, even once
+   * it has been retired.
+   *
+   * Without this the select would open blank on a retired account and saving
+   * would quietly detach it — erasing the record of where the money actually
+   * went, which is the one thing this link exists to preserve.
+   */
+  private withCurrentAccount(
+    options: { label: string; value: string }[],
+  ): { label: string; value: string }[] {
+    const payment = this.editing();
+    const id = payment?.paymentAccountId;
+
+    if (!id || options.some((option) => option.value === id)) {
+      return options;
+    }
+
+    return [
+      {
+        label: `${payment?.paymentAccountLabel ?? 'Account'} — no longer in use`,
+        value: id,
+      },
+      ...options,
+    ];
   }
 
   public close(): void {
@@ -169,9 +243,42 @@ export class AddPaymentModalComponent {
       return;
     }
 
+    const editing = this.editing();
+
+    this.loading.set(true);
+    this.errorMessage.set(null);
+
+    const request$ = editing
+      ? this.paymentsApi.updatePayment(this.saleId()!, editing.id, this.editBody())
+      : this.paymentsApi.recordPayment(this.saleId()!, this.recordBody());
+
+    request$
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (record) => {
+          this.loading.set(false);
+          this.messageService.add({
+            severity: 'success',
+            summary: editing ? 'Payment Updated' : 'Payment Recorded',
+            detail: editing
+              ? `Payment corrected to GHS ${record.amount.toFixed(2)}.`
+              : `Payment of GHS ${record.amount.toFixed(2)} recorded successfully.`,
+          });
+          this.paymentAdded.emit();
+          this.close();
+        },
+        error: (err: { status?: number }) => {
+          this.loading.set(false);
+          this.errorMessage.set(this.mapHttpError(err.status));
+        },
+      });
+  }
+
+  private recordBody(): RecordPaymentRequest {
     const { amount, paymentMethod, status, reference, note, paymentAccountId } =
       this.form.getRawValue();
-    const body: RecordPaymentRequest = {
+
+    return {
       amount: amount ?? 0,
       paymentMethod: paymentMethod ?? PaymentMethod.BANK_TRANSFER,
       status: status ?? PaymentRecordStatus.CONFIRMED,
@@ -182,29 +289,27 @@ export class AddPaymentModalComponent {
       paymentAccountId: paymentAccountId || undefined,
       isCustomerInitiated: false,
     };
+  }
 
-    this.loading.set(true);
-    this.errorMessage.set(null);
+  /**
+   * The whole form, with blanks sent as explicit nulls.
+   *
+   * The API leaves out what it is not sent, so clearing a reference has to be
+   * stated rather than implied — an omitted field would read as "leave it as
+   * it was", which is the opposite of what an emptied box means.
+   */
+  private editBody(): UpdatePaymentRequest {
+    const { amount, paymentMethod, status, reference, note, paymentAccountId } =
+      this.form.getRawValue();
 
-    this.paymentsApi
-      .recordPayment(this.saleId()!, body)
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({
-        next: (record) => {
-          this.loading.set(false);
-          this.messageService.add({
-            severity: 'success',
-            summary: 'Payment Recorded',
-            detail: `Payment of GHS ${record.amount.toFixed(2)} recorded successfully.`,
-          });
-          this.paymentAdded.emit();
-          this.close();
-        },
-        error: (err: { status?: number }) => {
-          this.loading.set(false);
-          this.errorMessage.set(this.mapHttpError(err.status));
-        },
-      });
+    return {
+      amount: amount ?? 0,
+      paymentMethod: paymentMethod ?? PaymentMethod.BANK_TRANSFER,
+      status: status ?? PaymentRecordStatus.CONFIRMED,
+      reference: reference?.trim() || null,
+      note: note?.trim() || null,
+      paymentAccountId: paymentAccountId || null,
+    };
   }
 
   private mapHttpError(status?: number): string {
