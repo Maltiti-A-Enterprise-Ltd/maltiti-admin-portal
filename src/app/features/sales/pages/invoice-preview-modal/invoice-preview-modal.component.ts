@@ -25,6 +25,9 @@ import { InputTextModule } from 'primeng/inputtext';
 import { RadioButtonModule } from 'primeng/radiobutton';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { CheckboxModule } from 'primeng/checkbox';
+import { SelectModule } from 'primeng/select';
+import { InputNumberModule } from 'primeng/inputnumber';
+import { TooltipModule } from 'primeng/tooltip';
 import { MessageService } from 'primeng/api';
 
 // Local
@@ -34,6 +37,8 @@ import {
   PaymentAccount,
   paymentAccountLabel,
 } from '@features/payment-accounts/models/payment-account.model';
+import { InvoiceCurrencyState } from './invoice-currency.state';
+import { InvoiceCurrency } from '../../models/sale.model';
 
 /** Where the invoice should go. */
 type Recipient = 'customer' | 'other';
@@ -44,6 +49,7 @@ type Recipient = 'customer' | 'other';
   templateUrl: './invoice-preview-modal.component.html',
   styleUrls: ['./invoice-preview-modal.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
+  providers: [InvoiceCurrencyState],
   imports: [
     ReactiveFormsModule,
     FormsModule,
@@ -53,6 +59,9 @@ type Recipient = 'customer' | 'other';
     RadioButtonModule,
     ProgressSpinnerModule,
     CheckboxModule,
+    SelectModule,
+    InputNumberModule,
+    TooltipModule,
   ],
 })
 export class InvoicePreviewModalComponent {
@@ -62,6 +71,8 @@ export class InvoicePreviewModalComponent {
   private readonly destroyRef = inject(DestroyRef);
   private readonly fb = inject(FormBuilder);
   private readonly paymentAccountApi = inject(PaymentAccountApiService);
+  /** Currency and rate, kept apart because it is its own concern. */
+  public readonly currencyState = inject(InvoiceCurrencyState);
 
   public readonly visible = signal(false);
   public readonly generating = signal(false);
@@ -92,6 +103,7 @@ export class InvoicePreviewModalComponent {
   private objectUrl: string | null = null;
   private pdfBlob: Blob | null = null;
 
+
   public readonly form = this.fb.group({
     recipient: this.fb.control<Recipient>('customer'),
     email: this.fb.control('', [Validators.email]),
@@ -111,16 +123,31 @@ export class InvoicePreviewModalComponent {
   }
 
   public readonly sendDisabled = computed(
-    () => this.generating() || this.sending() || !this.previewUrl(),
+    () =>
+      this.generating() ||
+      this.sending() ||
+      this.currencyState.needsRate() ||
+      !this.previewUrl(),
   );
 
   constructor() {
+    this.currencyState.onSettled = (): void => this.regenerate();
     this.destroyRef.onDestroy(() => this.releasePreview());
   }
 
-  public open(saleId: string, customerEmail?: string | null): void {
+  /**
+   * @param invoiceCurrency What this sale was last invoiced in, so reissuing
+   * it opens where it left off instead of silently reverting to cedis.
+   */
+  public open(
+    saleId: string,
+    customerEmail?: string | null,
+    invoiceCurrency?: InvoiceCurrency | null,
+    invoiceExchangeRate?: number | null,
+  ): void {
     this.saleId.set(saleId);
     this.customerEmail.set(customerEmail?.trim() || null);
+    this.currencyState.reset(invoiceCurrency, invoiceExchangeRate);
     this.form.reset({
       recipient: customerEmail?.trim() ? 'customer' : 'other',
       email: '',
@@ -129,6 +156,7 @@ export class InvoicePreviewModalComponent {
     this.visible.set(true);
     this.loadPaymentAccounts(saleId);
   }
+
 
   public isAccountSelected(id: string): boolean {
     return this.selectedAccountIds().includes(id);
@@ -155,7 +183,9 @@ export class InvoicePreviewModalComponent {
   private regenerate(): void {
     const saleId = this.saleId();
 
-    if (saleId) {
+    // Generating now would produce an invoice converted at 1:1 and look like
+    // a working preview, which is the most expensive way to get this wrong.
+    if (saleId && !this.currencyState.needsRate()) {
       this.loadPreview(saleId);
     }
   }
@@ -195,6 +225,7 @@ export class InvoicePreviewModalComponent {
     this.saleId.set(null);
     this.paymentAccounts.set([]);
     this.selectedAccountIds.set([]);
+    this.currencyState.reset();
     this.form.reset({ recipient: 'customer', email: '' });
   }
 
@@ -244,6 +275,7 @@ export class InvoicePreviewModalComponent {
         ...(toOther ? { email: typed } : {}),
         // Send what was previewed, not the defaults.
         paymentAccountIds: this.selectedAccountIds(),
+        ...this.currencyState.payload(),
       })
       .pipe(take(1))
       .subscribe({
@@ -279,6 +311,7 @@ export class InvoicePreviewModalComponent {
         discount: 0,
         transportation: 0,
         paymentAccountIds: this.selectedAccountIds(),
+        ...this.currencyState.payload(),
       })
       .pipe(take(1))
       .subscribe({

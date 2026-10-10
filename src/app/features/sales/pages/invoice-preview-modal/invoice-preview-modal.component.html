@@ -25,6 +25,66 @@
       }
     </div>
 
+    <!-- Currency. The sale stays in cedis; this only changes how the invoice
+         presents it, at a rate the admin can always overwrite. -->
+    <div class="currency-pane">
+      <h4 class="send-title">Invoice currency</h4>
+
+      <div class="currency-row">
+        <p-select
+          optionLabel="label"
+          optionValue="value"
+          styleClass="currency-select"
+          [disabled]="generating() || currencyState.fetching()"
+          [ngModel]="currencyState.currency()"
+          [ngModelOptions]="{ standalone: true }"
+          [options]="currencyState.options"
+          (onChange)="currencyState.selectCurrency($event.value)"
+        />
+
+        @if (currencyState.isForeign()) {
+          <div class="rate-field">
+            <label for="exchangeRate">1 {{ currencyState.currency() }} =</label>
+            <p-inputNumber
+              inputId="exchangeRate"
+              suffix=" GHS"
+              [disabled]="generating() || currencyState.fetching()"
+              [maxFractionDigits]="4"
+              [min]="0"
+              [minFractionDigits]="2"
+              [ngModel]="currencyState.exchangeRate()"
+              [ngModelOptions]="{ standalone: true }"
+              (ngModelChange)="currencyState.exchangeRate.set($event)"
+              (onBlur)="currencyState.setRate(currencyState.exchangeRate())"
+            />
+            <p-button
+              icon="pi pi-refresh"
+              pTooltip="Use today's rate"
+              severity="secondary"
+              [disabled]="generating()"
+              [loading]="currencyState.fetching()"
+              [text]="true"
+              (onClick)="currencyState.fetchTodaysRate()"
+            />
+          </div>
+        }
+      </div>
+
+      @if (currencyState.isForeign()) {
+        @if (currencyState.error()) {
+          <p class="rate-hint rate-hint-error">{{ currencyState.error() }}</p>
+        } @else if (currencyState.needsRate()) {
+          <p class="rate-hint rate-hint-error">
+            Enter the rate to use before sending this invoice.
+          </p>
+        } @else if (currencyState.asOf(); as asOf) {
+          <p class="rate-hint">Today's rate, published {{ asOf }}. Edit it if you have agreed another.</p>
+        } @else {
+          <p class="rate-hint">Using the rate entered above.</p>
+        }
+      }
+    </div>
+
     <!-- Which accounts to print. Ticking regenerates the preview, so what is
          on screen is always the document that would be sent. -->
     @if (paymentAccounts().length) {
@@ -122,7 +182,7 @@
       <p-button
         icon="pi pi-download"
         label="Download"
-        severity="secondary"
+        severity="contrast"
         [disabled]="sendDisabled()"
         [outlined]="true"
         (onClick)="download()"

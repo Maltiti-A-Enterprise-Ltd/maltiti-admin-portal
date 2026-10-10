@@ -110,6 +110,51 @@
   gap: 0.5rem;
 }
 
+.currency-pane {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  padding: 1rem 0;
+  border-top: 1px solid var(--surface-border, #e2e8f0);
+}
+
+.currency-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  /* The rate field drops under the currency select on a phone rather than
+     squeezing both into half a screen each. */
+  flex-wrap: wrap;
+}
+
+.rate-field {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+
+  label {
+    font-size: 0.85rem;
+    white-space: nowrap;
+    color: var(--text-color-secondary, #64748b);
+  }
+
+  /* Wide enough for "11.8125 GHS" without the suffix wrapping. ::ng-deep
+     because the input is PrimeNG's, inside its own component's encapsulation. */
+  ::ng-deep .p-inputnumber-input {
+    width: 9rem;
+  }
+}
+
+.rate-hint {
+  margin: 0;
+  font-size: 0.78rem;
+  color: var(--text-color-secondary, #64748b);
+}
+
+.rate-hint-error {
+  color: var(--red-600, #dc2626);
+}
+
 .accounts-pane {
   display: flex;
   flex-direction: column;
