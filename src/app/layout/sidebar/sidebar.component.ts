@@ -59,6 +59,19 @@ export class SidebarComponent {
     });
   }
 
+  /**
+   * Closes the drawer after a destination is chosen.
+   *
+   * Routing alone leaves it covering the page it just navigated to, which
+   * reads as the tap having done nothing at all. Only applies on mobile — the
+   * desktop sidebar is permanent and must not collapse when it is used.
+   */
+  public onNavigate(): void {
+    if (this.isMobile() && this.visible) {
+      this.toggleSidebar.emit();
+    }
+  }
+
   public readonly menuItems = computed<MenuItem[]>(() => {
     const baseItems: MenuItem[] = [
       {
