@@ -85,6 +85,26 @@
       }
     </div>
 
+    <!-- What has already been received against this invoice. -->
+    <div class="payments-pane">
+      <div class="payments-option">
+        <p-checkbox
+          ariaLabel="Show payments received"
+          inputId="includePayments"
+          [binary]="true"
+          [disabled]="generating()"
+          [ngModel]="includePayments()"
+          [ngModelOptions]="{ standalone: true }"
+          (onChange)="toggleIncludePayments()"
+        />
+        <label for="includePayments">Show payments received</label>
+      </div>
+      <p class="payments-hint">
+        Lists the confirmed payments for this sale, with an amount paid and a
+        balance due. Pending and failed payments are left out.
+      </p>
+    </div>
+
     <!-- Which accounts to print. Ticking regenerates the preview, so what is
          on screen is always the document that would be sent. -->
     @if (paymentAccounts().length) {
