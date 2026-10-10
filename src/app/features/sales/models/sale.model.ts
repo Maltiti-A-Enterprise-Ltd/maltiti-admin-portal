@@ -227,6 +227,11 @@ export interface InvoiceCurrencyOptions {
   currency?: InvoiceCurrency;
   /** Cedis per one unit of `currency`. Required unless the currency is GHS. */
   exchangeRate?: number;
+  /**
+   * List the confirmed payments for this sale, with an amount paid and a
+   * balance due. Off by default; has no effect when nothing is confirmed.
+   */
+  includePayments?: boolean;
 }
 
 /** Body for POST /sales/:id/invoice/email */

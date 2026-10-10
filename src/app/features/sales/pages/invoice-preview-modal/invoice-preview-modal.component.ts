@@ -87,6 +87,15 @@ export class InvoicePreviewModalComponent {
       this.selectedAccountIds().length === this.paymentAccounts().length,
   );
 
+  /**
+   * Whether the invoice lists what has already been received against it.
+   *
+   * Off by default: most invoices are a plain bill, and an unpaid one has
+   * nothing to show. Turning it on adds the confirmed payments, an amount
+   * paid and a balance due.
+   */
+  public readonly includePayments = signal(false);
+
   public readonly sending = signal(false);
   public readonly previewUrl = signal<SafeResourceUrl | null>(null);
   /**
@@ -148,6 +157,7 @@ export class InvoicePreviewModalComponent {
     this.saleId.set(saleId);
     this.customerEmail.set(customerEmail?.trim() || null);
     this.currencyState.reset(invoiceCurrency, invoiceExchangeRate);
+    this.includePayments.set(false);
     this.form.reset({
       recipient: customerEmail?.trim() ? 'customer' : 'other',
       email: '',
@@ -166,6 +176,11 @@ export class InvoicePreviewModalComponent {
     this.selectedAccountIds.update((ids) =>
       ids.includes(id) ? ids.filter((existing) => existing !== id) : [...ids, id],
     );
+    this.regenerate();
+  }
+
+  public toggleIncludePayments(): void {
+    this.includePayments.update((shown) => !shown);
     this.regenerate();
   }
 
@@ -226,6 +241,7 @@ export class InvoicePreviewModalComponent {
     this.paymentAccounts.set([]);
     this.selectedAccountIds.set([]);
     this.currencyState.reset();
+    this.includePayments.set(false);
     this.form.reset({ recipient: 'customer', email: '' });
   }
 
@@ -276,6 +292,7 @@ export class InvoicePreviewModalComponent {
         // Send what was previewed, not the defaults.
         paymentAccountIds: this.selectedAccountIds(),
         ...this.currencyState.payload(),
+        includePayments: this.includePayments(),
       })
       .pipe(take(1))
       .subscribe({
@@ -312,6 +329,7 @@ export class InvoicePreviewModalComponent {
         transportation: 0,
         paymentAccountIds: this.selectedAccountIds(),
         ...this.currencyState.payload(),
+        includePayments: this.includePayments(),
       })
       .pipe(take(1))
       .subscribe({

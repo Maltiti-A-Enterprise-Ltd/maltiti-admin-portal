@@ -155,6 +155,33 @@
   color: var(--red-600, #dc2626);
 }
 
+.payments-pane {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  padding: 1rem 0;
+  border-top: 1px solid var(--surface-border, #e2e8f0);
+}
+
+.payments-option {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+
+  label {
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    color: var(--text-color);
+  }
+}
+
+.payments-hint {
+  margin: 0;
+  font-size: 0.78rem;
+  color: var(--text-color-secondary, #64748b);
+}
+
 .accounts-pane {
   display: flex;
   flex-direction: column;
