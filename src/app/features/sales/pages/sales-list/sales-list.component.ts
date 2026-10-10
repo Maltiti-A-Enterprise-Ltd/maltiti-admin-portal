@@ -218,7 +218,12 @@ export class SalesListComponent implements OnInit {
   public onGenerateInvoice(sale: Sale): void {
     // Preview first: downloading or emailing is the admin's call, not a side
     // effect of asking to see the invoice.
-    this.invoicePreviewModal().open(sale.id, sale.customer?.email);
+    this.invoicePreviewModal().open(
+      sale.id,
+      sale.customer?.email,
+      sale.invoiceCurrency,
+      sale.invoiceExchangeRate,
+    );
   }
 
   public onGenerateReceipt(sale: Sale): void {
