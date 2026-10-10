@@ -1,6 +1,6 @@
 <p-dialog
-  header="Record Payment"
   [closable]="true"
+  [header]="heading()"
   [modal]="true"
   [style]="{ width: '520px', maxWidth: '95vw' }"
   [visible]="visible()"
@@ -114,14 +114,14 @@
   <ng-template pTemplate="footer">
     <p-button
       label="Cancel"
-      severity="secondary"
+      severity="contrast"
       [outlined]="true"
       (onClick)="close()"
     />
     <p-button
       icon="pi pi-check"
-      label="Record Payment"
       severity="success"
+      [label]="submitLabel()"
       [loading]="loading()"
       (onClick)="onSubmit()"
     />

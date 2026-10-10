@@ -225,7 +225,15 @@
   }
 }
 
-.update-status-btn {
+/* Two actions per row now, so they need to sit together and wrap on a
+   narrow screen rather than stretch the cell. */
+.row-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.row-action-btn {
   display: inline-flex;
   align-items: center;
   gap: 0.3rem;

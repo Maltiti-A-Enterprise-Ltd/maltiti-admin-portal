@@ -154,14 +154,27 @@
               }
             </td>
             <td>
-              <button
-                aria-label="Update status"
-                class="update-status-btn"
-                type="button"
-                (click)="onUpdateStatus(payment)"
-              >
-                <i class="pi pi-pencil"></i> Update Status
-              </button>
+              <div class="row-actions">
+                <button
+                  aria-label="Edit payment"
+                  class="row-action-btn"
+                  type="button"
+                  (click)="onEditPayment(payment)"
+                >
+                  <i class="pi pi-pencil"></i> Edit
+                </button>
+                <!-- Kept alongside Edit: marking a payment confirmed or failed
+                     is the one change made often enough to deserve its own
+                     two-click path. -->
+                <button
+                  aria-label="Update status"
+                  class="row-action-btn"
+                  type="button"
+                  (click)="onUpdateStatus(payment)"
+                >
+                  <i class="pi pi-flag"></i> Status
+                </button>
+              </div>
             </td>
           </tr>
         </ng-template>
@@ -171,6 +184,6 @@
 }
 
 <!-- ─── Modals ──────────────────────────────────────────────────────────────── -->
-<app-add-payment-modal (paymentAdded)="onPaymentAdded()" />
+<app-payment-form-modal (paymentAdded)="onPaymentAdded()" />
 <app-update-payment-status-modal (statusUpdated)="onStatusUpdated($event)" />
 
