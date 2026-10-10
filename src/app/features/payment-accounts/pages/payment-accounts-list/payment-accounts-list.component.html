@@ -4,13 +4,24 @@
       <h1>Payment Accounts</h1>
       <p>The bank and mobile money accounts customers are asked to pay into</p>
     </div>
-    <p-button icon="pi pi-plus" label="Add Account" (onClick)="onAdd()" />
+    <div class="page-actions">
+      <p-button
+        icon="pi pi-download"
+        label="Download All"
+        severity="contrast"
+        [disabled]="!accounts().length"
+        [loading]="downloadingAll()"
+        [outlined]="true"
+        (onClick)="onDownloadAll()"
+      />
+      <p-button icon="pi pi-plus" label="Add Account" (onClick)="onAdd()" />
+    </div>
   </div>
 
   <div class="table-card">
     <p-table
-    styleClass="table-cards"
-      dataKey="id"
+    dataKey="id"
+      styleClass="table-cards"
       [loading]="loading()"
       [value]="accounts()"
     >
@@ -58,7 +69,17 @@
           <td class="cell-actions" data-label="">
             <div class="row-actions">
               <p-button
+                icon="pi pi-download"
+                pTooltip="Download payment details"
+                severity="secondary"
+                [loading]="downloadingId() === account.id"
+                [rounded]="true"
+                [text]="true"
+                (onClick)="onDownload(account)"
+              />
+              <p-button
                 icon="pi pi-pencil"
+                pTooltip="Edit"
                 severity="secondary"
                 [rounded]="true"
                 [text]="true"
@@ -66,6 +87,7 @@
               />
               <p-button
                 icon="pi pi-trash"
+                pTooltip="Delete"
                 severity="danger"
                 [rounded]="true"
                 [text]="true"
