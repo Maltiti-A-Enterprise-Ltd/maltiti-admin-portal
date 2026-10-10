@@ -143,6 +143,11 @@
       margin: 0;
       color: var(--text-color);
     }
+
+    .optional-note {
+      font-weight: variables.$font-weight-normal;
+      color: var(--text-color-secondary);
+    }
   }
 
   .batch-allocations {
@@ -155,9 +160,9 @@
         margin: 0 0 variables.$spacing-xs 0;
       }
 
-      .required-note {
-        color: var(--red-600);
-        font-weight: variables.$font-weight-medium;
+      /* Explains why an empty list is fine, rather than reading as a gap. */
+      .optional-note {
+        color: var(--text-color-secondary);
       }
     }
 

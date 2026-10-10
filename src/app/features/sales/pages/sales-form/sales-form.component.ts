@@ -146,13 +146,6 @@ export class SalesFormComponent implements OnInit {
     this.loadProducts();
   }
 
-  public get isBatchRequired(): boolean {
-    const v = this.statusControl.value;
-    return v
-      ? [OrderStatus.PACKAGING, OrderStatus.IN_TRANSIT, OrderStatus.DELIVERED].includes(v)
-      : false;
-  }
-
   private loadProducts(): void {
     this.productApiService
       .getAllProductsSimple()

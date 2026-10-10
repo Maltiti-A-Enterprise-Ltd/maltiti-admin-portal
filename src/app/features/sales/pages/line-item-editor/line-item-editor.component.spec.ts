@@ -32,7 +32,6 @@ describe('LineItemEditorComponent', () => {
     component = fixture.componentInstance;
 
     fixture.componentRef.setInput('products', [product]);
-    fixture.componentRef.setInput('isBatchRequired', false);
     fixture.componentRef.setInput('isPaid', false);
 
     emitted = [];
