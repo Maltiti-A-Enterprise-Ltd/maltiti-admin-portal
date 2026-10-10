@@ -181,15 +181,47 @@ export interface AssignBatchesDto {
   batchAllocations: BatchAllocationDto[];
 }
 
+/**
+ * The currencies an invoice can be issued in. A sale is always recorded in
+ * cedis; these are presentation currencies for buyers who ask to be invoiced
+ * in their own money.
+ */
+export enum InvoiceCurrency {
+  GHS = 'GHS',
+  USD = 'USD',
+  CAD = 'CAD',
+}
+
+export const INVOICE_CURRENCY_LABELS: Record<InvoiceCurrency, string> = {
+  [InvoiceCurrency.GHS]: 'Ghana Cedi (GHS)',
+  [InvoiceCurrency.USD]: 'US Dollar (USD)',
+  [InvoiceCurrency.CAD]: 'Canadian Dollar (CAD)',
+};
+
+/** What the API quotes: cedis per one unit of `currency`. */
+export interface ExchangeRateQuote {
+  currency: InvoiceCurrency;
+  rate: number;
+  asOf: string;
+  source: string;
+}
+
+/** Carried on both invoice requests so the two documents cannot disagree. */
+export interface InvoiceCurrencyOptions {
+  currency?: InvoiceCurrency;
+  /** Cedis per one unit of `currency`. Required unless the currency is GHS. */
+  exchangeRate?: number;
+}
+
 /** Body for POST /sales/:id/invoice/email */
-export interface SendInvoiceEmailDto {
+export interface SendInvoiceEmailDto extends InvoiceCurrencyOptions {
   /** Omit to use the address on the customer record. */
   email?: string;
   /** Carried through so the emailed PDF matches what was previewed. */
   paymentAccountIds?: string[];
 }
 
-export interface GenerateInvoiceDto {
+export interface GenerateInvoiceDto extends InvoiceCurrencyOptions {
   discount?: number;
   transportation?: number;
   /**
@@ -250,6 +282,14 @@ export interface Sale {
   total: number;
   amount: number;
   deliveryFee: number;
+  /**
+   * The currency and rate this sale was last invoiced at. Absent means cedis.
+   * The sale itself is always recorded in cedis; these only describe how its
+   * invoice was presented, and are reused so a reissued invoice reproduces
+   * the figures the customer already has.
+   */
+  invoiceCurrency?: InvoiceCurrency;
+  invoiceExchangeRate?: number;
   /** Populated on GET /sales/:id */
   payments?: SalePaymentRecord[];
   /** Sum of all CONFIRMED payment amounts */
