@@ -56,6 +56,7 @@ import { combineLatest } from 'rxjs';
 import { map, startWith } from 'rxjs/operators';
 import { lineItemsTotalPrice } from '@shared/utils/totalPriceCalculator';
 import { lineItemSummarySignal } from '../../utils/line-item-summary';
+import { toLineItemPayload } from '../../utils/sale-line-items';
 import {
   ORDER_STATUS_OPTIONS,
   PAYMENT_STATUS_OPTIONS,
@@ -129,6 +130,18 @@ export class SalesFormComponent implements OnInit {
     Validators.required,
   );
   public readonly isPaid = computed(() => this.paymentStatusControl.value === PaymentStatus.PAID);
+
+  /**
+   * The API only accepts a delivery fee while the sale is awaiting delivery.
+   * The form used to drop the field silently outside that state, so an edit
+   * saved, reported success and changed nothing. Locking it shows the same
+   * rule before the value is typed rather than after it vanishes.
+   */
+  public readonly canEditDeliveryFee = computed(
+    () =>
+      !this.isEditMode ||
+      this.paymentStatusControl.value === PaymentStatus.AWAITING_DELIVERY,
+  );
   /**
    * Opt-in notification. Describes the save rather than the sale, so it lives
    * outside the form group and is never seeded from a loaded sale.
@@ -331,16 +344,12 @@ export class SalesFormComponent implements OnInit {
           customerId: String(this.customerControl.value),
           orderStatus: this.statusControl.value as OrderStatus,
           paymentStatus,
-          deliveryFee:
-            paymentStatus === PaymentStatus.AWAITING_DELIVERY
-              ? this.salesForm.value.deliveryFee
-              : undefined,
-          lineItems: lineItems.map((item: SaleLineItemDto) => ({
-            productId: item.productId,
-            requestedQuantity: item.requestedQuantity,
-            batchAllocations: item.batchAllocations,
-            customPrice: item.customPrice || undefined,
-          })),
+          // Omitted only when the field was locked, so the value cannot have
+          // been edited — rather than dropping an edit the user just made.
+          deliveryFee: this.canEditDeliveryFee()
+            ? this.salesForm.value.deliveryFee
+            : undefined,
+          lineItems: toLineItemPayload(lineItems),
         };
 
         this.store.dispatch(updateSale({ id: this.saleId, saleData: updateData }));
@@ -351,12 +360,7 @@ export class SalesFormComponent implements OnInit {
           orderStatus: this.statusControl.value as OrderStatus,
           paymentStatus: this.paymentStatusControl.value as PaymentStatus,
           deliveryFee: this.salesForm.value.deliveryFee,
-          lineItems: lineItems.map((item: SaleLineItemDto) => ({
-            productId: item.productId,
-            requestedQuantity: item.requestedQuantity,
-            batchAllocations: item.batchAllocations,
-            customPrice: item.customPrice || undefined,
-          })),
+          lineItems: toLineItemPayload(lineItems),
           // Create-only, and omitted when off: the API rejects unknown
           // properties, so an older deployment must not see the key at all.
           notifyCustomer: this.notifyCustomerControl.value || undefined,

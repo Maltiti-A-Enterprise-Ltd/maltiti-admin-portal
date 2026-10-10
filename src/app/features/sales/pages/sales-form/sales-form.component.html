@@ -77,17 +77,24 @@
         />
       </div>
       <div class="form-field">
-        <label for="deliveryFee">Delivery Fe</label>
+        <label for="deliveryFee">Delivery Fee</label>
         <p-inputNumber
           currency="GHS"
           id="deliveryFee"
           locale="en-US"
           mode="currency"
-          [disabled]="isPaid()"
+          [disabled]="isPaid() || !canEditDeliveryFee()"
           [formControl]="salesForm.controls.deliveryFee"
           [min]="0"
         />
-        <small class="form-help">Enter the delivery fee for this sale</small>
+        @if (canEditDeliveryFee()) {
+          <small class="form-help">Enter the delivery fee for this sale</small>
+        } @else {
+          <small class="form-help">
+            Locked until the payment status is Awaiting Delivery — that is the
+            stage where the delivery cost is agreed with the customer.
+          </small>
+        }
       </div>
       @if (confirmDeliveryDate()) {
         <div class="form-field">

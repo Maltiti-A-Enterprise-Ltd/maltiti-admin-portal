@@ -50,8 +50,8 @@
 <!-- Sales Table -->
 <div class="table-container">
   <p-table
-    styleClass="table-cards"
     currentPageReportTemplate="Showing {first} to {last} of {totalRecords} entries"
+    styleClass="table-cards"
     [lazy]="true"
     [loading]="loading()"
     [paginator]="true"
@@ -77,7 +77,7 @@
     </ng-template>
     <ng-template let-sale pTemplate="body">
       <tr>
-        <td data-label="ID" class="sale-id-column">{{ sale.id.split('-')[0] }}</td>
+        <td class="sale-id-column" data-label="ID">{{ sale.id.split('-')[0] }}</td>
         <td data-label="Customer">{{ getCustomerLabel(sale.customer) }}</td>
         <td data-label="Order Status">
           <p-tag
