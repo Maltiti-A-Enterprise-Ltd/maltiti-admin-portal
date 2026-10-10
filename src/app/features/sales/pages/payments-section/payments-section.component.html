@@ -121,6 +121,7 @@
             </th>
             <th scope="col">Amount</th>
             <th scope="col">Method</th>
+            <th scope="col">Received into</th>
             <th scope="col">Status</th>
             <th scope="col">Reference</th>
             <th scope="col">Note</th>
@@ -134,6 +135,9 @@
             <td>{{ formatDate(payment.createdAt) }}</td>
             <td class="amount-cell">{{ formatGhs(payment.amount) }}</td>
             <td>{{ getMethodLabel(payment.paymentMethod) }}</td>
+            <!-- Resolved server-side, so a payment still names its account after
+                 that account has been retired and left the picker. -->
+            <td class="account-cell">{{ payment.paymentAccountLabel || '—' }}</td>
             <td>
               <p-tag
                 [severity]="getRecordStatusSeverity(payment.status)"
