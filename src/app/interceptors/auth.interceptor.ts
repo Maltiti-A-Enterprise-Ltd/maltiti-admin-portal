@@ -1,79 +1,64 @@
-import { HttpClient, HttpErrorResponse, HttpInterceptorFn } from '@angular/common/http';
+import { HttpErrorResponse, HttpInterceptorFn, HttpRequest } from '@angular/common/http';
 import { inject } from '@angular/core';
 import { Store } from '@ngrx/store';
 import { catchError, switchMap, throwError } from 'rxjs';
 import { sessionExpired } from '@auth/store/auth.actions';
-import { environment } from '@environments/environment';
 
 import { StorageService } from '@services/storage.service';
-import { IResponse } from '@models/response.model';
+import { TokenRefreshService } from '@services/token-refresh.service';
+
+/** Endpoints that must never trigger a refresh, or it would recurse. */
+const UNAUTHENTICATED_PATHS = [
+  '/authentication/login',
+  '/authentication/refresh-token',
+];
+
+const withToken = (req: HttpRequest<unknown>, token: string): HttpRequest<unknown> =>
+  req.clone({
+    withCredentials: true,
+    setHeaders: { Authorization: `Bearer ${token}` },
+  });
 
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const store = inject(Store);
-  const http = inject(HttpClient);
+  const tokenRefresh = inject(TokenRefreshService);
 
   const token = StorageService.getToken();
 
-  // Add withCredentials to all requests and Authorization header if token exists
-  let clonedRequest = req.clone({
-    withCredentials: true,
-  });
+  let clonedRequest = req.clone({ withCredentials: true });
 
   if (token) {
-    clonedRequest = clonedRequest.clone({
-      setHeaders: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
+    clonedRequest = withToken(req, token);
   }
 
-  // Skip session expiration check for login and refresh endpoints
-  if (
-    req.url.includes('/authentication/login') ||
-    req.url.includes('/authentication/refresh-token')
-  ) {
+  if (UNAUTHENTICATED_PATHS.some((path) => req.url.includes(path))) {
     return next(clonedRequest);
   }
 
   return next(clonedRequest).pipe(
     catchError((error: HttpErrorResponse) => {
-      // Handle 401 Unauthorized - Try to refresh token
-      if (error.status === 401) {
-        return http
-          .post<
-            IResponse<string>
-          >(`${environment.apiUrl}/authentication/refresh-token`, {}, { withCredentials: true })
-          .pipe(
-            switchMap(({ data: accessToken }) => {
-              if (accessToken) {
-                StorageService.saveToken(accessToken);
-
-                // Retry request with new token
-                const newRequest = req.clone({
-                  withCredentials: true,
-                  setHeaders: {
-                    Authorization: `Bearer ${accessToken}`,
-                  },
-                });
-                return next(newRequest);
-              }
-
-              // If refresh succeeds, retry the original request
-              return next(clonedRequest).pipe(
-                catchError((newError: HttpErrorResponse) => throwError(() => newError || error)),
-              );
-            }),
-            catchError((refreshError: HttpErrorResponse) => {
-              // If refresh fails with 401, session is expired
-              if (refreshError.status === 401) {
-                store.dispatch(sessionExpired());
-              }
-              return throwError(() => error); // Return original error
-            }),
-          );
+      if (error.status !== 401) {
+        return throwError(() => error);
       }
 
-      return throwError(() => error);
+      // One refresh serves every request that failed together, so the server
+      // only rotates once. Firing one per request meant the second and third
+      // presented a token the first had already rotated away, and the 401
+      // that came back was read as "the session is over".
+      return tokenRefresh.refresh().pipe(
+        switchMap((accessToken) =>
+          next(accessToken ? withToken(req, accessToken) : clonedRequest),
+        ),
+        catchError((refreshError: HttpErrorResponse) => {
+          // Only a refusal to refresh ends the session. A network blip or a
+          // 500 on the way is not the user's session expiring.
+          if (refreshError.status === 401) {
+            store.dispatch(sessionExpired());
+          }
+
+          return throwError(() => error);
+        }),
+      );
     }),
   );
 };
