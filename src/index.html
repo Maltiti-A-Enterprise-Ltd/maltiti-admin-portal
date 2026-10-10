@@ -4,8 +4,36 @@
   <meta charset="utf-8">
   <title>Maltiti Admin Portal</title>
   <base href="/">
-  <meta content="width=device-width, initial-scale=1" name="viewport">
+
+  <!--
+    viewport-fit=cover lets the page paint under the notch and home indicator;
+    without it every env(safe-area-inset-*) resolves to 0px.
+    interactive-widget=resizes-content makes Android's keyboard shrink the
+    layout viewport, so 100dvh and bottom-pinned UI react the way they do on iOS.
+    No user-scalable or maximum-scale: pinch zoom stays available.
+  -->
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
+
+  <!-- Colours the status bar and browser chrome. Matched to the header, not
+       the brand swatch, so the bar blends into the top of the page. -->
+  <meta name="theme-color" media="(prefers-color-scheme: light)" content="#ffffff">
+  <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#1c1917">
+  <meta name="color-scheme" content="light dark">
+
+  <meta name="description" content="Manage products, sales, customers and invoices for Maltiti A. Enterprise Ltd.">
+
+  <!-- iOS ignores the manifest for home-screen installs and reads these. -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Maltiti">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <link href="apple-touch-icon.png" rel="apple-touch-icon">
+
   <link href="favicon.ico" rel="icon" type="image/x-icon">
+  <link href="favicon-32x32.png" rel="icon" sizes="32x32" type="image/png">
+  <link href="favicon-16x16.png" rel="icon" sizes="16x16" type="image/png">
+  <link href="site.webmanifest" rel="manifest">
 </head>
 <body>
   <app-root></app-root>

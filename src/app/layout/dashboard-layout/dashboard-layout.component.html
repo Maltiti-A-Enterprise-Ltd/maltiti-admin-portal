@@ -12,4 +12,7 @@
       <router-outlet />
     </main>
   </div>
+
+  <!-- Phone-shell primary navigation. Renders nothing above the breakpoint. -->
+  <app-bottom-nav (openMore)="onToggleSidebar()" />
 </div>

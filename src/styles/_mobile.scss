@@ -1,0 +1,121 @@
+/**
+ * The platform layer: the handful of declarations that decide whether the
+ * portal reads as an installed app or as a website someone opened on a phone.
+ *
+ * Each rule is here for a specific symptom. None of them reproduce in desktop
+ * device emulation — they are all real-hardware behaviours.
+ */
+
+html {
+  /* iOS and Android paint a translucent grey over anything tapped that has a
+     click handler. It is the loudest "this is a website" tell, and it fights
+     whatever press feedback the design already has. */
+  -webkit-tap-highlight-color: transparent;
+
+  /* Stops Safari inflating font sizes when the phone is turned landscape. */
+  -webkit-text-size-adjust: 100%;
+
+  /* The portal scrolls inside its own content area, so pulling past the top
+     should do nothing rather than trigger Chrome's pull-to-refresh or iOS's
+     whole-page rubber band. */
+  overscroll-behavior: none;
+}
+
+body {
+  /* Not `none` on body: order numbers, invoice references and error messages
+     are content, and people copy them. Only controls opt out (below). */
+  text-rendering: optimizeLegibility;
+}
+
+/**
+ * iOS zooms the page when focus lands on an input under 16px and does not zoom
+ * back out on blur, leaving the user on a cropped, drifted layout. Fixing the
+ * font size is the fix; disabling zoom is an accessibility failure.
+ *
+ * Scoped to coarse pointers so desktop keeps the denser type the design uses.
+ */
+@media (pointer: coarse) {
+  input,
+  textarea,
+  select,
+  .p-inputtext,
+  .p-select-label,
+  .p-inputnumber-input {
+    font-size: 16px !important;
+  }
+}
+
+/**
+ * Controls respond the instant a finger lands, and never offer to be selected
+ * or long-pressed into a callout — both are things native controls never do.
+ *
+ * `touch-action: manipulation` also drops the browser's wait-for-a-second-tap
+ * delay, which reads as lag even though nothing is actually slow.
+ */
+button,
+a,
+[role='button'],
+.p-button,
+.p-tag,
+.nav-link,
+.tappable {
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+
+/**
+ * Touch has no hover, so the browser fakes one: the first tap applies :hover
+ * and leaves it there until something else is tapped. Any hover styling the
+ * app adds has to be gated on the pointer actually being able to hover.
+ *
+ * PrimeNG ships its own ungated :hover rules; these neutralise the ones that
+ * visibly stick, and §press-feedback below gives touch users :active instead.
+ */
+@media (hover: none) {
+  .p-button:hover,
+  .p-datatable .p-datatable-tbody > tr:hover,
+  .nav-link:hover {
+    background-color: inherit;
+    color: inherit;
+  }
+}
+
+/**
+ * Press feedback on touch-down rather than on click. A button that only
+ * changes when the finger lifts feels late even at zero latency.
+ */
+@media (pointer: coarse) {
+  .p-button:active,
+  .nav-link:active,
+  [role='button']:active,
+  .tappable:active {
+    transform: scale(0.97);
+    transition: transform 100ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+}
+
+/**
+ * Inner scrollers keep their own bounce — which feels native — but stop the
+ * page behind them moving when they reach the end.
+ */
+.dashboard-content,
+.p-dialog-content,
+.p-drawer-content,
+.table-scroll {
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+/** Honour the OS setting rather than animating regardless. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
