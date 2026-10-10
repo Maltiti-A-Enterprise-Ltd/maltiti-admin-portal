@@ -56,10 +56,7 @@ import { combineLatest } from 'rxjs';
 import { map, startWith } from 'rxjs/operators';
 import { lineItemsTotalPrice } from '@shared/utils/totalPriceCalculator';
 import { lineItemSummarySignal } from '../../utils/line-item-summary';
-import {
-  ORDER_STATUS_OPTIONS,
-  PAYMENT_STATUS_OPTIONS,
-} from '../../constants/sale-status-options';
+import { ORDER_STATUS_OPTIONS, PAYMENT_STATUS_OPTIONS } from '../../constants/sale-status-options';
 import { BatchApiService } from '../../../batches/services/batch-api.service';
 import { Batch } from '../../../batches/models/batch.model';
 
@@ -331,10 +328,7 @@ export class SalesFormComponent implements OnInit {
           customerId: String(this.customerControl.value),
           orderStatus: this.statusControl.value as OrderStatus,
           paymentStatus,
-          deliveryFee:
-            paymentStatus === PaymentStatus.AWAITING_DELIVERY
-              ? this.salesForm.value.deliveryFee
-              : undefined,
+          deliveryFee: this.salesForm.value.deliveryFee,
           lineItems: lineItems.map((item: SaleLineItemDto) => ({
             productId: item.productId,
             requestedQuantity: item.requestedQuantity,

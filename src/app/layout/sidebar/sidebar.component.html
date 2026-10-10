@@ -21,6 +21,7 @@
               routerLinkActive="active"
               [routerLink]="item.route"
               [title]="item.label"
+              (click)="onNavigate()"
             >
               <i [class]="item.icon + ' nav-icon'"></i>
               @if (!isCollapsed()) {

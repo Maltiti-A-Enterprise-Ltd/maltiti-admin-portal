@@ -108,6 +108,17 @@ a,
   -webkit-overflow-scrolling: touch;
 }
 
+/**
+ * A chart canvas carries explicit width and height attributes, so it does not
+ * shrink with its container the way an image does. Capping it means a card
+ * that narrows takes the chart with it instead of being forced open.
+ *
+ * Not scoped to mobile: a canvas wider than its container is wrong at any size.
+ */
+canvas {
+  max-width: 100%;
+}
+
 /** Honour the OS setting rather than animating regardless. */
 @media (prefers-reduced-motion: reduce) {
   *,
