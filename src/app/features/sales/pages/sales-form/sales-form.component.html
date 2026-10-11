@@ -95,24 +95,29 @@
           <p>{{ confirmDeliveryDate() | date:'medium' }}</p>
         </div>
       }
-      <!-- Opt-in: recording a sale is silent unless this is ticked. Only on
-           create; editing a sale has never emailed the customer. -->
-      @if (!isEditMode) {
-        <div class="form-field notify-customer-field">
-          <div class="notify-customer-row">
-            <p-checkbox
-              inputId="notifyCustomer"
-              [binary]="true"
-              [formControl]="notifyCustomerControl"
-            />
-            <label for="notifyCustomer">Email the customer about this sale</label>
-          </div>
-          <small class="form-help">
+      <!-- Opt-in on both paths: saving is silent unless this is ticked, so a
+           past or offline sale can be recorded and later corrected without
+           the customer hearing about it. -->
+      <div class="form-field notify-customer-field">
+        <div class="notify-customer-row">
+          <p-checkbox
+            inputId="notifyCustomer"
+            [binary]="true"
+            [formControl]="notifyCustomerControl"
+          />
+          <label for="notifyCustomer">Email the customer about this sale</label>
+        </div>
+        <small class="form-help">
+          @if (isEditMode) {
+            Sends a status update, and the invoice or receipt if the payment status
+            calls for one. Only applies when you change a status. Leave unticked when
+            correcting a past or offline sale.
+          } @else {
             Sends the order confirmation, and the invoice or receipt. Leave unticked when
             recording a past or offline sale.
-          </small>
-        </div>
-      }
+          }
+        </small>
+      </div>
       <div class="total-wrapper">
         <div>Total Amount</div>
         <div class="total-amount">

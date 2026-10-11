@@ -24,7 +24,8 @@ import { TableModule, TablePageEvent } from 'primeng/table';
 import { ButtonModule } from 'primeng/button';
 import { TagModule } from 'primeng/tag';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
-import { ConfirmationService, MenuItem, MessageService } from 'primeng/api';
+import { CheckboxModule } from 'primeng/checkbox';
+import { ConfirmationService, MenuItem, MessageService, PrimeTemplate } from 'primeng/api';
 import { TooltipModule } from 'primeng/tooltip';
 import { MenuModule } from 'primeng/menu';
 import { InputTextModule } from 'primeng/inputtext';
@@ -78,6 +79,8 @@ import { customerFullLabel } from '@shared/utils/customer-name';
     ButtonModule,
     TagModule,
     ConfirmDialogModule,
+    CheckboxModule,
+    PrimeTemplate,
     TooltipModule,
     MenuModule,
     InputTextModule,
@@ -206,12 +209,28 @@ export class SalesListComponent implements OnInit {
     void this.router.navigate([APP_ROUTES.sales.payments(sale.id)]);
   }
 
+  /**
+   * Whether the pending status change should be emailed to the customer.
+   * Reset each time the dialog opens, so one deliberate tick never carries
+   * over into the next sale.
+   */
+  public readonly notifyOnStatusChange = signal(false);
+
   public onUpdateStatus(sale: Sale, newStatus: OrderStatus): void {
+    this.notifyOnStatusChange.set(false);
+
     this.confirmationService.confirm({
       message: `Are you sure you want to change the status to ${newStatus.replace('_', ' ')}?`,
       header: 'Confirm Status Change',
       icon: 'pi pi-exclamation-triangle',
-      accept: () => this.store.dispatch(updateSaleStatus({ id: sale.id, orderStatus: newStatus })),
+      accept: () =>
+        this.store.dispatch(
+          updateSaleStatus({
+            id: sale.id,
+            orderStatus: newStatus,
+            notifyCustomer: this.notifyOnStatusChange(),
+          }),
+        ),
     });
   }
 
