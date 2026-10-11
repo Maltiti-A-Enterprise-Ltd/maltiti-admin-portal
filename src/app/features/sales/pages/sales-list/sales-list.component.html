@@ -50,8 +50,8 @@
 <!-- Sales Table -->
 <div class="table-container">
   <p-table
-    styleClass="table-cards"
     currentPageReportTemplate="Showing {first} to {last} of {totalRecords} entries"
+    styleClass="table-cards"
     [lazy]="true"
     [loading]="loading()"
     [paginator]="true"
@@ -77,7 +77,7 @@
     </ng-template>
     <ng-template let-sale pTemplate="body">
       <tr>
-        <td data-label="ID" class="sale-id-column">{{ sale.id.split('-')[0] }}</td>
+        <td class="sale-id-column" data-label="ID">{{ sale.id.split('-')[0] }}</td>
         <td data-label="Customer">{{ getCustomerLabel(sale.customer) }}</td>
         <td data-label="Order Status">
           <p-tag
@@ -152,7 +152,31 @@
   </div>
 }
 
-<p-confirmDialog />
+<!-- The status-change confirmation carries its own opt-in, so the choice to
+     write to the customer is made at the moment of changing the status rather
+     than being implied by it. -->
+<p-confirmDialog>
+  <ng-template let-message pTemplate="message">
+    <div class="confirm-body">
+      <span>{{ message.message }}</span>
+      @if (message.header === 'Confirm Status Change') {
+        <div class="confirm-option">
+          <p-checkbox
+            ariaLabel="Email the customer about this change"
+            inputId="notifyOnStatusChange"
+            [binary]="true"
+            [ngModel]="notifyOnStatusChange()"
+            [ngModelOptions]="{ standalone: true }"
+            (onChange)="notifyOnStatusChange.set(!notifyOnStatusChange())"
+          />
+          <label for="notifyOnStatusChange">
+            Email the customer about this change
+          </label>
+        </div>
+      }
+    </div>
+  </ng-template>
+</p-confirmDialog>
 
 <!-- Receipt Generation Modal -->
 <app-invoice-preview-modal />

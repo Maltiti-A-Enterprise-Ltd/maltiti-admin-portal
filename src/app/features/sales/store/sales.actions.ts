@@ -68,7 +68,7 @@ export const updateSaleFailure = createAction(
 
 export const updateSaleStatus = createAction(
   '[Sales] Update Sale Status',
-  props<{ id: string; orderStatus: OrderStatus }>(),
+  props<{ id: string; orderStatus: OrderStatus; notifyCustomer?: boolean }>(),
 );
 
 export const updateSaleStatusSuccess = createAction(

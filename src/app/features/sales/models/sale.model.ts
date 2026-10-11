@@ -186,10 +186,19 @@ export interface UpdateSaleDto {
   paymentStatus?: PaymentStatus;
   lineItems?: UpdateSaleLineItemDto[];
   deliveryFee?: number;
+  /**
+   * Email the customer about this edit — the status update, and the invoice
+   * or receipt where the payment status calls for one. Only has any effect
+   * when a status actually changes. Opt-in, so correcting a back-dated sale
+   * does not send a receipt for something settled weeks ago.
+   */
+  notifyCustomer?: boolean;
 }
 
 export interface UpdateSaleStatusDto {
   orderStatus: OrderStatus;
+  /** As above: the status change is silent unless this is set. */
+  notifyCustomer?: boolean;
 }
 
 export interface AssignBatchesDto {
