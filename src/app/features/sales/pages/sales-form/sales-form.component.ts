@@ -328,6 +328,9 @@ export class SalesFormComponent implements OnInit {
             batchAllocations: item.batchAllocations,
             customPrice: item.customPrice || undefined,
           })),
+          // Omitted when off, like the create path: the API rejects unknown
+          // properties, so an older deployment must not see the key at all.
+          notifyCustomer: this.notifyCustomerControl.value || undefined,
         };
 
         this.store.dispatch(updateSale({ id: this.saleId, saleData: updateData }));

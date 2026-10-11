@@ -90,8 +90,8 @@ export class SalesEffects {
   public updateSaleStatus$ = createEffect(() =>
     this.actions$.pipe(
       ofType(SalesActions.updateSaleStatus),
-      mergeMap(({ id, orderStatus }) =>
-        this.salesApi.updateSaleStatus(id, { orderStatus }).pipe(
+      mergeMap(({ id, orderStatus, notifyCustomer }) =>
+        this.salesApi.updateSaleStatus(id, { orderStatus, notifyCustomer }).pipe(
           map((sale) => SalesActions.updateSaleStatusSuccess({ sale })),
           catchError((error) =>
             of(
