@@ -38,7 +38,16 @@
           [showClear]="true"
           [styleClass]="'customer-select'"
         />
-        <small class="form-help">Select an existing customer or create a new one</small>
+        <!-- Where the goods go. Shown here rather than only on the saved sale,
+             so switching customer updates it before anything is saved. -->
+        @if (deliveryAddress()) {
+          <small class="form-help delivery-address">
+            <i class="pi pi-map-marker"></i>
+            {{ deliveryAddress() }}
+          </small>
+        } @else {
+          <small class="form-help">Select an existing customer or create a new one</small>
+        }
       </div>
       <div class="non-form-field">
         <app-button
@@ -130,7 +139,17 @@
             &middot;
             {{ lineItemSummary().totalQuantity | number }}
             {{ lineItemSummary().totalQuantity === 1 ? 'unit' : 'units' }}
+            &middot;
+            <!-- Recalculated as quantities change, so it is never the weight of
+                 the order as it was before this edit. -->
+            {{ orderWeight().label }}
           </div>
+          @if (orderWeight().isPartial) {
+            <div class="total-weight-caveat">
+              <i class="pi pi-exclamation-triangle"></i>
+              {{ orderWeight().caveat }}
+            </div>
+          }
         }
       </div>
     </div>
