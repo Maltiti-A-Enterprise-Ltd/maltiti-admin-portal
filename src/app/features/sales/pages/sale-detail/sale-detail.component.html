@@ -51,6 +51,23 @@
         <span class="info-label">Customer</span>
         <span class="info-value">{{ customerName() }}</span>
       </div>
+      <!-- The two things a shipping agency asks for, side by side. -->
+      <div class="info-item">
+        <span class="info-label">Delivery Address</span>
+        <span class="info-value">{{ s.deliveryAddress || '—' }}</span>
+      </div>
+      <div class="info-item">
+        <span class="info-label">Total Weight</span>
+        <span class="info-value">{{ orderWeightLabel(s) }}</span>
+        @if (isWeightPartial(s)) {
+          <!-- Spelled out here rather than hidden in a tooltip: this is the
+               page an admin reads off when quoting a courier. -->
+          <span class="info-caveat">
+            <i class="pi pi-exclamation-triangle"></i>
+            {{ weightCaveat(s) }}
+          </span>
+        }
+      </div>
       <div class="info-item">
         <span class="info-label">Total Amount</span>
         <span class="info-value amount">{{ s.total | currency: 'GH₵ ' }}</span>
@@ -87,7 +104,7 @@
         @for (item of s.lineItems; track item.productId) {
           <div class="line-item-row">
             <span class="li-product">
-              {{ item.product?.name ?? item.productId }}
+              {{ item.productName ?? item.product?.name ?? item.productId }}
             </span>
             <span class="li-qty">Qty: {{ item.requestedQuantity }}</span>
             <span class="li-price">

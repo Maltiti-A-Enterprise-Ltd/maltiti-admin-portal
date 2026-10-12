@@ -123,6 +123,40 @@
 }
 
 
+/* Customer name over delivery address. The address is capped and ellipsised
+   rather than wrapped: a long one would set the row height for the whole
+   table, and the full text is on the element's title. */
+.customer-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  min-width: 0;
+}
+
+.customer-address {
+  font-size: variables.$font-size-sm;
+  color: var(--text-color-secondary);
+  max-width: 220px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.weight-cell {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  white-space: nowrap;
+}
+
+/* Amber rather than red: a partial weight is a caution to check, not a failure.
+   The icon never stands alone — it carries the explanation in its tooltip. */
+.weight-partial-icon {
+  color: var(--yellow-600, #b45309);
+  font-size: 0.8rem;
+  cursor: help;
+}
+
 /* The status-change confirmation now carries a choice as well as a question,
    so the message needs to stack rather than sit on one line. */
 .confirm-body {

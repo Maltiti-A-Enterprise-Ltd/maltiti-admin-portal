@@ -65,6 +65,7 @@ import {
 } from '@shared/utils/sales.utils';
 import { Customer } from '@models/customer.model';
 import { customerFullLabel } from '@shared/utils/customer-name';
+import { isWeightPartial, orderWeightLabel, weightCaveat } from '../../utils/order-weight';
 
 @Component({
   selector: 'app-sales-list',
@@ -382,6 +383,9 @@ export class SalesListComponent implements OnInit {
   protected readonly getPaymentStatusSeverity = getPaymentStatusSeverity;
   protected readonly getStatusLabel = getStatusLabel;
   protected readonly getStatusSeverity = getStatusSeverity;
+  protected readonly orderWeightLabel = orderWeightLabel;
+  protected readonly isWeightPartial = isWeightPartial;
+  protected readonly weightCaveat = weightCaveat;
 
   public getCustomerLabel(customer: Customer | undefined): string {
     return customer ? customerFullLabel(customer, 'N/A') : 'N/A';

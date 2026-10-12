@@ -290,6 +290,13 @@ export interface GenerateWaybillDto {
 export interface SaleLineItem {
   id: string;
   productId: string;
+  /**
+   * The product's name, flat on the line item, which is how the API sends it.
+   * Prefer this over `product.name`: the API has never nested a whole product
+   * inside a line item, so anything reading `product?.name` falls through to
+   * printing a raw UUID.
+   */
+  productName?: string;
   product?: Product;
   batchAllocations: BatchAllocationDto[];
   requestedQuantity: number;
@@ -320,6 +327,27 @@ export interface Sale {
    */
   invoiceCurrency?: InvoiceCurrency;
   invoiceExchangeRate?: number;
+  /**
+   * The customer's address as one line, ready to hand to a courier. Composed
+   * server-side from the customer's address, city, region and country so every
+   * surface shows the same string. Absent when nothing is recorded.
+   */
+  deliveryAddress?: string;
+  /**
+   * What the order weighs in kilograms, for getting a delivery quote.
+   *
+   * Only populated on endpoints that load the products — listing sales and
+   * fetching one — so it is absent on the response to a save. Absent also when
+   * not one line could be weighed; see {@link unweighedLineItems}.
+   */
+  totalWeightKg?: number;
+  /**
+   * How many line items are missing from `totalWeightKg` — their product
+   * records no size, or is sold by volume and has no density to convert with.
+   * Anything above zero means the weight is partial and must not be quoted to a
+   * carrier as the whole shipment.
+   */
+  unweighedLineItems?: number;
   /** Populated on GET /sales/:id */
   payments?: SalePaymentRecord[];
   /** Sum of all CONFIRMED payment amounts */

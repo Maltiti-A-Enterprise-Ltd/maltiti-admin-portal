@@ -99,6 +99,20 @@
     color: var(--text-color);
     &.amount { color: var(--primary-color); font-size: 1rem; font-weight: 700; }
   }
+  /* Amber rather than red: a partial weight is a caution to check before
+     quoting, not a failure. It wraps, because the sentence has to be read. */
+  .info-caveat {
+    font-size: 0.75rem;
+    line-height: 1.35;
+    color: var(--yellow-700, #a16207);
+    display: flex;
+    align-items: flex-start;
+    gap: 0.3rem;
+
+    i {
+      margin-top: 0.1rem;
+    }
+  }
 }
 // ─── Line Items ───────────────────────────────────────────────────────────────
 .no-items {

@@ -71,6 +71,7 @@
         <th scope="col">Payment Progress</th>
         <th scope="col">Total Amount</th>
         <th scope="col">Delivery Fee</th>
+        <th scope="col">Weight</th>
         <th scope="col">Created At</th>
         <th scope="col">Actions</th>
       </tr>
@@ -78,7 +79,19 @@
     <ng-template let-sale pTemplate="body">
       <tr>
         <td class="sale-id-column" data-label="ID">{{ sale.id.split('-')[0] }}</td>
-        <td data-label="Customer">{{ getCustomerLabel(sale.customer) }}</td>
+        <td data-label="Customer">
+          <div class="customer-cell">
+            <span class="customer-name">{{ getCustomerLabel(sale.customer) }}</span>
+            <!-- Where the goods go. Sits under the name rather than in a column
+                 of its own: it belongs to the customer, and a full postal
+                 address would dominate an already wide table. -->
+            @if (sale.deliveryAddress) {
+              <span class="customer-address" [title]="sale.deliveryAddress">
+                {{ sale.deliveryAddress }}
+              </span>
+            }
+          </div>
+        </td>
         <td data-label="Order Status">
           <p-tag
             [severity]="getStatusSeverity(sale.orderStatus)"
@@ -109,6 +122,20 @@
         </td>
         <td data-label="Total">{{ lineItemsTotalPrice(sale.lineItems) | currency: 'GH₵ ' }}</td>
         <td data-label="Delivery">{{ sale.deliveryFee ? (sale.deliveryFee | currency: 'GH₵ ') : 'N/A' }}</td>
+        <td data-label="Weight">
+          <span class="weight-cell">
+            {{ orderWeightLabel(sale) }}
+            <!-- A partial total is the dangerous case: quoted to a courier as
+                 if whole, it under-states the shipment. -->
+            @if (isWeightPartial(sale)) {
+              <i
+                class="pi pi-exclamation-triangle weight-partial-icon"
+                tooltipPosition="top"
+                [pTooltip]="weightCaveat(sale)"
+              ></i>
+            }
+          </span>
+        </td>
         <td data-label="Created">{{ sale.createdAt | date:'short' }}</td>
         <td class="cell-actions" data-label="">
           <div class="action-buttons">
@@ -127,7 +154,7 @@
     </ng-template>
     <ng-template pTemplate="emptymessage">
       <tr>
-        <td class="empty-state" colspan="9">
+        <td class="empty-state" colspan="10">
           <div class="empty-state-content">
             <i class="pi pi-inbox empty-icon"></i>
             <h3>No Sales Found</h3>
