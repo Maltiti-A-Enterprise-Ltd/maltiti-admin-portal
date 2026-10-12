@@ -209,3 +209,23 @@
   font-size: 0.75rem;
   color: var(--text-color-secondary, #64748b);
 }
+
+/* Amber rather than red: a partial weight is a caution to settle before
+   quoting, not a reason to block the save. */
+.total-weight-caveat {
+  margin-top: 0.25rem;
+  font-size: 0.7rem;
+  line-height: 1.35;
+  color: var(--yellow-700, #a16207);
+  max-width: 22rem;
+
+  i {
+    margin-right: 0.2rem;
+  }
+}
+
+/* The address takes the place of the select's help text, so it keeps that
+   text's size and colour and only adds the pin. */
+.delivery-address i {
+  margin-right: 0.25rem;
+}

@@ -1,4 +1,11 @@
-import { isWeightPartial, orderWeightLabel, weightCaveat } from './order-weight';
+import {
+  isWeightPartial,
+  lineItemsWeightKg,
+  orderWeightLabel,
+  weightCaveat,
+} from './order-weight';
+import { LightProduct, UnitOfMeasurement } from '@features/products/models/product.model';
+import { SaleLineItemDto } from '../models/sale.model';
 
 describe('orderWeightLabel', () => {
   it('writes the weight with its unit', () => {
@@ -64,18 +71,117 @@ describe('weightCaveat', () => {
   });
 
   /*
-   * Both causes are named because the fix differs: a missing size is something
-   * an admin can go and record, while a product sold by the litre cannot be
-   * converted at all without a density nobody has written down.
+   * Every unit in the catalogue converts now, so the only remaining cause is
+   * missing product data — and that is fixable, so the message says where.
    */
-  it('names both reasons rather than guessing between them', () => {
-    const caveat = weightCaveat({ unweighedLineItems: 2 });
-
-    expect(caveat).toContain('no size recorded');
-    expect(caveat).toContain('sold by volume');
+  it('names the one remaining cause', () => {
+    expect(weightCaveat({ unweighedLineItems: 2 })).toContain(
+      'no size or unit recorded on the product',
+    );
   });
 
   it('tells the admin what to do about it', () => {
-    expect(weightCaveat({ unweighedLineItems: 2 })).toContain('before quoting a courier');
+    const caveat = weightCaveat({ unweighedLineItems: 2 });
+
+    expect(caveat).toContain('Set it on the product');
+    expect(caveat).toContain('before quoting a courier');
+  });
+});
+
+describe('lineItemsWeightKg', () => {
+  const product = (over: Partial<LightProduct>): LightProduct =>
+    ({ id: 'p1', weight: '1', unitOfMeasurement: UnitOfMeasurement.KILOGRAM, ...over }) as LightProduct;
+
+  const line = (productId: string, requestedQuantity: number): SaleLineItemDto =>
+    ({ productId, requestedQuantity, batchAllocations: [] }) as SaleLineItemDto;
+
+  it('multiplies size by quantity', () => {
+    expect(lineItemsWeightKg([line('p1', 3)], [product({ weight: '5' })])).toEqual({
+      totalWeightKg: 15,
+      unweighedLineItems: 0,
+    });
+  });
+
+  it('converts grams', () => {
+    const weight = lineItemsWeightKg(
+      [line('p1', 11)],
+      [product({ weight: '500', unitOfMeasurement: UnitOfMeasurement.GRAM })],
+    );
+
+    expect(weight.totalWeightKg).toBe(5.5);
+  });
+
+  // The company rule: one litre is declared as one kilogram.
+  it('converts litres at one to one', () => {
+    const weight = lineItemsWeightKg(
+      [line('p1', 6)],
+      [product({ weight: '1', unitOfMeasurement: UnitOfMeasurement.LITRE })],
+    );
+
+    expect(weight.totalWeightKg).toBe(6);
+  });
+
+  it('converts pounds at the defined factor', () => {
+    const weight = lineItemsWeightKg(
+      [line('p1', 10)],
+      [product({ weight: '2', unitOfMeasurement: UnitOfMeasurement.POUND })],
+    );
+
+    expect(weight.totalWeightKg).toBe(9.072);
+  });
+
+  /*
+   * This must agree with the backend, which is the authority. If the two ever
+   * disagree, the figure changes the moment a sale is saved.
+   */
+  Object.values(UnitOfMeasurement).forEach((unit) => {
+    it(`can weigh a product measured in ${unit}`, () => {
+      const weight = lineItemsWeightKg([line('p1', 1)], [product({ unitOfMeasurement: unit })]);
+
+      expect(weight.unweighedLineItems).toBe(0);
+      expect(weight.totalWeightKg).toBeGreaterThan(0);
+    });
+  });
+
+  /*
+   * Adding a product creates an empty row before anything is chosen. Counting
+   * that as unweighable would warn about a row the user has not filled in yet.
+   */
+  it('ignores a row with no product chosen', () => {
+    expect(lineItemsWeightKg([line('', 3)], [product({})])).toEqual({
+      totalWeightKg: undefined,
+      unweighedLineItems: 0,
+    });
+  });
+
+  it('counts a line whose product records no size', () => {
+    const weight = lineItemsWeightKg([line('p1', 3)], [product({ weight: null as unknown as string })]);
+
+    expect(weight).toEqual({ totalWeightKg: undefined, unweighedLineItems: 1 });
+  });
+
+  it('still totals what it can alongside one it cannot', () => {
+    const weight = lineItemsWeightKg(
+      [line('p1', 2), line('p2', 4)],
+      [product({ weight: '1' }), product({ id: 'p2', weight: null as unknown as string })],
+    );
+
+    expect(weight).toEqual({ totalWeightKg: 2, unweighedLineItems: 1 });
+  });
+
+  it('counts a line whose product is not loaded', () => {
+    expect(lineItemsWeightKg([line('missing', 2)], [])).toEqual({
+      totalWeightKg: undefined,
+      unweighedLineItems: 1,
+    });
+  });
+
+  it('treats a missing quantity as none rather than failing', () => {
+    const weight = lineItemsWeightKg(
+      [{ productId: 'p1', batchAllocations: [] } as unknown as SaleLineItemDto],
+      [product({ weight: '2' })],
+    );
+
+    expect(weight.totalWeightKg).toBe(0);
   });
 });
