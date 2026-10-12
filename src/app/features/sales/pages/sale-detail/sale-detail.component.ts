@@ -27,6 +27,7 @@ import { OrderStatus, PaymentStatus, Sale } from '../../models/sale.model';
 import { PaymentsSectionComponent } from '../payments-section/payments-section.component';
 import { APP_ROUTES } from '@config/routes.config';
 import { customerFullLabel } from '@shared/utils/customer-name';
+import { isWeightPartial, orderWeightLabel, weightCaveat } from '../../utils/order-weight';
 
 @Component({
   selector: 'app-sale-detail',
@@ -58,6 +59,10 @@ export class SaleDetailComponent implements OnInit {
       ? customerFullLabel(s.customer, s.customerId ?? '—')
       : (s?.customerId ?? '—');
   });
+
+  protected readonly orderWeightLabel = orderWeightLabel;
+  protected readonly isWeightPartial = isWeightPartial;
+  protected readonly weightCaveat = weightCaveat;
 
   public ngOnInit(): void {
     this.saleId.set(this.route.snapshot.paramMap.get('id'));
