@@ -290,6 +290,13 @@ export interface GenerateWaybillDto {
 export interface SaleLineItem {
   id: string;
   productId: string;
+  /**
+   * The product's name, flat on the line item, which is how the API sends it.
+   * Prefer this over `product.name`: the API has never nested a whole product
+   * inside a line item, so anything reading `product?.name` falls through to
+   * printing a raw UUID.
+   */
+  productName?: string;
   product?: Product;
   batchAllocations: BatchAllocationDto[];
   requestedQuantity: number;
