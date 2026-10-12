@@ -48,6 +48,45 @@ export const customerSubLabel = (customer?: CustomerNameSource | null): string =
   return personName && organizationName ? organizationName : '';
 };
 
+/** The address columns, as carried by a customer record. */
+export interface CustomerAddressSource {
+  address?: string | null;
+  city?: string | null;
+  region?: string | null;
+  country?: string | null;
+}
+
+/**
+ * A customer's address as one line, e.g. `"12 Gumani Road, Tamale, Ghana"`.
+ *
+ * The API already composes this onto a sale as `deliveryAddress`, and that is
+ * what to read when a saved sale is on hand. This exists for the sales form,
+ * where the customer can be changed before anything is saved and there is no
+ * sale to read it from. It mirrors `buildDeliveryAddress` in the backend —
+ * which is the authority; change that first and follow it here.
+ *
+ * A part already contained in an earlier one is skipped: customers created
+ * through web checkout have their country, region and city flattened into
+ * `address` itself, so appending the columns again repeats them.
+ */
+export const customerAddressLabel = (
+  customer?: CustomerAddressSource | null,
+): string => {
+  const collected: string[] = [];
+
+  for (const raw of [customer?.address, customer?.city, customer?.region, customer?.country]) {
+    const part = raw?.trim();
+
+    if (!part || collected.join(', ').toLowerCase().includes(part.toLowerCase())) {
+      continue;
+    }
+
+    collected.push(part);
+  }
+
+  return collected.join(', ');
+};
+
 /** Up to two initials derived from whichever name identifies the customer. */
 export const customerInitials = (customer?: CustomerNameSource | null): string =>
   customerDisplayName(customer, '?')

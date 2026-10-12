@@ -56,6 +56,9 @@ import { combineLatest } from 'rxjs';
 import { map, startWith } from 'rxjs/operators';
 import { lineItemsTotalPrice } from '@shared/utils/totalPriceCalculator';
 import { lineItemSummarySignal } from '../../utils/line-item-summary';
+import { orderWeightSignal } from '../../utils/order-weight';
+import { deliveryAddressSignal } from '../../utils/delivery-address';
+import { selectCustomers } from '../../store/customers.selectors';
 import { ORDER_STATUS_OPTIONS, PAYMENT_STATUS_OPTIONS } from '../../constants/sale-status-options';
 import { BatchApiService } from '../../../batches/services/batch-api.service';
 import { Batch } from '../../../batches/models/batch.model';
@@ -140,6 +143,15 @@ export class SalesFormComponent implements OnInit {
 
   /** Running count of what has been added, so the total is never a surprise. */
   public readonly lineItemSummary = lineItemSummarySignal(this.lineItems);
+
+  /** What the sale weighs, recalculated as line items change. */
+  public readonly orderWeight = orderWeightSignal(this.lineItems, this.products);
+
+  /** Where the goods go, following the dropdown rather than the saved sale. */
+  public readonly deliveryAddress = deliveryAddressSignal(
+    this.customerControl,
+    this.store.selectSignal(selectCustomers),
+  );
 
   public ngOnInit(): void {
     this.checkEditMode();
