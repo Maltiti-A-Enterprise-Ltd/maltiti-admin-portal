@@ -149,6 +149,26 @@
   white-space: nowrap;
 }
 
+/* In card mode the row is no longer a table cell competing with nine others,
+   so the address has room to wrap. Ellipsising it there hid most of it —
+   "12 Gumani Road, Tamale, N…" is not an address anyone can act on, and the
+   title tooltip it falls back to does not exist on a touch screen. */
+@media (max-width: 768px) {
+  .customer-cell {
+    flex: 1 1 auto;
+    align-items: flex-end;
+    gap: 0.2rem;
+  }
+
+  .customer-address {
+    max-width: none;
+    white-space: normal;
+    overflow: visible;
+    text-overflow: clip;
+    line-height: 1.35;
+  }
+}
+
 /* Amber rather than red: a partial weight is a caution to check, not a failure.
    The icon never stands alone — it carries the explanation in its tooltip. */
 .weight-partial-icon {
