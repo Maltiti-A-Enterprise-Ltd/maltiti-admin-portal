@@ -71,6 +71,7 @@ import {
 } from '../../constants/sale-status-options';
 import { SalesAttentionStore } from '../../services/sales-attention.store';
 import { isWeightPartial, orderWeightLabel, weightCaveat } from '../../utils/order-weight';
+import { SalesMetricsPanelComponent } from '../sales-metrics-panel/sales-metrics-panel.component';
 
 @Component({
   selector: 'app-sales-list',
@@ -99,6 +100,7 @@ import { isWeightPartial, orderWeightLabel, weightCaveat } from '../../utils/ord
     WaybillGenerationModalComponent,
     DeliveryCostUpdateModalComponent,
     CancelSaleByAdminModalComponent,
+    SalesMetricsPanelComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   providers: [ConfirmationService],
@@ -149,22 +151,14 @@ export class SalesListComponent implements OnInit {
     // Subscribe to status filter changes
     this.statusFilterControl.valueChanges
       .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe((status) => {
-        this.onOrderStatusFilterChange(status);
-      });
+      .subscribe((status) => this.onOrderStatusFilterChange(status));
     this.paymentStatusFilterControl.valueChanges
       .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe((status) => {
-        this.onPaymentStatusFilterChange(status);
-      });
+      .subscribe((status) => this.onPaymentStatusFilterChange(status));
+    // Typed rather than picked, so it waits for a pause before reloading.
     this.customerNameFilterControl.valueChanges
-      .pipe(
-        takeUntilDestroyed(this.destroyRef),
-        debounceTime(300), // Add debounce time here
-      )
-      .subscribe((name) => {
-        this.onCustomerNameFilterChange(name);
-      });
+      .pipe(takeUntilDestroyed(this.destroyRef), debounceTime(300))
+      .subscribe((name) => this.onCustomerNameFilterChange(name));
   }
 
   public onOrderStatusFilterChange(status: OrderStatus | null): void {
