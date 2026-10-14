@@ -1,25 +1,28 @@
 import { computed, inject, Injectable, signal } from '@angular/core';
 import { take } from 'rxjs';
-import { ExchangeRateApiService } from '../../services/exchange-rate-api.service';
+import { ExchangeRateApiService } from './exchange-rate-api.service';
+import { currencySymbol } from '@shared/utils/sale-money';
 import {
   INVOICE_CURRENCY_LABELS,
   InvoiceCurrency,
   InvoiceCurrencyOptions,
-} from '../../models/sale.model';
+} from '../models/sale.model';
 
 /**
- * The currency an invoice is issued in, and the rate it is struck at.
+ * A currency and the rate it is struck at, with the feed behind it.
  *
- * Lives apart from the preview dialog because it is a self-contained concern
- * with its own async work — and because the dialog was already at the file's
- * length limit.
+ * Used in two places that look alike and mean different things. On the sales
+ * form it is the **deal** currency: what the order was negotiated in, pinned
+ * once and not changed afterwards. On the invoice dialog it is a
+ * presentation choice — printing a cedi sale in dollars for a buyer's
+ * convenience, re-pickable at any time.
  *
  * Nothing here ever invents a rate. When the feed cannot be reached the field
  * is left for the admin to fill in, which is the fallback this feature was
  * asked to have.
  */
 @Injectable()
-export class InvoiceCurrencyState {
+export class CurrencyRateState {
   private readonly api = inject(ExchangeRateApiService);
 
   /**
@@ -43,6 +46,11 @@ export class InvoiceCurrencyState {
 
   public readonly isForeign = computed(
     () => this.currency() !== InvoiceCurrency.GHS,
+  );
+
+  /** What to print in front of an amount: "GH₵", "USD", "CAD". */
+  public readonly symbol = computed(() =>
+    currencySymbol({ currency: this.currency() }),
   );
 
   /**

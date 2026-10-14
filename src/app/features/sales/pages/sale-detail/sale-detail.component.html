@@ -89,12 +89,12 @@
       </div>
       <div class="info-item">
         <span class="info-label">Total Amount</span>
-        <span class="info-value amount">{{ s.total | currency: 'GH₵ ' }}</span>
+        <span class="info-value amount">{{ money(s.total, s) }}</span>
       </div>
       <div class="info-item">
         <span class="info-label">Delivery Fee</span>
         <span class="info-value">
-          {{ s.deliveryFee ? (s.deliveryFee | currency: 'GH₵ ') : '—' }}
+          {{ s.deliveryFee ? money(s.deliveryFee, s) : '—' }}
         </span>
       </div>
       @if (s.confirmedDeliveryDate) {
@@ -130,7 +130,7 @@
               Qty: {{ formatQuantity(item.requestedQuantity, item.quantityUnit) }}
             </span>
             <span class="li-price">
-              GH₵ {{ item.finalPrice ?? item.customPrice ?? 0 | number: '1.2-2' }}
+              {{ money(item.finalPrice ?? item.customPrice ?? 0, s) }}
             </span>
           </div>
         }
@@ -142,7 +142,7 @@
 
   <!-- ─── Payments Section ─────────────────────────────────────────────────── -->
   <p-card header="Payments" styleClass="info-card">
-    <app-payments-section [saleId]="s.id" />
+    <app-payments-section [currency]="s.currency" [saleId]="s.id" />
   </p-card>
 }
 

@@ -3,7 +3,9 @@
  * Modal dialog for updating delivery cost for a sale
  */
 
-import { ChangeDetectionStrategy, Component, inject, output, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, output,
+  signal,
+} from '@angular/core';
 
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 
@@ -18,6 +20,8 @@ import { SalesApiService } from '../../services/sales-api.service';
 import { UpdateDeliveryCostDto } from '../../models/sale.model';
 import { take } from 'rxjs';
 
+import { currencySymbol } from '@shared/utils/sale-money';
+import { InvoiceCurrency } from '../../models/sale.model';
 @Component({
   selector: 'app-delivery-cost-update-modal',
   standalone: true,
@@ -28,6 +32,12 @@ import { take } from 'rxjs';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class DeliveryCostUpdateModalComponent {
+  /** The sale's currency, so the amounts here are labelled correctly. */
+  public readonly currency = signal<InvoiceCurrency | undefined>(undefined);
+  public readonly symbol = computed(() =>
+    currencySymbol({ currency: this.currency() }),
+  );
+
   private readonly fb = inject(FormBuilder);
   private readonly salesApiService = inject(SalesApiService);
   private readonly messageService = inject(MessageService);
@@ -45,7 +55,12 @@ export class DeliveryCostUpdateModalComponent {
     deliveryCost: [0, [Validators.required, Validators.min(0)]],
   });
 
-  public open(saleId: string): void {
+  /**
+   * @param currency The sale's own currency. The figures typed here are in
+   *   it, so the field has to say so rather than assume cedis.
+   */
+  public open(saleId: string, currency?: InvoiceCurrency): void {
+    this.currency.set(currency);
     this.currentSaleId.set(saleId);
     this.visible.set(true);
     this.deliveryCostForm.reset({

@@ -73,6 +73,7 @@ import { SalesAttentionStore } from '../../services/sales-attention.store';
 import { isWeightPartial, orderWeightLabel, weightCaveat } from '../../utils/order-weight';
 import { SalesMetricsPanelComponent } from '../sales-metrics-panel/sales-metrics-panel.component';
 
+import { formatSaleAmount } from '@shared/utils/sale-money';
 @Component({
   selector: 'app-sales-list',
   standalone: true,
@@ -126,6 +127,8 @@ export class SalesListComponent implements OnInit {
   public readonly menuItems = signal<MenuItem[]>([]);
 
   protected readonly lineItemsTotalPrice = lineItemsTotalPrice;
+  /** Money in each sale's own currency, not an assumed cedi. */
+  protected readonly money = formatSaleAmount;
 
   // ViewChild references
   public readonly invoicePreviewModal = viewChild.required(InvoicePreviewModalComponent);
@@ -233,7 +236,7 @@ export class SalesListComponent implements OnInit {
   }
 
   public onGenerateReceipt(sale: Sale): void {
-    this.receiptModal().open(sale.id);
+    this.receiptModal().open(sale.id, sale.currency);
   }
 
   public onGenerateWaybill(sale: Sale): void {
@@ -241,7 +244,7 @@ export class SalesListComponent implements OnInit {
   }
 
   public onUpdateDeliveryCost(sale: Sale): void {
-    this.deliveryCostModal().open(sale.id);
+    this.deliveryCostModal().open(sale.id, sale.currency);
   }
 
   public onCancelSale(sale: Sale): void {

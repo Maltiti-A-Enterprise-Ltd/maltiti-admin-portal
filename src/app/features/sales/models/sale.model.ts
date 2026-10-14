@@ -1,3 +1,16 @@
+export {
+  InvoiceCurrency,
+  INVOICE_CURRENCY_LABELS,
+  type ExchangeRateQuote,
+  type InvoiceCurrencyOptions,
+  type SendInvoiceEmailDto,
+  type GenerateInvoiceDto,
+} from './sale-currency.model';
+import {
+  InvoiceCurrency,
+  InvoiceCurrencyOptions,
+} from './sale-currency.model';
+
 import { Customer } from '@models/customer.model';
 import { Product, QuantityUnit } from '../../products/models/product.model';
 
@@ -46,8 +59,16 @@ export enum PaymentRecordStatus {
 export interface SalePaymentRecord {
   id: string;
   saleId: string;
-  /** Amount in GHS */
+  /** Amount, in the sale's own currency. */
   amount: number;
+  /** The currency `amount` is in — always the sale's. */
+  currency?: InvoiceCurrency;
+  /**
+   * Cedis per one unit of `currency` at the moment the money arrived.
+   * The settlement rate, not the sale's pinned one; the gap between the two
+   * is the FX gain or loss.
+   */
+  exchangeRate?: number;
   paymentMethod: PaymentMethod;
   status: PaymentRecordStatus;
   reference?: string;
@@ -67,7 +88,7 @@ export interface SalePaymentRecord {
 /** Summary returned by GET /sales/:saleId/payments */
 export interface SalePaymentSummary {
   saleId: string;
-  /** Grand total for the sale in GHS */
+  /** Grand total for the sale, in the sale's own currency. */
   saleTotal: number;
   /** Sum of all CONFIRMED payment amounts */
   totalPaid: number;
@@ -81,8 +102,14 @@ export interface SalePaymentSummary {
 
 /** Body for POST /sales/:saleId/payments */
 export interface RecordPaymentRequest {
-  /** Must be > 0 */
+  /** Must be > 0. In the sale's own currency. */
   amount: number;
+  /**
+   * Cedis per one unit of the sale's currency at the moment the money
+   * arrived. Only meaningful on a foreign sale; omitted, the API uses the
+   * sale's pinned rate.
+   */
+  exchangeRate?: number;
   paymentMethod: PaymentMethod;
   status: PaymentRecordStatus;
   reference?: string;
@@ -170,6 +197,13 @@ export interface CreateSaleDto {
   lineItems: SaleLineItemDto[];
   deliveryFee?: number;
   /**
+   * The currency the deal was struck in, with the rate it was agreed at as
+   * cedis per one unit. Omit both for an ordinary cedi sale; the API refuses
+   * a foreign currency without a rate rather than guessing one.
+   */
+  currency?: InvoiceCurrency;
+  exchangeRate?: number;
+  /**
    * Email the customer their order confirmation, and the invoice or receipt
    * for this sale. Opt-in, so historical and offline sales can be recorded
    * without reaching the customer. Describes the save, not the sale — the API
@@ -191,6 +225,13 @@ export interface UpdateSaleDto {
   paymentStatus?: PaymentStatus;
   lineItems?: UpdateSaleLineItemDto[];
   deliveryFee?: number;
+  /**
+   * The currency the deal was struck in, with the rate it was agreed at as
+   * cedis per one unit. Omit both for an ordinary cedi sale; the API refuses
+   * a foreign currency without a rate rather than guessing one.
+   */
+  currency?: InvoiceCurrency;
+  exchangeRate?: number;
   /**
    * Email the customer about this edit — the status update, and the invoice
    * or receipt where the payment status calls for one. Only has any effect
@@ -219,60 +260,6 @@ export interface AssignBatchesDto {
   batchAllocations: BatchAllocationDto[];
 }
 
-/**
- * The currencies an invoice can be issued in. A sale is always recorded in
- * cedis; these are presentation currencies for buyers who ask to be invoiced
- * in their own money.
- */
-export enum InvoiceCurrency {
-  GHS = 'GHS',
-  USD = 'USD',
-  CAD = 'CAD',
-}
-
-export const INVOICE_CURRENCY_LABELS: Record<InvoiceCurrency, string> = {
-  [InvoiceCurrency.GHS]: 'Ghana Cedi (GHS)',
-  [InvoiceCurrency.USD]: 'US Dollar (USD)',
-  [InvoiceCurrency.CAD]: 'Canadian Dollar (CAD)',
-};
-
-/** What the API quotes: cedis per one unit of `currency`. */
-export interface ExchangeRateQuote {
-  currency: InvoiceCurrency;
-  rate: number;
-  asOf: string;
-  source: string;
-}
-
-/** Carried on both invoice requests so the two documents cannot disagree. */
-export interface InvoiceCurrencyOptions {
-  currency?: InvoiceCurrency;
-  /** Cedis per one unit of `currency`. Required unless the currency is GHS. */
-  exchangeRate?: number;
-  /**
-   * List the confirmed payments for this sale, with an amount paid and a
-   * balance due. Off by default; has no effect when nothing is confirmed.
-   */
-  includePayments?: boolean;
-}
-
-/** Body for POST /sales/:id/invoice/email */
-export interface SendInvoiceEmailDto extends InvoiceCurrencyOptions {
-  /** Omit to use the address on the customer record. */
-  email?: string;
-  /** Carried through so the emailed PDF matches what was previewed. */
-  paymentAccountIds?: string[];
-}
-
-export interface GenerateInvoiceDto extends InvoiceCurrencyOptions {
-  discount?: number;
-  transportation?: number;
-  /**
-   * Which payment accounts to print. Omit the property to use the accounts
-   * marked as defaults; send an empty array to print none at all.
-   */
-  paymentAccountIds?: string[];
-}
 
 export interface GenerateReceiptDto {
   paymentMethod?: string;
@@ -328,6 +315,20 @@ export interface SaleLineItem {
 
 export interface Sale {
   id: string;
+  /**
+   * The currency this sale was **negotiated** in. Every money field on it —
+   * amount, fees, line prices, totalPaid, balanceRemaining — is in this.
+   *
+   * Not the same as `invoiceCurrency`, which only prints a cedi sale in
+   * another currency and leaves the stored amounts in cedis.
+   */
+  currency?: InvoiceCurrency;
+  /** Cedis per one unit of `currency`, pinned when the sale was agreed. */
+  exchangeRate?: number;
+  /** `total` in cedis at the pinned rate. For adding sales together. */
+  totalGhs?: number;
+  /** `balanceRemaining` in cedis at the pinned rate. */
+  balanceRemainingGhs?: number;
   customerId: string;
   confirmedDeliveryDate?: string;
   /** The sale's customer as returned by the API (not the linked user account). */

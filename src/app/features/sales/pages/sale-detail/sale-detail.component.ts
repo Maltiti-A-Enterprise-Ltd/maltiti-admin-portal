@@ -32,6 +32,7 @@ import { SalesAttentionStore } from '../../services/sales-attention.store';
 import { SalesApiService } from '../../services/sales-api.service';
 import { SALE_ATTENTION_LABELS } from '../../models/sale.model';
 import { formatQuantity } from '@shared/utils/quantity-unit';
+import { formatSaleAmount } from '@shared/utils/sale-money';
 
 @Component({
   selector: 'app-sale-detail',
@@ -146,4 +147,7 @@ export class SaleDetailComponent implements OnInit {
 
   /** "1 piece", "4 boxes" — the unit agrees with the number beside it. */
   protected readonly formatQuantity = formatQuantity;
+
+  /** Money in the sale's own currency, not an assumed cedi. */
+  protected readonly money = formatSaleAmount;
 }

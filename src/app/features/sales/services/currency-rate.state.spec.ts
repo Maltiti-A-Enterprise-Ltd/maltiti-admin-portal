@@ -1,8 +1,8 @@
 import { TestBed } from '@angular/core/testing';
 import { of, throwError } from 'rxjs';
-import { InvoiceCurrencyState } from './invoice-currency.state';
-import { ExchangeRateApiService } from '../../services/exchange-rate-api.service';
-import { ExchangeRateQuote, InvoiceCurrency } from '../../models/sale.model';
+import { CurrencyRateState } from './currency-rate.state';
+import { ExchangeRateApiService } from './exchange-rate-api.service';
+import { ExchangeRateQuote, InvoiceCurrency } from '../models/sale.model';
 
 const quote = (currency: InvoiceCurrency, rate: number): ExchangeRateQuote => ({
   currency,
@@ -11,8 +11,8 @@ const quote = (currency: InvoiceCurrency, rate: number): ExchangeRateQuote => ({
   source: 'open.er-api.com',
 });
 
-describe('InvoiceCurrencyState', () => {
-  let state: InvoiceCurrencyState;
+describe('CurrencyRateState', () => {
+  let state: CurrencyRateState;
   let getRate: jasmine.Spy;
 
   beforeEach(() => {
@@ -22,12 +22,12 @@ describe('InvoiceCurrencyState', () => {
 
     TestBed.configureTestingModule({
       providers: [
-        InvoiceCurrencyState,
+        CurrencyRateState,
         { provide: ExchangeRateApiService, useValue: { getRate } },
       ],
     });
 
-    state = TestBed.inject(InvoiceCurrencyState);
+    state = TestBed.inject(CurrencyRateState);
   });
 
   it('starts on cedis, with nothing to convert', () => {

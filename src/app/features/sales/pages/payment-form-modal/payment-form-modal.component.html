@@ -18,14 +18,16 @@
 
     <!-- Amount -->
     <div class="form-field">
-      <label for="amount">Amount (GHS) <span class="required">*</span></label>
+      <label for="amount">Amount ({{ symbol() }}) <span class="required">*</span></label>
       <p-inputNumber
-        currency="GHS"
         id="amount"
         locale="en-GH"
-        mode="currency"
+        mode="decimal"
         [formControl]="form.controls.amount"
+        [maxFractionDigits]="2"
         [min]="0.01"
+        [minFractionDigits]="2"
+        [prefix]="symbol() + ' '"
       />
       @if (form.controls.amount.invalid && form.controls.amount.touched) {
         <small class="field-error">Amount must be greater than 0.</small>
@@ -36,7 +38,7 @@
         <small class="field-warning">
           <i class="pi pi-exclamation-triangle"></i>
           This payment exceeds the remaining balance of
-          GHS {{ balanceRemaining().toFixed(2) }}. Do you want to continue?
+          {{ symbol() }} {{ balanceRemaining().toFixed(2) }}. Do you want to continue?
         </small>
       }
     </div>

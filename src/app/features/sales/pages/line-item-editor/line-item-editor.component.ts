@@ -17,7 +17,7 @@ import { InputNumberModule } from 'primeng/inputnumber';
 import { CardModule } from 'primeng/card';
 import { MessageService } from 'primeng/api';
 import { RadioButtonModule } from 'primeng/radiobutton';
-import { PriceType, SaleLineItemDto } from '../../models/sale.model';
+import { InvoiceCurrency, PriceType, SaleLineItemDto } from '../../models/sale.model';
 import { ButtonComponent } from '@shared/components/button/button.component';
 import { NumberInputComponent } from '@shared/components/number-input/number-input.component';
 import { SelectComponent } from '@shared/components/select/select.component';
@@ -34,6 +34,8 @@ import { Message } from 'primeng/message';
 import { filter, map, startWith } from 'rxjs/operators';
 import { productName } from '@shared/utils/product-name';
 
+import { LinePrice } from '../../utils/line-price';
+import { batchInfo, controlAt } from '../../utils/batch-allocation-lookup';
 @Component({
   selector: 'app-line-item-editor',
   standalone: true,
@@ -63,6 +65,8 @@ export class LineItemEditorComponent implements OnInit {
   public readonly lineItem = input<SaleLineItemDto | null>(null);
   public readonly products = input<LightProduct[]>([]);
   public readonly isPaid = input<boolean>(false);
+  /** The sale's currency. Line prices are denominated in it. */
+  public readonly currency = input<InvoiceCurrency | undefined>(undefined);
   public readonly availableBatches = input<Map<string, Batch[]>>();
   public readonly lineItemChange = output<SaleLineItemDto>();
   public readonly remove = output<void>();
@@ -86,6 +90,15 @@ export class LineItemEditorComponent implements OnInit {
    * `emitChange` spreads the whole form into the payload, and the API rejects
    * properties it does not know.
    */
+  /** Where a line's price comes from, and what currency it is in. */
+  public readonly price = new LinePrice(
+    this.lineItemForm.controls.customPrice,
+    this.lineItemForm.controls.requestedQuantity,
+    this.lineItemForm.controls.priceType,
+    this.selectedProduct,
+    this.currency,
+  );
+
   public readonly boxLink = new BoxQuantityLink(
     this.lineItemForm.controls.requestedQuantity,
     this.selectedProduct,
@@ -204,21 +217,12 @@ export class LineItemEditorComponent implements OnInit {
   }
 
   private onProductChange(): void {
-    const selectedProduct = this.selectedProduct();
-    if (selectedProduct && !this.lineItemForm.get('customPrice')?.value) {
-      const priceType = this.lineItemForm.get('priceType')?.value || 'wholesale';
-      const price = priceType === 'wholesale' ? selectedProduct.wholesale : selectedProduct.retail;
-      this.lineItemForm.patchValue({ customPrice: price });
-    }
+    this.price.fillIfEmpty();
   }
 
   private onPriceTypeChange(priceType: PriceType): void {
     this.priceType = priceType;
-    const selectedProduct = this.selectedProduct();
-    if (selectedProduct) {
-      const price = priceType === 'wholesale' ? selectedProduct.wholesale : selectedProduct.retail;
-      this.lineItemForm.patchValue({ customPrice: price });
-    }
+    this.price.fillFromCatalogue();
   }
 
   public addBatchAllocation(): void {
@@ -329,15 +333,7 @@ export class LineItemEditorComponent implements OnInit {
   }
 
   public getTotalPrice(): number {
-    const quantity = this.lineItemForm.get('requestedQuantity')?.value || 0;
-    const customPrice = this.lineItemForm.get('customPrice')?.value;
-    const selectedProduct = this.selectedProduct();
-    let price = customPrice || 0;
-    if (!customPrice && selectedProduct) {
-      const priceType = this.lineItemForm.get('priceType')?.value || 'wholesale';
-      price = priceType === 'wholesale' ? selectedProduct.wholesale : selectedProduct.retail;
-    }
-    return quantity * price;
+    return this.price.total();
   }
 
   /**
@@ -370,26 +366,17 @@ export class LineItemEditorComponent implements OnInit {
   }
 
   public getBatchControl(index: number): FormControl {
-    const control = this.batchControls().get(index);
-    return control || new FormControl('', { nonNullable: true });
+    return controlAt(this.batchControls(), index, '');
   }
 
   public getQuantityControl(index: number): FormControl {
-    const control = this.quantityControls().get(index);
-    return control || new FormControl(1, { nonNullable: true });
+    return controlAt(this.quantityControls(), index, 1);
   }
 
   public getBatchInfo(
     batchId: string,
   ): { availableQuantity: number; expiryDate: string | null } | null {
-    const batch = this.batches().find((b) => b.id === batchId);
-    if (!batch) {
-      return null;
-    }
-    return {
-      availableQuantity: batch.quantity,
-      expiryDate: batch.expiryDate || null,
-    };
+    return batchInfo(this.batches(), batchId);
   }
 
   public get productOptions(): { label: string; value: string }[] {

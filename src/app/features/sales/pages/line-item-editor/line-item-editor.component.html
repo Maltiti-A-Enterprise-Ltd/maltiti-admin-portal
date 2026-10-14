@@ -125,20 +125,30 @@
       <div class="form-field">
         <app-number-input
           id="price"
-          label="Custom Price (Optional)"
-          placeholder="Override with custom price"
           [control]="lineItemForm.controls.customPrice"
+          [label]="'Price (' + price.symbol() + ')' + (price.isForeign() ? ' *' : ' (Optional)')"
           [min]="0"
-          [mode]="'currency'"
+          [mode]="'decimal'"
+          [placeholder]="price.isForeign() ? 'Enter the agreed price' : 'Override with custom price'"
           [style]="{'width': '100%'}"
         />
-        <small class="helper-text">Leave empty to use {{ priceType }} price</small>
+        <!-- The catalogue is in cedis, so on a sale agreed in another
+             currency there is nothing safe to fall back to — the negotiated
+             price is not the shelf price converted. -->
+        @if (price.isForeign()) {
+          <small class="helper-text">
+            Enter the price agreed in {{ currency() }}. The cedi prices above
+            are the catalogue's, for reference only.
+          </small>
+        } @else {
+          <small class="helper-text">Leave empty to use {{ priceType }} price</small>
+        }
       </div>
 
       <div class="form-field">
         <div class="total-price">
           <span>Total</span>
-          <span>{{ getTotalPrice() | currency: 'GH₵ ' }}</span>
+          <span>{{ price.symbol() }} {{ getTotalPrice() | number: '1.2-2' }}</span>
         </div>
       </div>
     </div>

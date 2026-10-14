@@ -29,6 +29,7 @@ import { MessageService } from 'primeng/api';
 // Local
 import { SalesPaymentsApiService } from '../../services/sales-payments-api.service';
 import {
+  InvoiceCurrency,
   PAYMENT_METHOD_LABELS,
   PAYMENT_RECORD_STATUS_CONFIG,
   PaymentMethod,
@@ -39,6 +40,7 @@ import {
 import { PaymentFormModalComponent } from '../payment-form-modal/payment-form-modal.component';
 import { UpdatePaymentStatusModalComponent } from '../update-payment-status-modal/update-payment-status-modal.component';
 
+import { formatSaleAmount } from '@shared/utils/sale-money';
 @Component({
   selector: 'app-payments-section',
   templateUrl: './payments-section.component.html',
@@ -62,6 +64,12 @@ export class PaymentsSectionComponent implements OnInit {
 
   /** The ID of the sale whose payments to display. */
   public readonly saleId = input.required<string>();
+  /**
+   * The sale's own currency. Payments are recorded in it, and "paid in full"
+   * is judged in it — so the figures here must be labelled with it rather
+   * than with an assumed cedi.
+   */
+  public readonly currency = input<InvoiceCurrency | undefined>(undefined);
 
   // ─── Child modals ────────────────────────────────────────────────────────────
   private readonly paymentFormModal = viewChild.required(PaymentFormModalComponent);
@@ -91,9 +99,9 @@ export class PaymentsSectionComponent implements OnInit {
     this.loadSummary();
   }
 
-  /** Format amount as GHS currency string. */
-  public formatGhs(amount: number): string {
-    return new Intl.NumberFormat('en-GH', { style: 'currency', currency: 'GHS' }).format(amount);
+  /** An amount in the sale's own currency. */
+  public money(amount: number): string {
+    return formatSaleAmount(amount, { currency: this.currency() });
   }
 
   /** Format ISO date string to human-readable. */
@@ -134,12 +142,17 @@ export class PaymentsSectionComponent implements OnInit {
   }
 
   public onAddPayment(): void {
-    this.paymentFormModal().open(this.saleId(), this.summary());
+    this.paymentFormModal().open(this.saleId(), this.summary(), this.currency());
   }
 
   /** Correct a payment that was entered wrongly — amount, method and all. */
   public onEditPayment(payment: SalePaymentRecord): void {
-    this.paymentFormModal().openForEdit(this.saleId(), payment, this.summary());
+    this.paymentFormModal().openForEdit(
+      this.saleId(),
+      payment,
+      this.summary(),
+      this.currency(),
+    );
   }
 
   public onUpdateStatus(payment: SalePaymentRecord): void {

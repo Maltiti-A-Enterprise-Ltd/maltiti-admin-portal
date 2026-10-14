@@ -4,7 +4,9 @@
  * All fields are optional as per API specification
  */
 
-import { ChangeDetectionStrategy, Component, inject, output, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, output,
+  signal,
+} from '@angular/core';
 
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 
@@ -20,6 +22,8 @@ import { SalesApiService } from '../../services/sales-api.service';
 import { GenerateReceiptDto } from '../../models/sale.model';
 import { take } from 'rxjs';
 
+import { currencySymbol } from '@shared/utils/sale-money';
+import { InvoiceCurrency } from '../../models/sale.model';
 @Component({
   selector: 'app-receipt-generation-modal',
   standalone: true,
@@ -30,6 +34,12 @@ import { take } from 'rxjs';
   providers: [MessageService],
 })
 export class ReceiptGenerationModalComponent {
+  /** The sale's currency, so the amounts here are labelled correctly. */
+  public readonly currency = signal<InvoiceCurrency | undefined>(undefined);
+  public readonly symbol = computed(() =>
+    currencySymbol({ currency: this.currency() }),
+  );
+
   private readonly fb = inject(FormBuilder);
   private readonly salesApiService = inject(SalesApiService);
   private readonly messageService = inject(MessageService);
@@ -49,7 +59,12 @@ export class ReceiptGenerationModalComponent {
     transportation: [0, [Validators.min(0)]],
   });
 
-  public open(saleId: string): void {
+  /**
+   * @param currency The sale's own currency. The figures typed here are in
+   *   it, so the field has to say so rather than assume cedis.
+   */
+  public open(saleId: string, currency?: InvoiceCurrency): void {
+    this.currency.set(currency);
     this.currentSaleId.set(saleId);
     this.visible.set(true);
     this.receiptForm.reset({
