@@ -15,6 +15,11 @@
   </div>
 </div>
 
+<!-- What the book is worth. Collapsed to its headline by default; clicking a
+     debtor drops that customer into the name filter below, which is why it
+     drives the control directly rather than the component owning a handler. -->
+<app-sales-metrics-panel (customerSelected)="customerNameFilterControl.setValue($event)" />
+
 <!-- Which sales are asking for something. Two independent filters: the first
      is derived from each sale's status, balance and age; the second is what an
      admin marked by hand. Both on means both, not either. -->

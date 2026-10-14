@@ -27,6 +27,7 @@ import {
   UpdateSaleStatusDto,
 } from '../models/sale.model';
 import { IPaginationResponse } from '@models/response.model';
+import { SalesMetrics } from '../models/sales-metrics.model';
 
 @Injectable({
   providedIn: 'root',
@@ -116,6 +117,16 @@ export class SalesApiService {
   /** Counts for the chips above the sales list. */
   public getAttentionSummary(): Observable<SaleAttentionSummary> {
     return this.http.get<SaleAttentionSummary>(`${this.baseUrl}/attention-summary`);
+  }
+
+  /**
+   * What the book is worth and who owes what, for the overview panel.
+   *
+   * Covers the whole book, not the list's current filters — it answers what
+   * the business is owed, not what this page adds up to.
+   */
+  public getMetrics(): Observable<SalesMetrics> {
+    return this.http.get<SalesMetrics>(`${this.baseUrl}/metrics`);
   }
 
   public updateSaleStatus(id: string, dto: UpdateSaleStatusDto): Observable<Sale> {

@@ -1,0 +1,244 @@
+.metrics-panel {
+  margin-bottom: 1rem;
+  border: 1px solid var(--surface-border, #e7e5e4);
+  border-radius: 8px;
+  background: var(--surface-card, #fff);
+  overflow: hidden;
+}
+
+// The collapsed state is this row alone, so it has to read as a whole
+// control: full width, and the chevron at the start where it is looked for.
+.metrics-summary {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  width: 100%;
+  padding: 0.8rem 1rem;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font-size: 0.9rem;
+  text-align: left;
+  cursor: pointer;
+
+  &:hover {
+    background: var(--surface-ground, #f5f5f4);
+  }
+
+  .pi {
+    align-self: center;
+    font-size: 0.75rem;
+    color: var(--text-color-secondary, #78716c);
+  }
+}
+
+.metrics-summary-label {
+  font-weight: 600;
+}
+
+.metrics-summary-amount {
+  font-size: 1.15rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.metrics-summary-note,
+.metric-note {
+  color: var(--text-color-secondary, #78716c);
+  font-size: 0.78rem;
+}
+
+// Amber rather than red: an invoice past terms is routine here, not a fault.
+.metrics-summary-overdue {
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  background: var(--yellow-100, #fef3c7);
+  color: var(--yellow-900, #78350f);
+  font-size: 0.78rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.metrics-summary-error {
+  color: var(--red-700, #b91c1c);
+  font-size: 0.82rem;
+}
+
+.metrics-body {
+  padding: 0 1rem 1rem;
+  border-top: 1px solid var(--surface-border, #e7e5e4);
+}
+
+.metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.metric {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  padding: 0.75rem;
+  border: 1px solid var(--surface-border, #e7e5e4);
+  border-radius: 6px;
+  background: var(--surface-ground, #fafaf9);
+}
+
+.metric-urgent {
+  background: var(--yellow-50, #fffbeb);
+  border-color: var(--yellow-200, #fde68a);
+}
+
+.metric-label {
+  color: var(--text-color-secondary, #78716c);
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.metric-value {
+  font-size: 1.1rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.metric-note.down {
+  color: var(--red-700, #b91c1c);
+}
+
+.debtors,
+.month {
+  margin-top: 1.25rem;
+}
+
+.debtors-title,
+.month-title {
+  margin: 0 0 0.5rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  color: var(--text-color-secondary, #78716c);
+}
+
+// Capped rather than full width. Names left and amounts right is what makes
+// a ledger scannable, but across a 1400px panel the two halves stop reading
+// as the same row.
+.debtors-list {
+  max-width: 46rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+// A call sheet: name, amount, how late. Clicking one filters the list to it,
+// which is why the whole row is the button rather than the name alone.
+.debtor {
+  display: grid;
+  grid-template-columns: minmax(8rem, 1fr) 9rem 5rem 8.5rem;
+  align-items: baseline;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 0.45rem 0.5rem;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: inherit;
+  font-size: 0.85rem;
+  text-align: left;
+  cursor: pointer;
+
+  &:hover {
+    background: var(--surface-ground, #f5f5f4);
+  }
+}
+
+.debtor-name {
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.debtor-amount {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  text-align: right;
+}
+
+.debtor-orders,
+.debtor-ontime {
+  color: var(--text-color-secondary, #78716c);
+  font-size: 0.78rem;
+}
+
+.debtor-overdue {
+  color: var(--yellow-900, #78350f);
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.debtors-more {
+  margin: 0.35rem 0 0 0.5rem;
+  color: var(--text-color-secondary, #78716c);
+  font-size: 0.78rem;
+}
+
+.month-figures {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+  gap: 0.75rem;
+}
+
+// Said plainly, because a figure that ignores the filters above it while
+// sitting below them is otherwise a trap.
+.metrics-scope {
+  margin: 1rem 0 0;
+  color: var(--text-color-secondary, #78716c);
+  font-size: 0.75rem;
+  font-style: italic;
+}
+
+.metrics-error {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 1rem 0 0;
+  color: var(--red-700, #b91c1c);
+  font-size: 0.85rem;
+}
+
+.metrics-retry {
+  border: 0;
+  background: transparent;
+  color: var(--primary-color, #166534);
+  font: inherit;
+  font-weight: 600;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.metrics-loading {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+// On a phone the debtor row cannot hold four columns, so it stacks and the
+// amount keeps its own line beside the name.
+@media (max-width: 640px) {
+  .debtor {
+    grid-template-columns: 1fr auto;
+    row-gap: 0.15rem;
+  }
+
+  .debtor-orders,
+  .debtor-overdue,
+  .debtor-ontime {
+    grid-column: span 2;
+  }
+}
