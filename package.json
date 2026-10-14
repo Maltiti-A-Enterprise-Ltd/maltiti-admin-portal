@@ -12,7 +12,8 @@
     "build:prod": "ng build --configuration production",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
-    "lint": "ng lint"
+    "lint": "ng lint",
+    "prebuild": "node scripts/build-geo-assets.mjs"
   },
   "prettier": {
     "printWidth": 100,
@@ -41,7 +42,6 @@
     "@ngrx/store-devtools": "^21.0.1",
     "@primeng/themes": "^21.0.4",
     "chart.js": "^4.5.1",
-    "country-state-city": "^3.2.1",
     "primeicons": "^7.0.0",
     "primeng": "^21.1.3",
     "rxjs": "~7.8.2",
@@ -55,6 +55,7 @@
     "@angular/compiler-cli": "^21.2.4",
     "@types/jasmine": "~5.1.0",
     "angular-eslint": "21.3.0",
+    "country-state-city": "^3.2.1",
     "eslint": "^9.39.1",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-prettier": "^5.5.5",

@@ -112,11 +112,10 @@ export class CustomersListComponent implements OnInit {
   public readonly regionOptions = signal<GeoOption[]>([]);
   public readonly cityOptions = signal<GeoOption[]>([]);
 
-  // Static options
-  public readonly countryOptions: GeoOption[] = [
+  /** "All Countries" first; the rest arrive when the country file loads. */
+  public readonly countryOptions = signal<GeoOption[]>([
     { label: 'All Countries', value: null as unknown as string },
-    ...this.geoService.getCountries(),
-  ];
+  ]);
 
   public readonly sortByOptions = [
     { label: 'Date Created', value: CustomerSortBy.CREATED_AT },
@@ -157,6 +156,11 @@ export class CustomersListComponent implements OnInit {
   });
 
   public ngOnInit(): void {
+    /* Appended rather than replaced, so the "All Countries" entry stays first. */
+    void this.geoService
+      .getCountries()
+      .then((o) => this.countryOptions.update((current) => [...current, ...o]));
+
     this.loadCustomers();
 
     // Search with debounce
@@ -171,7 +175,11 @@ export class CustomersListComponent implements OnInit {
         this.regionControl.reset('', { emitEvent: false });
         this.cityControl.reset('', { emitEvent: false });
         this.cityOptions.set([]);
-        this.regionOptions.set(country ? this.geoService.getStates(country) : []);
+        if (country) {
+          void this.geoService.getStates(country).then((o) => this.regionOptions.set(o));
+        } else {
+          this.regionOptions.set([]);
+        }
         this.loadCustomers(1);
       });
 
@@ -181,7 +189,11 @@ export class CustomersListComponent implements OnInit {
       .subscribe((region) => {
         this.cityControl.reset('', { emitEvent: false });
         const country = this.countryControl.value ?? '';
-        this.cityOptions.set(region && country ? this.geoService.getCities(country, region) : []);
+        if (region && country) {
+          void this.geoService.getCities(country, region).then((o) => this.cityOptions.set(o));
+        } else {
+          this.cityOptions.set([]);
+        }
         this.loadCustomers(1);
       });
 

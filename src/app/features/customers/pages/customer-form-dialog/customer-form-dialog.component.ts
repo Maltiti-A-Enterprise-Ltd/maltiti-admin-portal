@@ -101,7 +101,7 @@ export class CustomerFormDialogComponent implements OnInit {
 
   public ngOnInit(): void {
     // Load countries once
-    this.countryOptions.set(this.geoService.getCountries());
+    void this.geoService.getCountries().then((options) => this.countryOptions.set(options));
 
     // Cascade: country → states/regions
     this.form.controls.country.valueChanges
@@ -111,7 +111,7 @@ export class CustomerFormDialogComponent implements OnInit {
         this.form.controls.city.reset('');
         this.cityOptions.set([]);
         if (country) {
-          this.regionOptions.set(this.geoService.getStates(country));
+          void this.geoService.getStates(country).then((o) => this.regionOptions.set(o));
         } else {
           this.regionOptions.set([]);
         }
@@ -124,7 +124,7 @@ export class CustomerFormDialogComponent implements OnInit {
         this.form.controls.city.reset('');
         const country = this.form.controls.country.value ?? '';
         if (region && country) {
-          this.cityOptions.set(this.geoService.getCities(country, region));
+          void this.geoService.getCities(country, region).then((o) => this.cityOptions.set(o));
         } else {
           this.cityOptions.set([]);
         }
@@ -147,10 +147,10 @@ export class CustomerFormDialogComponent implements OnInit {
     if (c) {
       // Pre-load geo cascades before patching
       if (c.country) {
-        this.regionOptions.set(this.geoService.getStates(c.country));
+        void this.geoService.getStates(c.country).then((o) => this.regionOptions.set(o));
       }
       if (c.country && c.region) {
-        this.cityOptions.set(this.geoService.getCities(c.country, c.region));
+        void this.geoService.getCities(c.country, c.region).then((o) => this.cityOptions.set(o));
       }
       this.form.patchValue({
         name: c.name ?? '',
@@ -168,7 +168,7 @@ export class CustomerFormDialogComponent implements OnInit {
       this.form.reset();
       // Default to Ghana
       this.form.controls.country.setValue('Ghana', { emitEvent: false });
-      this.regionOptions.set(this.geoService.getStates('Ghana'));
+      void this.geoService.getStates('Ghana').then((o) => this.regionOptions.set(o));
       this.cityOptions.set([]);
     }
     this.visible.set(true);
