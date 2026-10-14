@@ -80,6 +80,28 @@
         </div>
       }
 
+      <!-- Loose goods are ordered by the total, not the piece: a buyer asks for
+           250 kg, not 500 tubs. Only for products that are not boxed — the box
+           count wins there, since that is how the order is picked. -->
+      @if (weightLink.isWeighed()) {
+        <div class="form-field">
+          <app-number-input
+            id="totalWeight"
+            [control]="weightLink.totalControl"
+            [label]="'Total (' + weightLink.unitLabel() + ')'"
+            [min]="0"
+          />
+          <small class="form-help">
+            {{ weightLink.unitSize() }} {{ weightLink.unitLabel() }} each.
+            <!-- The quantity is whole, so the total rarely lands exactly where
+                 it was typed. Saying so here beats finding out on the invoice. -->
+            @if (weightLink.actualTotal(); as actual) {
+              Comes to {{ actual }} {{ weightLink.unitLabel() }}.
+            }
+          </small>
+        </div>
+      }
+
       <div>
         <div class="form-field">
           <app-number-input
