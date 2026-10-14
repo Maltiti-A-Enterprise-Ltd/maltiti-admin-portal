@@ -28,6 +28,13 @@ export const SALE_ATTENTION_LABELS: Record<SaleAttention, string> = {
   [SaleAttention.SETTLED]: 'Settled',
 };
 
+/** The day counts the buckets are decided by. Served, never restated here. */
+export interface SaleAttentionThresholds {
+  paymentTermsDays: number;
+  inTransitDays: number;
+  stalledDays: number;
+}
+
 /** Counts for the chips above the sales list. */
 export interface SaleAttentionSummary {
   buckets: Partial<Record<SaleAttention, number>>;
@@ -35,7 +42,59 @@ export interface SaleAttentionSummary {
   needsAttention: number;
   /** Open sales an admin flagged by hand. */
   flagged: number;
+  /** What the rules actually use, so the explanation cannot drift. */
+  thresholds?: SaleAttentionThresholds;
 }
+
+/**
+ * What each bucket means, for the "how this is decided" panel.
+ *
+ * The prose lives here because it is display copy; the numbers inside it
+ * come from the API, so tuning a threshold server-side changes what admins
+ * are told without anyone remembering to edit this file.
+ */
+export const SALE_ATTENTION_RULES: {
+  bucket: SaleAttention;
+  rule: (t: SaleAttentionThresholds) => string;
+}[] = [
+  {
+    bucket: SaleAttention.PAYMENT_OVERDUE,
+    rule: (t) =>
+      `Still owes money more than ${t.paymentTermsDays} days after being invoiced — the same terms printed on the invoice.`,
+  },
+  {
+    bucket: SaleAttention.NEEDS_INVOICE,
+    rule: () => 'Asked for an invoice and has not been sent one.',
+  },
+  {
+    bucket: SaleAttention.READY_TO_PACK,
+    rule: () => 'Paid for, but still sitting here unpacked.',
+  },
+  {
+    bucket: SaleAttention.CONFIRM_DELIVERY,
+    rule: (t) =>
+      `Dispatched more than ${t.inTransitDays} days ago and not confirmed delivered. Sea freight takes weeks, so this is the point past which someone should ask the agent.`,
+  },
+  {
+    bucket: SaleAttention.STALLED,
+    rule: (t) =>
+      `Open, within terms, and nothing has changed on it for ${t.stalledDays} days.`,
+  },
+  {
+    bucket: SaleAttention.PAID_NOT_DELIVERED,
+    rule: () =>
+      'Money is in for goods the customer has not received. Counted rather than flagged — most are simply still in transit.',
+  },
+  {
+    bucket: SaleAttention.AWAITING_PAYMENT,
+    rule: () =>
+      'Open and waiting on the customer, still within terms. Nothing to do yet.',
+  },
+  {
+    bucket: SaleAttention.SETTLED,
+    rule: () => 'Delivered and paid, or cancelled. Finished.',
+  },
+];
 
 /** Body for PATCH /sales/:id/flag. Explicit rather than a toggle. */
 export interface FlagSaleRequest {

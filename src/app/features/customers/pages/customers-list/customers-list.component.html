@@ -172,8 +172,9 @@
   <!-- Table -->
   <div class="table-card">
     <p-table
-    styleClass="table-cards"
-      currentPageReportTemplate="Showing {first} to {last} of {totalRecords} customers"
+    currentPageReportTemplate="Showing {first} to {last} of {totalRecords} customers"
+      styleClass="table-cards"
+      [first]="firstRow()"
       [lazy]="true"
       [loading]="loading()"
       [paginator]="true"
@@ -201,7 +202,7 @@
       <ng-template #body let-customer let-rowIndex="rowIndex">
         <tr>
           <!-- Index -->
-          <td data-label="#" class="row-index">{{ (currentPage() - 1) * limit() + rowIndex + 1 }}</td>
+          <td class="row-index" data-label="#">{{ (currentPage() - 1) * limit() + rowIndex + 1 }}</td>
 
           <!-- Customer: avatar + name + organization/email -->
           <td data-label="Customer">

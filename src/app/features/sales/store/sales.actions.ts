@@ -1,3 +1,4 @@
+import { SaleAttention } from '../models/sale-attention.model';
 import { createAction, props } from '@ngrx/store';
 import {
   CreateSaleDto,
@@ -21,6 +22,8 @@ export const loadSales = createAction(
     needsAttention?: boolean;
     /** Only sales an admin flagged by hand. Combines with the above. */
     flagged?: boolean;
+    /** Only sales in one attention bucket, e.g. paid but not delivered. */
+    attention?: SaleAttention;
   }>(),
 );
 

@@ -67,6 +67,7 @@
       class="p-datatable-sm"
       currentPageReportTemplate="Showing {first} to {last} of {totalRecords} products"
       styleClass="table-cards"
+      [first]="firstRow()"
       [lazy]="true"
       [loading]="loading()"
       [paginator]="true"
