@@ -12,12 +12,14 @@ import {
   AssignBatchesDto,
   CancelSaleByAdminDto,
   CreateSaleDto,
+  FlagSaleRequest,
   GenerateInvoiceDto,
   GenerateReceiptDto,
   GenerateWaybillDto,
   OrderStatus,
   PaymentStatus,
   Sale,
+  SaleAttentionSummary,
   SaleLineItemDto,
   SendInvoiceEmailDto,
   UpdateDeliveryCostDto,
@@ -52,6 +54,10 @@ export class SalesApiService {
     customerName?: string,
     page = 1,
     limit = 10,
+    /* Grouped rather than two more positional booleans: the signature is
+       already long enough that a bare `true, false` at the end would be
+       unreadable at the call site. */
+    attention?: { needsAttention?: boolean; flagged?: boolean },
   ): Observable<IPaginationResponse<Sale>> {
     let params = new HttpParams().set('page', page.toString()).set('limit', limit.toString());
 
@@ -66,6 +72,12 @@ export class SalesApiService {
     }
     if (customerName) {
       params = params.set('customerName', customerName);
+    }
+    if (attention?.needsAttention) {
+      params = params.set('needsAttention', 'true');
+    }
+    if (attention?.flagged) {
+      params = params.set('flagged', 'true');
     }
 
     return this.http.get<IPaginationResponse<Sale>>(this.baseUrl, { params });
@@ -91,6 +103,21 @@ export class SalesApiService {
    * Update sale status
    * PUT /sales/{id}/status
    */
+  /**
+   * Set or clear an admin's flag on a sale.
+   *
+   * `flagged` is sent explicitly rather than toggled, so two people working
+   * the same queue cannot flip each other's decision.
+   */
+  public setSaleFlag(id: string, body: FlagSaleRequest): Observable<Sale> {
+    return this.http.patch<Sale>(`${this.baseUrl}/${id}/flag`, body);
+  }
+
+  /** Counts for the chips above the sales list. */
+  public getAttentionSummary(): Observable<SaleAttentionSummary> {
+    return this.http.get<SaleAttentionSummary>(`${this.baseUrl}/attention-summary`);
+  }
+
   public updateSaleStatus(id: string, dto: UpdateSaleStatusDto): Observable<Sale> {
     return this.http.put<Sale>(`${this.baseUrl}/${id}/status`, dto);
   }

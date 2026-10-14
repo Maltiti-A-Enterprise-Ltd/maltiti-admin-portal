@@ -196,3 +196,62 @@
     color: var(--text-color);
   }
 }
+
+/* The attention chips. Each is a filter and a count at once, so the number is
+   part of the control rather than a separate badge. */
+.attention-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.attention-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.4rem 0.85rem;
+  border: 1px solid var(--surface-border, #e7e5e4);
+  border-radius: 999px;
+  background: var(--surface-card, #fff);
+  color: var(--text-color, #1c1917);
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: background 120ms, border-color 120ms;
+
+  /* Nothing in the bucket and not already filtering by it: there is nothing
+     to show, so the chip says so by being unavailable rather than by
+     returning an empty table. */
+  &:disabled {
+    opacity: 0.5;
+    cursor: default;
+  }
+
+  &.urgent .attention-chip-count {
+    background: var(--yellow-100, #fef3c7);
+    color: var(--yellow-900, #78350f);
+  }
+
+  &.active {
+    border-color: var(--primary-color, #166534);
+    background: var(--primary-color-50, #f0fdf4);
+    font-weight: 600;
+  }
+}
+
+.attention-chip-count {
+  min-width: 1.4rem;
+  padding: 0 0.35rem;
+  border-radius: 999px;
+  background: var(--surface-ground, #f5f5f4);
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+
+/* An admin's mark, beside the id so it reads as a property of the row. */
+.sale-flag {
+  margin-left: 0.4rem;
+  color: var(--primary-color, #166534);
+  font-size: 0.75rem;
+  cursor: help;
+}

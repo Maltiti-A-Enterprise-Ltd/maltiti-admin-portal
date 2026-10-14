@@ -18,9 +18,22 @@ export class SalesEffects {
   public loadSales$ = createEffect(() =>
     this.actions$.pipe(
       ofType(SalesActions.loadSales),
-      mergeMap(({ page, limit, orderStatus, paymentStatus, customerId, customerName }) =>
+      mergeMap(
+        ({
+          page,
+          limit,
+          orderStatus,
+          paymentStatus,
+          customerId,
+          customerName,
+          needsAttention,
+          flagged,
+        }) =>
         this.salesApi
-          .getSales(orderStatus, paymentStatus, customerId, customerName, page, limit)
+          .getSales(orderStatus, paymentStatus, customerId, customerName, page, limit, {
+            needsAttention,
+            flagged,
+          })
           .pipe(
             map((response) => SalesActions.loadSalesSuccess({ response })),
             catchError((error) =>

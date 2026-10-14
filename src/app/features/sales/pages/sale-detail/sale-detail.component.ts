@@ -28,6 +28,9 @@ import { PaymentsSectionComponent } from '../payments-section/payments-section.c
 import { APP_ROUTES } from '@config/routes.config';
 import { customerFullLabel } from '@shared/utils/customer-name';
 import { isWeightPartial, orderWeightLabel, weightCaveat } from '../../utils/order-weight';
+import { SalesAttentionStore } from '../../services/sales-attention.store';
+import { SalesApiService } from '../../services/sales-api.service';
+import { SALE_ATTENTION_LABELS } from '../../models/sale.model';
 
 @Component({
   selector: 'app-sale-detail',
@@ -48,6 +51,8 @@ import { isWeightPartial, orderWeightLabel, weightCaveat } from '../../utils/ord
 })
 export class SaleDetailComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
+  private readonly salesApi = inject(SalesApiService);
+  public readonly attention = inject(SalesAttentionStore);
   private readonly router = inject(Router);
 
   public readonly sale = signal<Sale | null>(null);
@@ -60,6 +65,7 @@ export class SaleDetailComponent implements OnInit {
       : (s?.customerId ?? '—');
   });
 
+  protected readonly attentionLabels = SALE_ATTENTION_LABELS;
   protected readonly orderWeightLabel = orderWeightLabel;
   protected readonly isWeightPartial = isWeightPartial;
   protected readonly weightCaveat = weightCaveat;
@@ -68,6 +74,21 @@ export class SaleDetailComponent implements OnInit {
     this.saleId.set(this.route.snapshot.paramMap.get('id'));
     const resolved = this.route.snapshot.data['sale'] as Sale | null;
     this.sale.set(resolved);
+  }
+
+  /** Flag or clear, then re-read the sale so the page shows the new state. */
+  public onToggleFlag(): void {
+    const sale = this.sale();
+
+    if (!sale) {
+      return;
+    }
+
+    this.attention.toggleFlag(sale, () =>
+      this.salesApi.getSale(sale.id).subscribe({
+        next: (fresh) => this.sale.set(fresh),
+      }),
+    );
   }
 
   public onBack(): void {
