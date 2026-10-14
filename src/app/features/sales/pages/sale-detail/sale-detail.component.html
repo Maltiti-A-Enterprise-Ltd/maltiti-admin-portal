@@ -52,6 +52,25 @@
         <span class="info-value">{{ customerName() }}</span>
       </div>
       <!-- The two things a shipping agency asks for, side by side. -->
+      <!-- What this sale is waiting on, and an admin's own mark on it. The
+           first is derived and moves as the sale moves; the second only
+           changes when someone says so. -->
+      <div class="info-item">
+        <span class="info-label">Attention</span>
+        <span class="info-value">
+          {{ s.attention ? attentionLabels[s.attention] : '—' }}
+          @if (s.needsAttention && s.waitingDays) {
+            <span class="attention-waiting">· {{ s.waitingDays }} days</span>
+          }
+        </span>
+        <button class="flag-toggle" type="button" (click)="onToggleFlag()">
+          <i [class]="s.flaggedAt ? 'pi pi-flag-fill' : 'pi pi-flag'"></i>
+          {{ s.flaggedAt ? 'Remove flag' : 'Flag for attention' }}
+        </button>
+        @if (s.flaggedAt && s.flagReason) {
+          <span class="info-caveat">{{ s.flagReason }}</span>
+        }
+      </div>
       <div class="info-item">
         <span class="info-label">Delivery Address</span>
         <span class="info-value">{{ s.deliveryAddress || '—' }}</span>

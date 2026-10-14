@@ -16,7 +16,6 @@ import {
 import { CommonModule, DecimalPipe } from '@angular/common';
 import { Router } from '@angular/router';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { first } from 'rxjs';
 import { debounceTime } from 'rxjs/operators';
 
 // PrimeNG Imports
@@ -65,6 +64,12 @@ import {
 } from '@shared/utils/sales.utils';
 import { Customer } from '@models/customer.model';
 import { customerFullLabel } from '@shared/utils/customer-name';
+import { AttentionChipKey, waitingLabel } from '../../utils/attention-chips';
+import {
+  ORDER_STATUS_FILTER_OPTIONS,
+  PAYMENT_STATUS_FILTER_OPTIONS,
+} from '../../constants/sale-status-options';
+import { SalesAttentionStore } from '../../services/sales-attention.store';
 import { isWeightPartial, orderWeightLabel, weightCaveat } from '../../utils/order-weight';
 
 @Component({
@@ -105,6 +110,7 @@ export class SalesListComponent implements OnInit {
   private readonly confirmationService = inject(ConfirmationService);
   private readonly salesApiService = inject(SalesApiService);
   private readonly messageService = inject(MessageService);
+  public readonly attention = inject(SalesAttentionStore);
 
   // Signals from store
   public readonly sales = this.store.selectSignal(selectSales);
@@ -126,24 +132,9 @@ export class SalesListComponent implements OnInit {
   public readonly deliveryCostModal = viewChild.required(DeliveryCostUpdateModalComponent);
   public readonly cancelModal = viewChild.required(CancelSaleByAdminModalComponent);
 
-  // Local state
-  public readonly statusOptions = [
-    { label: 'All Statuses', value: null },
-    { label: 'Pending', value: OrderStatus.PENDING },
-    { label: 'Packaging', value: OrderStatus.PACKAGING },
-    { label: 'In Transit', value: OrderStatus.IN_TRANSIT },
-    { label: 'Delivered', value: OrderStatus.DELIVERED },
-    { label: 'Cancelled', value: OrderStatus.CANCELLED },
-  ];
-
-  public readonly paymentStatusOptions = [
-    { label: 'All Payment Statuses', value: null },
-    { label: 'Invoice Requested', value: PaymentStatus.INVOICE_REQUESTED },
-    { label: 'Pending Payment', value: PaymentStatus.PENDING_PAYMENT },
-    { label: 'Paid', value: PaymentStatus.PAID },
-    { label: 'Refunded', value: PaymentStatus.REFUNDED },
-    { label: 'Awaiting Delivery', value: PaymentStatus.AWAITING_DELIVERY },
-  ];
+  // Lists live beside the form's, so a new status is added once.
+  public readonly statusOptions = ORDER_STATUS_FILTER_OPTIONS;
+  public readonly paymentStatusOptions = PAYMENT_STATUS_FILTER_OPTIONS;
 
   public statusFilterControl = new FormControl<OrderStatus | null>(null);
   public paymentStatusFilterControl = new FormControl<PaymentStatus | null>(null);
@@ -154,6 +145,7 @@ export class SalesListComponent implements OnInit {
 
   public ngOnInit(): void {
     this.loadSales();
+    this.attention.refresh();
     // Subscribe to status filter changes
     this.statusFilterControl.valueChanges
       .pipe(takeUntilDestroyed(this.destroyRef))
@@ -279,7 +271,6 @@ export class SalesListComponent implements OnInit {
   }
 
   public getActionMenuItems(sale: Sale): void {
-    // Check if user is admin and sale is not cancelled
     const isAdmin = this.userRole() === Role.Admin || this.userRole() === Role.SuperAdmin;
     const canCancel = isAdmin && sale.orderStatus !== OrderStatus.CANCELLED;
 
@@ -305,6 +296,11 @@ export class SalesListComponent implements OnInit {
         label: 'View / Edit Sale',
         icon: 'pi pi-pencil',
         command: (): void => this.onEditSale(sale),
+      },
+      {
+        label: sale.flaggedAt ? 'Remove flag' : 'Flag for attention',
+        icon: sale.flaggedAt ? 'pi pi-flag-fill' : 'pi pi-flag',
+        command: (): void => this.onToggleFlag(sale),
       },
       {
         label: 'View Payments',
@@ -374,6 +370,8 @@ export class SalesListComponent implements OnInit {
         orderStatus: params?.orderStatus ?? this.selectedStatus ?? undefined,
         paymentStatus: params?.paymentStatus ?? this.selectedPaymentStatus ?? undefined,
         customerName: params?.customerName ?? undefined,
+        needsAttention: this.attention.isActive('needsAttention') || undefined,
+        flagged: this.attention.isActive('flagged') || undefined,
         page: params?.page ?? 1,
         limit: 10,
       }),
@@ -383,9 +381,18 @@ export class SalesListComponent implements OnInit {
   protected readonly getPaymentStatusSeverity = getPaymentStatusSeverity;
   protected readonly getStatusLabel = getStatusLabel;
   protected readonly getStatusSeverity = getStatusSeverity;
+  protected readonly waitingLabel = waitingLabel;
   protected readonly orderWeightLabel = orderWeightLabel;
   protected readonly isWeightPartial = isWeightPartial;
   protected readonly weightCaveat = weightCaveat;
+
+  public onChipToggle(key: AttentionChipKey): void {
+    this.attention.toggleChip(key);
+    this.loadSales({ page: 1 });
+  }
+
+  public onToggleFlag = (sale: Sale): void =>
+    this.attention.toggleFlag(sale, () => this.loadSales());
 
   public getCustomerLabel(customer: Customer | undefined): string {
     return customer ? customerFullLabel(customer, 'N/A') : 'N/A';

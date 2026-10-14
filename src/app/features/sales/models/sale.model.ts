@@ -1,6 +1,11 @@
 import { Customer } from '@models/customer.model';
 import { Product } from '../../products/models/product.model';
 
+/* Re-exported so the many existing `from './sale.model'` imports keep working;
+   the definitions moved out when this file hit its 400-line ceiling. */
+export * from './sale-attention.model';
+import { SaleAttention } from './sale-attention.model';
+
 export enum PaymentStatus {
   INVOICE_REQUESTED = 'invoice_requested',
   PENDING_PAYMENT = 'pending_payment',
@@ -202,6 +207,7 @@ export interface UpdateSaleDto {
   overrideStatusLock?: boolean;
 }
 
+
 export interface UpdateSaleStatusDto {
   orderStatus: OrderStatus;
   /** As above: the status change is silent unless this is set. */
@@ -355,6 +361,15 @@ export interface Sale {
    * carrier as the whole shipment.
    */
   unweighedLineItems?: number;
+  /** What this sale is waiting on. Derived; never sent back to the API. */
+  attention?: SaleAttention;
+  /** Whether it is waiting on us. False while the ball is with the customer. */
+  needsAttention?: boolean;
+  /** How long it has waited in its bucket, for sorting the worst first. */
+  waitingDays?: number;
+  /** Set when an admin flagged it by hand. Independent of needsAttention. */
+  flaggedAt?: string;
+  flagReason?: string;
   /** Populated on GET /sales/:id */
   payments?: SalePaymentRecord[];
   /** Sum of all CONFIRMED payment amounts */
