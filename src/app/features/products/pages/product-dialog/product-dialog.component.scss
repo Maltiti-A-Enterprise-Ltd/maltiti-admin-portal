@@ -189,3 +189,37 @@
     font-size: 0.75rem;
   }
 }
+
+// A banner at the top of the form, for the two things that are about the save
+// rather than about any one field: that this is a copy, and that the last
+// attempt was refused.
+.form-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  margin: 0 0 1rem;
+  padding: 0.75rem 1rem;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  line-height: 1.4;
+
+  // The icon is one flex item and the whole sentence is the other. Loose text
+  // nodes beside a <strong> would each become an item of their own and the
+  // sentence would come apart into columns.
+  i {
+    margin-top: 0.1rem;
+    flex-shrink: 0;
+  }
+}
+
+.duplicate-note {
+  color: var(--p-blue-800, #1e40af);
+  background: var(--p-blue-50, #eff6ff);
+  border: 1px solid var(--p-blue-200, #bfdbfe);
+}
+
+.save-error {
+  color: var(--p-red-800, #991b1b);
+  background: var(--p-red-50, #fef2f2);
+  border: 1px solid var(--p-red-200, #fecaca);
+}

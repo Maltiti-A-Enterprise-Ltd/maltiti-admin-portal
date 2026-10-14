@@ -51,6 +51,7 @@ import { ProductFormValue } from '../../types/product-form-value.type';
 import { buildProductPayload } from '../../utils/product-payload';
 import { InBoxPriceLink } from '../../utils/in-box-price-link';
 import { PRODUCT_FORM_DEFAULTS } from '../../utils/product-form-defaults';
+import { productFormSeed } from '../../utils/product-form-seed';
 import { FieldRendererComponent } from '@shared/components/field-renderer/field-renderer.component';
 import { ImageSectionComponent } from '@shared/components/image-section/image-section.component';
 import { ScrollToErrorDirective } from '@shared/directives/scroll-to-error.directive';
@@ -94,6 +95,13 @@ export class ProductDialogComponent {
   public readonly visible = input.required<boolean>();
   public readonly product = input<Product | null>();
   public readonly viewMode = input<boolean>(false);
+  /**
+   * Start a new product from `product` rather than editing it.
+   *
+   * Most of the catalogue is near-identical rows — the same butter in four
+   * sizes — so a copy is nearly always a faster start than a blank form.
+   */
+  public readonly duplicateMode = input<boolean>(false);
 
   // Outputs
   public readonly visibleChange = output<boolean>();
@@ -102,7 +110,8 @@ export class ProductDialogComponent {
 
   // Signals
   public readonly loading = signal(false);
-  public readonly isEdit = computed(() => !!this.product());
+  // A copy is seeded from a product but saved as a new one.
+  public readonly isEdit = computed(() => !!this.product() && !this.duplicateMode());
   public readonly errorMessage = signal<string | null>(null);
   public readonly ingredientsOptions = toSignal(
     this.ingredientApiService
@@ -189,6 +198,9 @@ export class ProductDialogComponent {
     if (this.isViewMode()) {
       return 'View Product';
     }
+    if (this.duplicateMode()) {
+      return `New Product from "${this.product()?.name ?? ''}"`;
+    }
     return this.isEdit() ? 'Edit Product' : 'Add New Product';
   });
   public readonly showFooterActions = computed(() => !this.viewMode());
@@ -225,28 +237,27 @@ export class ProductDialogComponent {
     effect(() => {
       const visible = this.visible();
       const product = this.product();
+      const duplicate = this.duplicateMode();
 
       if (!visible) {
         seeder.markClosed();
         return;
       }
 
-      if (!seeder.shouldSeed(product?.id ?? null)) {
+      /* Keyed on the mode as well as the product: editing a product and
+         starting a new one from it are two different things to seed, and the
+         id alone cannot tell them apart. */
+      const key = product ? `${duplicate ? 'copy' : 'edit'}:${product.id}` : null;
+
+      if (!seeder.shouldSeed(key)) {
         return;
       }
 
       if (product) {
-        this.productForm.patchValue({
-          ...product,
-          minOrderQuantity: product.minOrderQuantity || 1,
-          // These controls are typed as arrays, but the API returns null for an
-          // empty list. Letting null through makes anything that reads them as
-          // arrays throw.
-          ingredients: (product.ingredients ?? []).map(({ id }) => id),
-          certifications: product.certifications ?? [],
-          images: product.images ?? [],
-          costPrice: product.costPrice ?? null,
-        });
+        // Reset first so a copy never inherits leftovers — the notification
+        // flags especially, which are never seeded from a product.
+        this.productForm.reset({ ...PRODUCT_FORM_DEFAULTS });
+        this.productForm.patchValue(productFormSeed(product, { duplicate }));
         // A stored price that does not match the formula was set by hand, so
         // opening this product for an unrelated edit must not reprice its boxes.
         this.inBoxPriceLink.resync();

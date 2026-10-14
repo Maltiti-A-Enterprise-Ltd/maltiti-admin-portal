@@ -114,6 +114,8 @@ export class ProductsListComponent {
   public readonly showProductDialog = signal(false);
   public readonly selectedProduct = signal<Product | null>(null);
   public readonly viewMode = signal(false);
+  /** Whether the dialog is starting a new product from the selected one. */
+  public readonly duplicateMode = signal(false);
 
   public categoryOptions = [{ label: 'All Categories', value: '' }, ...PRODUCT_CATEGORIES];
 
@@ -152,20 +154,33 @@ export class ProductsListComponent {
   }
 
   public onCreateProduct(): void {
-    this.selectedProduct.set(null);
-    this.viewMode.set(false);
-    this.showProductDialog.set(true);
+    this.openDialog(null, { view: false, duplicate: false });
   }
 
   public onEditProduct(product: Product): void {
-    this.selectedProduct.set(product);
-    this.viewMode.set(false);
-    this.showProductDialog.set(true);
+    this.openDialog(product, { view: false, duplicate: false });
   }
 
   public onViewProduct(product: Product): void {
+    this.openDialog(product, { view: true, duplicate: false });
+  }
+
+  /**
+   * Opens the create form filled in from an existing product.
+   *
+   * Most of the catalogue is near-identical rows — the same butter in four
+   * sizes — so a copy with the size changed is a far shorter path than a blank
+   * form, and a far smaller chance of the prices or ingredients drifting apart
+   * between siblings.
+   */
+  public onDuplicateProduct(product: Product): void {
+    this.openDialog(product, { view: false, duplicate: true });
+  }
+
+  private openDialog(product: Product | null, mode: { view: boolean; duplicate: boolean }): void {
     this.selectedProduct.set(product);
-    this.viewMode.set(true);
+    this.viewMode.set(mode.view);
+    this.duplicateMode.set(mode.duplicate);
     this.showProductDialog.set(true);
   }
 
