@@ -30,6 +30,7 @@ export enum QuantityUnit {
   DRUM = 'drum',
   KEG = 'keg',
   PALLET = 'pallet',
+  BUCKET = 'bucket',
 }
 
 export type ProductCategory =

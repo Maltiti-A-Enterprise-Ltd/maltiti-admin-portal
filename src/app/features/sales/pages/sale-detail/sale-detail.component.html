@@ -125,7 +125,10 @@
             <span class="li-product">
               {{ item.productName ?? item.product?.name ?? item.productId }}
             </span>
-            <span class="li-qty">Qty: {{ item.requestedQuantity }}</span>
+            <!-- The unit agrees with the number: "1 piece", "4 boxes". -->
+            <span class="li-qty">
+              Qty: {{ formatQuantity(item.requestedQuantity, item.quantityUnit) }}
+            </span>
             <span class="li-price">
               GH₵ {{ item.finalPrice ?? item.customPrice ?? 0 | number: '1.2-2' }}
             </span>

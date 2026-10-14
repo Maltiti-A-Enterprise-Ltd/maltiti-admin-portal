@@ -84,7 +84,12 @@
             <div class="kpi-details">
               <span class="kpi-label">Inventory Value</span>
               <span class="kpi-value">{{ summary()!.kpis.inventory.totalValue | currency: 'GHS ' }}</span>
-              <span class="kpi-info">{{ summary()!.kpis.inventory.totalQuantity | number }} units</span>
+              <!-- A total across products of different units, so it stays
+                   generic — but it still has to agree in number. -->
+              <span class="kpi-info">
+                {{ summary()!.kpis.inventory.totalQuantity | number }}
+                {{ summary()!.kpis.inventory.totalQuantity === 1 ? 'unit' : 'units' }}
+              </span>
             </div>
           </div>
         </p-card>
@@ -443,7 +448,9 @@
                     <span class="activity-sub">{{ batch.productName }}</span>
                   </div>
                   <div class="activity-meta">
-                    <span class="activity-amount">{{ batch.quantity }} units</span>
+                    <span class="activity-amount">
+                      {{ batch.quantity }} {{ batch.quantity === 1 ? 'unit' : 'units' }}
+                    </span>
                     <span class="activity-date">{{ batch.productionDate | date: 'short' }}</span>
                   </div>
                 </li>

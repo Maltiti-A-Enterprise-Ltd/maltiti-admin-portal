@@ -1,9 +1,48 @@
+/*
+ * Colours come from PrimeNG's semantic tokens (`--p-content-*`,
+ * `--p-text-*`), which are the ones that actually flip with the colour
+ * scheme — the theme is configured with `darkModeSelector: 'system'`.
+ *
+ * Not `--surface-card` / `--text-color`: those are PrimeNG v3 names that v21
+ * does not emit under the `p` prefix, so every one of them silently falls
+ * through to its hardcoded light literal. Much of the app still does that and
+ * is light-only as a result; this panel is deliberately not.
+ *
+ * The palette tokens (`--p-amber-*`, `--p-red-*`) are fixed across schemes,
+ * so the two accents are declared as local properties and re-picked for dark
+ * below rather than tinted automatically. Amber-900 text is unreadable on a
+ * dark surface, and a pale amber block on a dark page reads as a fault rather
+ * than a caution.
+ */
 .metrics-panel {
+  --metrics-warn-surface: var(--p-amber-50, #fffbeb);
+  --metrics-warn-border: var(--p-amber-200, #fde68a);
+  --metrics-warn-ink: var(--p-amber-900, #78350f);
+  --metrics-warn-chip: var(--p-amber-100, #fef3c7);
+  --metrics-danger-surface: var(--p-red-50, #fef2f2);
+  --metrics-danger-border: var(--p-red-200, #fecaca);
+  --metrics-danger-ink: var(--p-red-700, #b91c1c);
+
   margin-bottom: 1rem;
-  border: 1px solid var(--surface-border, #e7e5e4);
+  border: 1px solid var(--p-content-border-color);
   border-radius: 8px;
-  background: var(--surface-card, #fff);
+  background: var(--p-content-background);
+  color: var(--p-text-color);
   overflow: hidden;
+}
+
+@media (prefers-color-scheme: dark) {
+  .metrics-panel {
+    /* Tints of the accent over whatever the card sits on, so the blocks read
+       as shaded regions of the panel rather than as pasted-on light cards. */
+    --metrics-warn-surface: color-mix(in srgb, var(--p-amber-400) 12%, transparent);
+    --metrics-warn-border: color-mix(in srgb, var(--p-amber-400) 30%, transparent);
+    --metrics-warn-ink: var(--p-amber-300, #fcd34d);
+    --metrics-warn-chip: color-mix(in srgb, var(--p-amber-400) 22%, transparent);
+    --metrics-danger-surface: color-mix(in srgb, var(--p-red-400) 12%, transparent);
+    --metrics-danger-border: color-mix(in srgb, var(--p-red-400) 30%, transparent);
+    --metrics-danger-ink: var(--p-red-300, #fca5a5);
+  }
 }
 
 // The collapsed state is this row alone, so it has to read as a whole
@@ -23,13 +62,13 @@
   cursor: pointer;
 
   &:hover {
-    background: var(--surface-ground, #f5f5f4);
+    background: var(--p-content-hover-background);
   }
 
   .pi {
     align-self: center;
     font-size: 0.75rem;
-    color: var(--text-color-secondary, #78716c);
+    color: var(--p-text-muted-color);
   }
 }
 
@@ -45,7 +84,7 @@
 
 .metrics-summary-note,
 .metric-note {
-  color: var(--text-color-secondary, #78716c);
+  color: var(--p-text-muted-color);
   font-size: 0.78rem;
 }
 
@@ -53,21 +92,21 @@
 .metrics-summary-overdue {
   padding: 0.15rem 0.5rem;
   border-radius: 999px;
-  background: var(--yellow-100, #fef3c7);
-  color: var(--yellow-900, #78350f);
+  background: var(--metrics-warn-chip);
+  color: var(--metrics-warn-ink);
   font-size: 0.78rem;
   font-weight: 600;
   font-variant-numeric: tabular-nums;
 }
 
 .metrics-summary-error {
-  color: var(--red-700, #b91c1c);
+  color: var(--metrics-danger-ink);
   font-size: 0.82rem;
 }
 
 .metrics-body {
   padding: 0 1rem 1rem;
-  border-top: 1px solid var(--surface-border, #e7e5e4);
+  border-top: 1px solid var(--p-content-border-color);
 }
 
 .metrics-grid {
@@ -82,18 +121,20 @@
   flex-direction: column;
   gap: 0.15rem;
   padding: 0.75rem;
-  border: 1px solid var(--surface-border, #e7e5e4);
+  border: 1px solid var(--p-content-border-color);
   border-radius: 6px;
-  background: var(--surface-ground, #fafaf9);
+  // One step off the card rather than a fixed grey, so the tiles stay legible
+  // against either background.
+  background: var(--p-content-hover-background);
 }
 
 .metric-urgent {
-  background: var(--yellow-50, #fffbeb);
-  border-color: var(--yellow-200, #fde68a);
+  background: var(--metrics-warn-surface);
+  border-color: var(--metrics-warn-border);
 }
 
 .metric-label {
-  color: var(--text-color-secondary, #78716c);
+  color: var(--p-text-muted-color);
   font-size: 0.78rem;
   text-transform: uppercase;
   letter-spacing: 0.02em;
@@ -106,7 +147,7 @@
 }
 
 .metric-note.down {
-  color: var(--red-700, #b91c1c);
+  color: var(--metrics-danger-ink);
 }
 
 .debtors,
@@ -121,7 +162,7 @@
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.02em;
-  color: var(--text-color-secondary, #78716c);
+  color: var(--p-text-muted-color);
 }
 
 // Capped rather than full width. Names left and amounts right is what makes
@@ -152,7 +193,7 @@
   cursor: pointer;
 
   &:hover {
-    background: var(--surface-ground, #f5f5f4);
+    background: var(--p-content-hover-background);
   }
 }
 
@@ -171,19 +212,19 @@
 
 .debtor-orders,
 .debtor-ontime {
-  color: var(--text-color-secondary, #78716c);
+  color: var(--p-text-muted-color);
   font-size: 0.78rem;
 }
 
 .debtor-overdue {
-  color: var(--yellow-900, #78350f);
+  color: var(--metrics-warn-ink);
   font-size: 0.78rem;
   font-weight: 600;
 }
 
 .debtors-more {
   margin: 0.35rem 0 0 0.5rem;
-  color: var(--text-color-secondary, #78716c);
+  color: var(--p-text-muted-color);
   font-size: 0.78rem;
 }
 
@@ -197,7 +238,7 @@
 // sitting below them is otherwise a trap.
 .metrics-scope {
   margin: 1rem 0 0;
-  color: var(--text-color-secondary, #78716c);
+  color: var(--p-text-muted-color);
   font-size: 0.75rem;
   font-style: italic;
 }
@@ -207,14 +248,18 @@
   align-items: center;
   gap: 0.5rem;
   margin: 1rem 0 0;
-  color: var(--red-700, #b91c1c);
+  padding: 0.6rem 0.75rem;
+  border: 1px solid var(--metrics-danger-border);
+  border-radius: 6px;
+  background: var(--metrics-danger-surface);
+  color: var(--metrics-danger-ink);
   font-size: 0.85rem;
 }
 
 .metrics-retry {
   border: 0;
   background: transparent;
-  color: var(--primary-color, #166534);
+  color: inherit;
   font: inherit;
   font-weight: 600;
   text-decoration: underline;

@@ -72,6 +72,28 @@
             [control]="form.controls.email"
           />
         </div>
+
+        <!-- A second address to reach them on — a shared orders inbox, or a
+             personal address beside a company one. Not used to identify the
+             customer, so it need not be unique. -->
+        <div class="form-field">
+          <label class="form-label" for="alternativeEmail">Alternative Email</label>
+          <app-input
+            id="alternativeEmail"
+            placeholder="orders@example.com (optional)"
+            type="email"
+            [control]="form.controls.alternativeEmail"
+          />
+        </div>
+
+        <div class="form-field">
+          <label class="form-label" for="website">Website</label>
+          <app-input
+            id="website"
+            placeholder="example.com (optional)"
+            [control]="form.controls.website"
+          />
+        </div>
       </div>
     </div>
 

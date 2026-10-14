@@ -31,6 +31,7 @@ import { isWeightPartial, orderWeightLabel, weightCaveat } from '../../utils/ord
 import { SalesAttentionStore } from '../../services/sales-attention.store';
 import { SalesApiService } from '../../services/sales-api.service';
 import { SALE_ATTENTION_LABELS } from '../../models/sale.model';
+import { formatQuantity } from '@shared/utils/quantity-unit';
 
 @Component({
   selector: 'app-sale-detail',
@@ -142,4 +143,7 @@ export class SaleDetailComponent implements OnInit {
   public formatStatus(status: string): string {
     return status.replaceAll('_', ' ').replaceAll(/\b\w/g, (l) => l.toUpperCase());
   }
+
+  /** "1 piece", "4 boxes" — the unit agrees with the number beside it. */
+  protected readonly formatQuantity = formatQuantity;
 }
