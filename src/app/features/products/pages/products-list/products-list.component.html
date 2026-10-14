@@ -64,9 +64,9 @@
   <!-- Products Table -->
   <div class="table-card">
     <p-table
-    styleClass="table-cards"
       class="p-datatable-sm"
       currentPageReportTemplate="Showing {first} to {last} of {totalRecords} products"
+      styleClass="table-cards"
       [lazy]="true"
       [loading]="loading()"
       [paginator]="true"
@@ -81,15 +81,14 @@
       <ng-template #header>
         <tr>
           <th id="image" style="width: 80px">Image</th>
-          <th id="name" pSortableColumn="name">
-            Name <p-sortIcon field="name" />
-          </th>
+          <th id="name" pSortableColumn="name">Name <p-sortIcon field="name" /></th>
           <th id="product-category">Category</th>
-          <th id="retail" pSortableColumn="retail">
-            Retail Price <p-sortIcon field="retail" />
-          </th>
+          <th id="retail" pSortableColumn="retail">Retail Price <p-sortIcon field="retail" /></th>
           <th id="product-status">Status</th>
-          <th id="actions" style="width: 150px">Actions</th>
+          <!-- 5 × 40px buttons + 4 × 4px gaps + the cell's 32px of padding.
+               Narrower and the row wraps onto two lines — as it already did
+               with four buttons at 150px. -->
+          <th id="actions" style="width: 250px">Actions</th>
         </tr>
       </ng-template>
 
@@ -100,7 +99,10 @@
             <img
               class="product-image"
               [alt]="product.name"
-              [src]="product.image || 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjQiIGhlaWdodD0iNjQiIHZpZXdCb3g9IjAgMCA2NCA2NCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiBmaWxsPSIjRjNGNEY2Ii8+CjxwYXRoIGQ9Ik0yNCAyMEgxNmEyIDIgMCAwIDAtMi0yVjE2YTIgMiAwIDAgMCAyLTJoOFYyMGEyIDIgMCAwIDAgMiAydjhoOFptMC0xMEgxNmEyIDIgMCAwIDAtMi0yVjE2YTIgMiAwIDAgMCAyLTJoOFYyMGEyIDIgMCAwIDAgMiAydjhoOFoiIGZpbGw9IiM5Q0E0QUYiLz4KPHBhdGggZD0iTTMyIDI4YTEyIDEyIDAgMSAwIDAtMjQgMTIgMTIgMCAwIDAgMCAyNFoiIGZpbGw9IiM5Q0E0QUYiLz4KPHBhdGggZD0iTTQwIDI4YTEyIDEyIDAgMSAwIDAtMjQgMTIgMTIgMCAwIDAgMCAyNFoiIGZpbGw9IiM5Q0E0QUYiLz4KPC9zdmc+'"
+              [src]="
+                product.image ||
+                'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjQiIGhlaWdodD0iNjQiIHZpZXdCb3g9IjAgMCA2NCA2NCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiBmaWxsPSIjRjNGNEY2Ii8+CjxwYXRoIGQ9Ik0yNCAyMEgxNmEyIDIgMCAwIDAtMi0yVjE2YTIgMiAwIDAgMCAyLTJoOFYyMGEyIDIgMCAwIDAgMiAydjhoOFptMC0xMEgxNmEyIDIgMCAwIDAtMi0yVjE2YTIgMiAwIDAgMCAyLTJoOFYyMGEyIDIgMCAwIDAgMiAydjhoOFoiIGZpbGw9IiM5Q0E0QUYiLz4KPHBhdGggZD0iTTMyIDI4YTEyIDEyIDAgMSAwIDAtMjQgMTIgMTIgMCAwIDAgMCAyNFoiIGZpbGw9IiM5Q0E0QUYiLz4KPHBhdGggZD0iTTQwIDI4YTEyIDEyIDAgMSAwIDAtMjQgMTIgMTIgMCAwIDAgMCAyNFoiIGZpbGw9IiM5Q0E0QUYiLz4KPC9zdmc+'
+              "
             />
           </td>
 
@@ -153,6 +155,14 @@
                 [text]="true"
                 [tooltip]="'Edit Product'"
                 (click)="onEditProduct(product)"
+              />
+              <app-button
+                [icon]="'pi pi-copy'"
+                [rounded]="true"
+                [severity]="'secondary'"
+                [text]="true"
+                [tooltip]="'New product based on this one'"
+                (click)="onDuplicateProduct(product)"
               />
               <app-button
                 [icon]="product.status === 'active' ? 'pi pi-ban' : 'pi pi-check-circle'"
@@ -208,6 +218,7 @@
 
   <!-- Product Dialog (Create/Edit) -->
   <app-product-dialog
+    [duplicateMode]="duplicateMode()"
     [product]="selectedProduct()"
     [viewMode]="viewMode()"
     [visible]="showProductDialog()"
