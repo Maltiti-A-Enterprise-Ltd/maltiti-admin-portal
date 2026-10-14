@@ -23,9 +23,9 @@
       <p-inputNumber
         id="discount"
         placeholder="Enter discount amount"
-        suffix=" GHS"
         [formControl]="receiptForm.controls.discount"
         [min]="0"
+        [suffix]="' ' + symbol()"
       />
       <small class="field-hint">Optional - Defaults to 0</small>
     </div>
@@ -35,9 +35,9 @@
       <p-inputNumber
         id="transportation"
         placeholder="Enter transportation cost"
-        suffix=" GHS"
         [formControl]="receiptForm.controls.transportation"
         [min]="0"
+        [suffix]="' ' + symbol()"
       />
       <small class="field-hint">Optional - Defaults to 0</small>
     </div>

@@ -115,16 +115,84 @@
           [styleClass]="'payment-status-select'"
         />
       </div>
+      <!-- The currency the deal was struck in. Pinned once with its rate, so
+           it is only offered while the sale is being created: every amount on
+           the sale is denominated in it, and changing it afterwards would
+           restate the order without anyone renegotiating it. -->
+      @if (!isEditMode) {
+        <div class="form-field deal-currency-field">
+          <label for="dealCurrency">Currency</label>
+          <div class="deal-currency-row">
+            <p-select
+              inputId="dealCurrency"
+              optionLabel="label"
+              optionValue="value"
+              [disabled]="deal.fetching()"
+              [ngModel]="deal.currency()"
+              [ngModelOptions]="{ standalone: true }"
+              [options]="deal.options"
+              (onChange)="deal.selectCurrency($event.value)"
+            />
+
+            @if (deal.isForeign()) {
+              <div class="rate-field">
+                <label for="dealRate">1 {{ deal.currency() }} =</label>
+                <p-inputNumber
+                  inputId="dealRate"
+                  suffix=" GHS"
+                  [maxFractionDigits]="4"
+                  [min]="0"
+                  [minFractionDigits]="2"
+                  [ngModel]="deal.exchangeRate()"
+                  [ngModelOptions]="{ standalone: true }"
+                  (ngModelChange)="deal.exchangeRate.set($event)"
+                  (onBlur)="deal.setRate(deal.exchangeRate())"
+                />
+                <p-button
+                  icon="pi pi-refresh"
+                  pTooltip="Use today's rate"
+                  severity="secondary"
+                  [loading]="deal.fetching()"
+                  [text]="true"
+                  (onClick)="deal.fetchTodaysRate()"
+                />
+              </div>
+            }
+          </div>
+
+          @if (deal.isForeign()) {
+            @if (deal.error()) {
+              <small class="form-help rate-hint-error">{{ deal.error() }}</small>
+            } @else if (deal.needsRate()) {
+              <small class="form-help rate-hint-error">
+                Enter the rate this deal was agreed at before saving.
+              </small>
+            } @else {
+              <small class="form-help">
+                Prices below are in {{ deal.currency() }}. The rate is fixed on
+                this sale and used to report it in cedis.
+              </small>
+            }
+          } @else {
+            <small class="form-help">
+              Set this only if the order was negotiated in another currency.
+            </small>
+          }
+        </div>
+      }
+
       <div class="form-field">
-        <label for="deliveryFee">Delivery Fe</label>
+        <label for="deliveryFee">Delivery Fee</label>
         <p-inputNumber
-          currency="GHS"
           id="deliveryFee"
           locale="en-US"
-          mode="currency"
+          mode="decimal"
           [disabled]="isPaid()"
           [formControl]="salesForm.controls.deliveryFee"
+          [maxFractionDigits]="2"
           [min]="0"
+          [minFractionDigits]="2"
+          [prefix]="deal.symbol() + ' '"
         />
         <small class="form-help">Enter the delivery fee for this sale</small>
       </div>
@@ -159,9 +227,12 @@
       </div>
       <div class="total-wrapper">
         <div>Total Amount</div>
-        <div class="total-amount">
-          {{ totalPrice() | currency: 'GH₵ ' }}
-        </div>
+        <div class="total-amount">{{ deal.symbol() }} {{ totalPrice() | number: '1.2-2' }}</div>
+        <!-- What it comes to in cedis, at the rate pinned on the deal. Shown
+             only where the two differ, so an ordinary sale is not cluttered. -->
+        @if (deal.isForeign() && deal.exchangeRate(); as rate) {
+          <div class="total-ghs">≈ GH₵ {{ totalPrice() * rate | number: '1.2-2' }}</div>
+        }
         @if (lineItemSummary().productCount) {
           <div class="total-items">
             {{ lineItemSummary().productCount }}
@@ -217,6 +288,7 @@
       @for (lineItem of lineItems.controls; track lineItem; let i = $index) {
         <app-line-item-editor
           [availableBatches]="batchesByProductId()"
+          [currency]="deal.currency()"
           [isPaid]="isPaid()"
           [lineItem]="lineItem.value"
           [products]="products()"

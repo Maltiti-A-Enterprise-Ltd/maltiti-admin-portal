@@ -12,9 +12,9 @@
       <p-inputNumber
         id="deliveryCost"
         placeholder="Enter delivery cost"
-        suffix=" GHS"
         [formControl]="deliveryCostForm.controls.deliveryCost"
         [min]="0"
+        [suffix]="' ' + symbol()"
       />
       <small class="field-hint">Enter the delivery cost for this sale</small>
     </div>

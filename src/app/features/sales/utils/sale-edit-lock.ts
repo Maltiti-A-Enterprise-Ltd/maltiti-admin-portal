@@ -3,6 +3,7 @@ import { AbstractControl } from '@angular/forms';
 import { Role } from '@models/user.model';
 import {
   CreateSaleDto,
+  InvoiceCurrency,
   OrderStatus,
   PaymentStatus,
   Sale,
@@ -139,7 +140,12 @@ export function buildSaleCreatePayload(input: {
   deliveryFee: number;
   lineItems: readonly SaleLineItemDto[];
   notifyCustomer: boolean;
+  /** The deal currency, pinned with its rate. Omitted for a cedi sale. */
+  currency?: InvoiceCurrency;
+  exchangeRate?: number;
 }): CreateSaleDto {
+  const foreign = !!input.currency && input.currency !== InvoiceCurrency.GHS;
+
   return {
     customerId: input.customerId,
     orderStatus: input.orderStatus,
@@ -154,5 +160,10 @@ export function buildSaleCreatePayload(input: {
     // Omitted when off: the API rejects unknown properties, so an older
     // deployment must not see the key at all.
     notifyCustomer: input.notifyCustomer || undefined,
+    /* Only sent for a foreign deal. A cedi sale omits both, which is what
+       the API defaults to — and sending GHS with a rate of 1 would just be
+       noise on every ordinary order. */
+    currency: foreign ? input.currency : undefined,
+    exchangeRate: foreign ? input.exchangeRate : undefined,
   };
 }

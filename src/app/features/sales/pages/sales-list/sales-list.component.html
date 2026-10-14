@@ -150,15 +150,15 @@
                 [value]="getPaymentProgress(sale)"
               />
               <span class="payment-progress-label">
-                GH₵ {{ sale.totalPaid | number: '1.2-2' }} / {{ sale.total | number: '1.2-2' }}
+                {{ money(sale.totalPaid, sale) }} / {{ money(sale.total, sale) }}
               </span>
             } @else {
               <span class="payment-progress-na">—</span>
             }
           </div>
         </td>
-        <td data-label="Total">{{ lineItemsTotalPrice(sale.lineItems) | currency: 'GH₵ ' }}</td>
-        <td data-label="Delivery">{{ sale.deliveryFee ? (sale.deliveryFee | currency: 'GH₵ ') : 'N/A' }}</td>
+        <td data-label="Total">{{ money(lineItemsTotalPrice(sale.lineItems), sale) }}</td>
+        <td data-label="Delivery">{{ sale.deliveryFee ? money(sale.deliveryFee, sale) : 'N/A' }}</td>
         <td data-label="Weight">
           <span class="weight-cell">
             {{ orderWeightLabel(sale) }}

@@ -19,6 +19,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import {
   FormArray,
   FormControl,
+  FormsModule,
   NonNullableFormBuilder,
   ReactiveFormsModule,
   Validators,
@@ -27,6 +28,8 @@ import { ButtonModule } from 'primeng/button';
 import { CardModule } from 'primeng/card';
 import { InputTextModule } from 'primeng/inputtext';
 import { InputNumberModule } from 'primeng/inputnumber';
+import { SelectModule } from 'primeng/select';
+import { TooltipModule } from 'primeng/tooltip';
 import { CheckboxModule } from 'primeng/checkbox';
 import { DialogModule } from 'primeng/dialog';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
@@ -67,7 +70,7 @@ import { selectCustomers } from '../../store/customers.selectors';
 import { ORDER_STATUS_OPTIONS, PAYMENT_STATUS_OPTIONS } from '../../constants/sale-status-options';
 import { BatchApiService } from '../../../batches/services/batch-api.service';
 import { Batch } from '../../../batches/models/batch.model';
-
+import { CurrencyRateState } from '../../services/currency-rate.state';
 @Component({
   selector: 'app-sales-form',
   standalone: true,
@@ -76,7 +79,10 @@ import { Batch } from '../../../batches/models/batch.model';
   imports: [
     CommonModule,
     ReactiveFormsModule,
+    FormsModule,
     ButtonModule,
+    SelectModule,
+    TooltipModule,
     CardModule,
     InputTextModule,
     InputNumberModule,
@@ -90,7 +96,7 @@ import { Batch } from '../../../batches/models/batch.model';
     CustomerSelectComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  providers: [ConfirmationService],
+  providers: [ConfirmationService, CurrencyRateState],
 })
 export class SalesFormComponent implements OnInit {
   private readonly fb = inject(NonNullableFormBuilder);
@@ -108,6 +114,9 @@ export class SalesFormComponent implements OnInit {
   // Signals
   public readonly loading = this.store.selectSignal(selectLoading);
   public readonly error = this.store.selectSignal(selectError);
+  /* The deal currency, pinned when the sale is created. Shared with the
+     invoice dialog, which uses the same picker for a different purpose. */
+  public readonly deal = inject(CurrencyRateState);
   public readonly products = signal<LightProduct[]>([]);
   public readonly batchesByProductId = signal<Map<string, Batch[]>>(new Map());
   public readonly confirmDeliveryDate = signal<string | null>(null);
@@ -118,13 +127,12 @@ export class SalesFormComponent implements OnInit {
     line_items: this.fb.array<SaleLineItemDto>([], Validators.minLength(1)),
     deliveryFee: [0, [Validators.required, Validators.min(0)]],
   });
+  private readonly fee = this.salesForm.controls.deliveryFee;
   public readonly totalPrice = toSignal(
     combineLatest([
       this.lineItems.valueChanges.pipe(startWith(this.lineItems.value)),
-      this.salesForm.controls.deliveryFee.valueChanges.pipe(
-        startWith(this.salesForm.controls.deliveryFee.value),
-      ),
-    ]).pipe(map(([items, deliveryFee]) => Number(deliveryFee) + lineItemsTotalPrice(items))),
+      this.fee.valueChanges.pipe(startWith(this.fee.value)),
+    ]).pipe(map(([items, fee]) => Number(fee) + lineItemsTotalPrice(items))),
     { initialValue: 0 },
   );
   public customerControl = new FormControl<string>('', Validators.required);
@@ -201,12 +209,10 @@ export class SalesFormComponent implements OnInit {
           const batchesMap = new Map<string, Batch[]>();
           response.data.forEach((batch) => {
             const productId = batch.product?.id;
-            if (productId) {
-              if (!batchesMap.has(productId)) {
-                batchesMap.set(productId, []);
-              }
-              batchesMap.get(productId)!.push(batch);
+            if (!productId) {
+              return;
             }
+            batchesMap.set(productId, [...(batchesMap.get(productId) ?? []), batch]);
           });
           this.batchesByProductId.set(batchesMap);
         },
@@ -235,34 +241,30 @@ export class SalesFormComponent implements OnInit {
   }
 
   private populateForm(sale: Sale): void {
+    // Pinned, not editable — but every price on the page is labelled with it.
+    this.deal.reset(sale.currency, sale.exchangeRate);
     this.lock.isLocked.set(isSaleLocked(sale));
     this.customerControl.setValue(sale.customer?.id || sale.customerId);
 
-    // Set status
     this.statusControl.setValue(sale.orderStatus);
     this.paymentStatusControl.setValue(sale.paymentStatus);
 
-    // Set delivery fee
     this.salesForm.controls.deliveryFee.setValue(sale.deliveryFee);
 
     this.confirmDeliveryDate.set(sale.confirmedDeliveryDate || null);
 
-    // Clear existing line items
     this.lineItems.clear();
-
-    // Populate line items
-    const lineItemsToAdd: FormControl<SaleLineItemDto>[] = [];
-    sale.lineItems.forEach((item) => {
-      const lineItemDto: SaleLineItemDto = {
-        productId: item.productId,
-        requestedQuantity: item.requestedQuantity,
-        batchAllocations: item.batchAllocations || [],
-        customPrice: item.customPrice,
-        finalPrice: Number(item.finalPrice),
-      };
-      lineItemsToAdd.push(this.fb.control(lineItemDto));
-    });
-    this.lineItems.push(lineItemsToAdd);
+    this.lineItems.push(
+      sale.lineItems.map((item) =>
+        this.fb.control<SaleLineItemDto>({
+          productId: item.productId,
+          requestedQuantity: item.requestedQuantity,
+          batchAllocations: item.batchAllocations || [],
+          customPrice: item.customPrice,
+          finalPrice: Number(item.finalPrice),
+        }),
+      ),
+    );
   }
 
   public get lineItems(): FormArray<FormControl<SaleLineItemDto>> {
@@ -337,28 +339,30 @@ export class SalesFormComponent implements OnInit {
       this.paymentStatusControl.valid
     ) {
       const formValue = this.salesForm.value;
-      const lineItems = formValue.line_items as SaleLineItemDto[];
+      const common = {
+        customerId: String(this.customerControl.value),
+        orderStatus: this.statusControl.value as OrderStatus,
+        paymentStatus: this.paymentStatusControl.value as PaymentStatus,
+        deliveryFee: Number(this.salesForm.value.deliveryFee ?? 0),
+        lineItems: formValue.line_items as SaleLineItemDto[],
+        notifyCustomer: !!this.notifyCustomerControl.value,
+      };
+
       if (this.isEditMode && this.saleId) {
         const updateData = buildSaleUpdatePayload({
-          customerId: String(this.customerControl.value),
-          orderStatus: this.statusControl.value as OrderStatus,
-          paymentStatus: this.paymentStatusControl.value as PaymentStatus,
-          deliveryFee: Number(this.salesForm.value.deliveryFee ?? 0),
-          lineItems,
-          notifyCustomer: !!this.notifyCustomerControl.value,
+          ...common,
           canEditContents: this.lock.canEditContents(),
           overriding: this.lock.isOverriding(),
         });
 
         this.store.dispatch(updateSale({ id: this.saleId, saleData: updateData }));
       } else {
+        /* The deal currency is only settable at creation — it is pinned with
+           its rate and every amount on the sale is denominated in it. */
         const saleData = buildSaleCreatePayload({
-          customerId: String(this.customerControl.value),
-          orderStatus: this.statusControl.value as OrderStatus,
-          paymentStatus: this.paymentStatusControl.value as PaymentStatus,
-          deliveryFee: Number(this.salesForm.value.deliveryFee ?? 0),
-          lineItems,
-          notifyCustomer: !!this.notifyCustomerControl.value,
+          ...common,
+          currency: this.deal.currency(),
+          exchangeRate: this.deal.exchangeRate() ?? undefined,
         });
 
         this.store.dispatch(createSale({ saleData }));

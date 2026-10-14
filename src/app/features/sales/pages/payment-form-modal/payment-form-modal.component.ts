@@ -34,6 +34,7 @@ import { SalesPaymentsApiService } from '../../services/sales-payments-api.servi
 import { PaymentAccountApiService } from '@features/payment-accounts/services/payment-account-api.service';
 import { paymentAccountLabel } from '@features/payment-accounts/models/payment-account.model';
 import {
+  InvoiceCurrency,
   PAYMENT_METHOD_LABELS,
   PaymentMethod,
   PaymentRecordStatus,
@@ -43,6 +44,7 @@ import {
   UpdatePaymentRequest,
 } from '../../models/sale.model';
 
+import { currencySymbol, formatSaleAmount } from '@shared/utils/sale-money';
 interface PaymentMethodOption {
   label: string;
   value: PaymentMethod;
@@ -97,6 +99,18 @@ export class PaymentFormModalComponent {
     this.isEditing() ? 'Save Changes' : 'Record Payment',
   );
 
+  /**
+   * The sale's currency. A payment is always recorded in it, so the field is
+   * labelled with it and the balance it is checked against is in it too.
+   */
+  public readonly currency = signal<InvoiceCurrency | undefined>(undefined);
+  public readonly symbol = computed(() =>
+    currencySymbol({ currency: this.currency() }),
+  );
+  public readonly isForeign = computed(
+    () => this.currency() !== undefined && this.currency() !== InvoiceCurrency.GHS,
+  );
+
   public readonly balanceRemaining = computed(() => this.summary()?.balanceRemaining ?? 0);
   public readonly isFullyPaid = computed(() => this.summary()?.isFullyPaid ?? false);
   public readonly showOverpayWarning = computed(() => {
@@ -140,7 +154,12 @@ export class PaymentFormModalComponent {
    * Open the modal for the given sale and pre-load the payment summary
    * (used to display balance remaining and overpay warnings).
    */
-  public open(saleId: string, summary: SalePaymentSummary | null = null): void {
+  public open(
+    saleId: string,
+    summary: SalePaymentSummary | null = null,
+    currency?: InvoiceCurrency,
+  ): void {
+    this.currency.set(currency);
     this.editing.set(null);
     this.saleId.set(saleId);
     this.summary.set(summary);
@@ -162,7 +181,11 @@ export class PaymentFormModalComponent {
     saleId: string,
     payment: SalePaymentRecord,
     summary: SalePaymentSummary | null = null,
+    currency?: InvoiceCurrency,
   ): void {
+    /* The payment's own currency where it has one — a correction is read in
+       the money that actually arrived, not in whatever the sale is now. */
+    this.currency.set(payment.currency ?? currency);
     this.editing.set(payment);
     this.saleId.set(saleId);
     this.summary.set(summary);
@@ -261,8 +284,8 @@ export class PaymentFormModalComponent {
             severity: 'success',
             summary: editing ? 'Payment Updated' : 'Payment Recorded',
             detail: editing
-              ? `Payment corrected to GHS ${record.amount.toFixed(2)}.`
-              : `Payment of GHS ${record.amount.toFixed(2)} recorded successfully.`,
+              ? `Payment corrected to ${formatSaleAmount(record.amount, { currency: this.currency() })}.`
+              : `Payment of ${formatSaleAmount(record.amount, { currency: this.currency() })} recorded.`,
           });
           this.paymentAdded.emit();
           this.close();

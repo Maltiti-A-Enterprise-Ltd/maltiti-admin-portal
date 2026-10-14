@@ -37,7 +37,7 @@ import {
   PaymentAccount,
   paymentAccountLabel,
 } from '@features/payment-accounts/models/payment-account.model';
-import { InvoiceCurrencyState } from './invoice-currency.state';
+import { CurrencyRateState } from '../../services/currency-rate.state';
 import { InvoiceCurrency } from '../../models/sale.model';
 
 /** Where the invoice should go. */
@@ -49,7 +49,7 @@ type Recipient = 'customer' | 'other';
   templateUrl: './invoice-preview-modal.component.html',
   styleUrls: ['./invoice-preview-modal.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  providers: [InvoiceCurrencyState],
+  providers: [CurrencyRateState],
   imports: [
     ReactiveFormsModule,
     FormsModule,
@@ -72,7 +72,7 @@ export class InvoicePreviewModalComponent {
   private readonly fb = inject(FormBuilder);
   private readonly paymentAccountApi = inject(PaymentAccountApiService);
   /** Currency and rate, kept apart because it is its own concern. */
-  public readonly currencyState = inject(InvoiceCurrencyState);
+  public readonly currencyState = inject(CurrencyRateState);
 
   public readonly visible = signal(false);
   public readonly generating = signal(false);
