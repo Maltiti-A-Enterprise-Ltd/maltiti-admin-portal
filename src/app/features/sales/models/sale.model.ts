@@ -193,6 +193,13 @@ export interface UpdateSaleDto {
    * does not send a receipt for something settled weeks ago.
    */
   notifyCustomer?: boolean;
+  /**
+   * Edit a sale that is in transit or delivered, which the API otherwise
+   * refuses. Super admins only — any other role sending it is rejected
+   * outright rather than quietly ignored. Not needed to change the order or
+   * payment status: those are always editable.
+   */
+  overrideStatusLock?: boolean;
 }
 
 export interface UpdateSaleStatusDto {

@@ -27,6 +27,36 @@
 
 <!-- Main Form -->
 <form class="sales-form" [formGroup]="salesForm">
+  <!-- A dispatched sale is a record of what happened, so what it says was sold
+       is frozen. Its status is not: a delivered order still has to be marked
+       delivered, which is the one change it most needs. -->
+  @if (lock.isLocked()) {
+    <div class="dispatch-notice" [class.overriding]="lock.overrideLock()">
+      <i class="pi pi-lock"></i>
+      <div class="dispatch-notice-text">
+        @if (lock.overrideLock()) {
+          <strong>Editing a dispatched sale.</strong>
+          Changes to products, customer and fees will be saved, and recorded in the audit log.
+        } @else {
+          <strong>This sale has already been dispatched.</strong>
+          You can still change the order and payment status. Products, customer and fees are
+          locked, so the paperwork keeps matching what was delivered.
+        }
+        @if (lock.isSuperAdmin()) {
+          <!-- Native rather than p-checkbox: this sits outside the form group
+               and ngModel would mean pulling FormsModule in for one control. -->
+          <label class="dispatch-override">
+            <input
+              type="checkbox"
+              [checked]="lock.overrideLock()"
+              (change)="lock.overrideLock.set($any($event.target).checked)"
+            />
+            <span>Let me correct this sale anyway</span>
+          </label>
+        }
+      </div>
+    </div>
+  }
   <!-- Customer Section -->
   <p-card header="Customer Information">
     <div class="form-row">

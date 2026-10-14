@@ -34,12 +34,10 @@ import { ConfirmationService, MessageService } from 'primeng/api';
 import { Store } from '@ngrx/store';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import {
-  CreateSaleDto,
   OrderStatus,
   PaymentStatus,
   Sale,
   SaleLineItemDto,
-  UpdateSaleDto,
 } from '../../models/sale.model';
 import { createSale, updateSale } from '../../store/sales.actions';
 import { selectError, selectLoading } from '../../store/sales.selectors';
@@ -58,6 +56,13 @@ import { lineItemsTotalPrice } from '@shared/utils/totalPriceCalculator';
 import { lineItemSummarySignal } from '../../utils/line-item-summary';
 import { orderWeightSignal } from '../../utils/order-weight';
 import { deliveryAddressSignal } from '../../utils/delivery-address';
+import {
+  buildSaleCreatePayload,
+  buildSaleUpdatePayload,
+  isSaleLocked,
+  saleEditLock,
+} from '../../utils/sale-edit-lock';
+import { selectUserRole } from '@auth/store/auth.selectors';
 import { selectCustomers } from '../../store/customers.selectors';
 import { ORDER_STATUS_OPTIONS, PAYMENT_STATUS_OPTIONS } from '../../constants/sale-status-options';
 import { BatchApiService } from '../../../batches/services/batch-api.service';
@@ -144,6 +149,13 @@ export class SalesFormComponent implements OnInit {
   /** Running count of what has been added, so the total is never a surprise. */
   public readonly lineItemSummary = lineItemSummarySignal(this.lineItems);
 
+  /** Dispatched sales are frozen apart from their status. */
+  public readonly lock = saleEditLock(this.store.selectSignal(selectUserRole), [
+    this.salesForm.controls.line_items,
+    this.salesForm.controls.deliveryFee,
+    this.customerControl,
+  ]);
+
   /** What the sale weighs, recalculated as line items change. */
   public readonly orderWeight = orderWeightSignal(this.lineItems, this.products);
 
@@ -223,7 +235,7 @@ export class SalesFormComponent implements OnInit {
   }
 
   private populateForm(sale: Sale): void {
-    // Set customer
+    this.lock.isLocked.set(isSaleLocked(sale));
     this.customerControl.setValue(sale.customer?.id || sale.customerId);
 
     // Set status
@@ -327,42 +339,27 @@ export class SalesFormComponent implements OnInit {
       const formValue = this.salesForm.value;
       const lineItems = formValue.line_items as SaleLineItemDto[];
       if (this.isEditMode && this.saleId) {
-        const paymentStatus = this.paymentStatusControl.value as PaymentStatus;
-        // Handle update
-        const updateData: UpdateSaleDto = {
-          customerId: String(this.customerControl.value),
-          orderStatus: this.statusControl.value as OrderStatus,
-          paymentStatus,
-          deliveryFee: this.salesForm.value.deliveryFee,
-          lineItems: lineItems.map((item: SaleLineItemDto) => ({
-            productId: item.productId,
-            requestedQuantity: item.requestedQuantity,
-            batchAllocations: item.batchAllocations,
-            customPrice: item.customPrice || undefined,
-          })),
-          // Omitted when off, like the create path: the API rejects unknown
-          // properties, so an older deployment must not see the key at all.
-          notifyCustomer: this.notifyCustomerControl.value || undefined,
-        };
-
-        this.store.dispatch(updateSale({ id: this.saleId, saleData: updateData }));
-      } else {
-        // Handle create
-        const saleData: CreateSaleDto = {
+        const updateData = buildSaleUpdatePayload({
           customerId: String(this.customerControl.value),
           orderStatus: this.statusControl.value as OrderStatus,
           paymentStatus: this.paymentStatusControl.value as PaymentStatus,
-          deliveryFee: this.salesForm.value.deliveryFee,
-          lineItems: lineItems.map((item: SaleLineItemDto) => ({
-            productId: item.productId,
-            requestedQuantity: item.requestedQuantity,
-            batchAllocations: item.batchAllocations,
-            customPrice: item.customPrice || undefined,
-          })),
-          // Create-only, and omitted when off: the API rejects unknown
-          // properties, so an older deployment must not see the key at all.
-          notifyCustomer: this.notifyCustomerControl.value || undefined,
-        };
+          deliveryFee: Number(this.salesForm.value.deliveryFee ?? 0),
+          lineItems,
+          notifyCustomer: !!this.notifyCustomerControl.value,
+          canEditContents: this.lock.canEditContents(),
+          overriding: this.lock.isOverriding(),
+        });
+
+        this.store.dispatch(updateSale({ id: this.saleId, saleData: updateData }));
+      } else {
+        const saleData = buildSaleCreatePayload({
+          customerId: String(this.customerControl.value),
+          orderStatus: this.statusControl.value as OrderStatus,
+          paymentStatus: this.paymentStatusControl.value as PaymentStatus,
+          deliveryFee: Number(this.salesForm.value.deliveryFee ?? 0),
+          lineItems,
+          notifyCustomer: !!this.notifyCustomerControl.value,
+        });
 
         this.store.dispatch(createSale({ saleData }));
       }
