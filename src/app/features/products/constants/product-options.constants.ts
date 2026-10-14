@@ -1,3 +1,5 @@
+import { QUANTITY_UNIT_OPTIONS as DERIVED_QUANTITY_UNIT_OPTIONS } from '@shared/utils/quantity-unit';
+
 /**
  * Product Constants
  * Contains all option arrays and constants used across product-related components
@@ -46,21 +48,12 @@ export const UNIT_OF_MEASUREMENT_OPTIONS = [
 
 // How a product is counted when sold. Separate from unit of measurement, which
 // describes how much product is inside one of these.
-export const QUANTITY_UNIT_OPTIONS = [
-  { label: 'Pieces', value: 'piece' },
-  { label: 'Boxes', value: 'box' },
-  { label: 'Cartons', value: 'carton' },
-  { label: 'Bags', value: 'bag' },
-  { label: 'Sachets', value: 'sachet' },
-  { label: 'Bottles', value: 'bottle' },
-  { label: 'Gallons', value: 'gallon' },
-  { label: 'Jerry Cans', value: 'jerry_can' },
-  { label: 'Jars', value: 'jar' },
-  { label: 'Tubs', value: 'tub' },
-  { label: 'Drums', value: 'drum' },
-  { label: 'Kegs', value: 'keg' },
-  { label: 'Pallets', value: 'pallet' },
-];
+/* Derived from the singular/plural table the rest of the app formats
+   quantities with, so a unit cannot be added there and go missing here.
+   Imported and re-exported rather than passed straight through: a bare
+   `export ... from` leaves the name unbound locally, and the option type
+   below is declared from it. */
+export const QUANTITY_UNIT_OPTIONS = DERIVED_QUANTITY_UNIT_OPTIONS;
 
 // Ingredient Options
 export const INGREDIENT_OPTIONS = [

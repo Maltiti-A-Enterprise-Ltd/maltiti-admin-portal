@@ -1,5 +1,5 @@
 import { Customer } from '@models/customer.model';
-import { Product } from '../../products/models/product.model';
+import { Product, QuantityUnit } from '../../products/models/product.model';
 
 /* Re-exported so the many existing `from './sale.model'` imports keep working;
    the definitions moved out when this file hit its 400-line ceiling. */
@@ -310,6 +310,12 @@ export interface SaleLineItem {
    * printing a raw UUID.
    */
   productName?: string;
+  /**
+   * What the quantity counts, so a line can read "1 piece" or "4 boxes"
+   * rather than a bare figure. Absent on sales whose product could not be
+   * loaded; callers fall back to pieces, as the API does.
+   */
+  quantityUnit?: QuantityUnit;
   product?: Product;
   batchAllocations: BatchAllocationDto[];
   requestedQuantity: number;

@@ -23,6 +23,9 @@ export interface Customer {
   phone?: string;
   phoneNumber?: string;
   email?: string;
+  /** A second address to reach them on. Not unique, unlike `email`. */
+  alternativeEmail?: string;
+  website?: string;
   address?: string;
   country?: string;
   region?: string;
@@ -39,6 +42,9 @@ export interface CreateCustomerDto {
   phone?: string;
   phoneNumber?: string;
   email?: string;
+  /** A second address to reach them on. Not unique, unlike `email`. */
+  alternativeEmail?: string;
+  website?: string;
   address?: string;
   country?: string;
   region?: string;
@@ -55,6 +61,9 @@ export interface UpdateCustomerDto {
   phone?: string;
   phoneNumber?: string;
   email?: string;
+  /** A second address to reach them on. Not unique, unlike `email`. */
+  alternativeEmail?: string;
+  website?: string;
   address?: string;
   country?: string;
   region?: string;
