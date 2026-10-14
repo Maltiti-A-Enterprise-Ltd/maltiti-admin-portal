@@ -24,6 +24,8 @@ import { SelectComponent } from '@shared/components/select/select.component';
 import { LightProduct } from '../../../products/models/product.model';
 import { Batch } from '../../../batches/models/batch.model';
 import { BoxQuantityLink } from '../../utils/box-quantity-link';
+import { WeightQuantityLink } from '../../utils/weight-quantity-link';
+import { clearBatchErrors } from '../../utils/batch-errors';
 import { reindexControlMap } from '../../utils/reindex-control-map';
 import { TooltipModule } from 'primeng/tooltip';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
@@ -88,6 +90,11 @@ export class LineItemEditorComponent implements OnInit {
     this.lineItemForm.controls.requestedQuantity,
     this.selectedProduct,
   );
+  /** For loose goods, ordered by the tonne rather than by the tub. */
+  public readonly weightLink = new WeightQuantityLink(
+    this.lineItemForm.controls.requestedQuantity,
+    this.selectedProduct,
+  );
   public readonly totalAllocatedQuantity = computed(
     () =>
       this.lineItem()
@@ -103,6 +110,7 @@ export class LineItemEditorComponent implements OnInit {
 
   constructor() {
     this.boxLink.connect();
+    this.weightLink.connect();
 
     effect(() => {
       if (this.isPaid()) {
@@ -311,22 +319,13 @@ export class LineItemEditorComponent implements OnInit {
       quantityControl?.setErrors({ batchOverAllocated: true });
       hasError = true;
     } else {
-      this.clearBatchErrors(quantityControl);
+      clearBatchErrors(quantityControl);
     }
 
     // Report the form's own validity too, not just batch problems. The parent
     // builds its request from the last *valid* value this component emitted, so
     // without this an incomplete line item submits silently with stale data.
     this.validationError.emit(hasError || this.lineItemForm.invalid);
-  }
-
-  private clearBatchErrors(control: FormControl | null): void {
-    const errors = control?.errors;
-    if (errors) {
-      delete errors['batchAllocationMismatch'];
-      delete errors['batchOverAllocated'];
-      control?.setErrors(Object.keys(errors).length ? errors : null);
-    }
   }
 
   public getTotalPrice(): number {
