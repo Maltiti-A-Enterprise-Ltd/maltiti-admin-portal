@@ -1,95 +1,134 @@
 /**
  * Geography Service
- * Uses the `country-state-city` npm library to provide all countries, states/regions,
- * and cities for cascading selects.
  *
- * Exposed GeoOption values are human-readable names (not ISO codes) because the
- * backend DTO stores plain strings for country, region, and city.
- * ISO codes are resolved internally for library lookups.
+ * Cascading country → region → city options for the customer address form,
+ * fetched one slice at a time.
+ *
+ * This used to import `country-state-city` directly. That put the library's
+ * whole dataset in the bundle — 8.36 MB, 94% of it the 148,038-record world
+ * city list — and because the import was static, every page that touched an
+ * address form had to download and parse all of it *before rendering*, whether
+ * or not anyone opened a dropdown. On a desktop that was an unnoticed blip. On
+ * an iPhone it exceeded Safari's per-tab memory, the module never finished
+ * evaluating, the route never completed, and the page simply never appeared —
+ * no error, because nothing threw.
+ *
+ * The same data is now split per country at build time (see
+ * `scripts/build-geo-assets.mjs`) and requested on demand. A Ghanaian address
+ * costs about 18 KB across three small files instead of 8.36 MB up front.
+ *
+ * Exposed GeoOption values are human-readable names, not ISO codes, because the
+ * backend stores plain strings for country, region and city. Codes are resolved
+ * internally to find the right file.
  */
-import { Injectable } from '@angular/core';
-import { City, Country, State } from 'country-state-city';
+import { inject, Injectable } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { firstValueFrom } from 'rxjs';
 
 export interface GeoOption {
   label: string;
   value: string;
 }
 
+interface CountryRecord {
+  name: string;
+  isoCode: string;
+  flag: string;
+}
+
+interface StateRecord {
+  name: string;
+  isoCode: string;
+}
+
+interface CityRecord {
+  name: string;
+  stateCode: string;
+}
+
+const GEO_ROOT = 'assets/geo';
+
 @Injectable({ providedIn: 'root' })
 export class GeographyService {
-  /** Cached map: country name → ISO code */
-  private readonly countryNameToCode = new Map<string, string>();
-  /** Cached map: "countryName|stateName" → state ISO code */
-  private readonly stateNameToCode = new Map<string, string>();
+  private readonly http = inject(HttpClient);
 
-  constructor() {
-    // Pre-build country name → isoCode map once
-    for (const c of Country.getAllCountries()) {
-      this.countryNameToCode.set(c.name, c.isoCode);
+  /**
+   * One in-flight request per file, kept forever.
+   *
+   * The promise is cached rather than its result, so two dropdowns opening at
+   * once share a single request instead of racing. The data is static and
+   * small, and an admin switching back and forth between two countries should
+   * not re-fetch either.
+   */
+  private readonly files = new Map<string, Promise<unknown>>();
+
+  private load<T>(path: string): Promise<T> {
+    const cached = this.files.get(path);
+
+    if (cached) {
+      return cached as Promise<T>;
     }
+
+    /* A country with no regions or no cities has no file, and that is a normal
+       answer rather than a failure — an empty list leaves the dependent
+       dropdown empty instead of breaking the form. */
+    const request = firstValueFrom(this.http.get<T>(`${GEO_ROOT}/${path}`)).catch(
+      () => [] as unknown as T,
+    );
+
+    this.files.set(path, request);
+
+    return request;
   }
 
-  /** All countries as select options — label includes emoji flag */
-  public getCountries(): GeoOption[] {
-    return Country.getAllCountries().map((c) => ({
-      label: `${c.flag} ${c.name}`,
-      value: c.name,
+  /** All countries as select options — label includes the emoji flag. */
+  public async getCountries(): Promise<GeoOption[]> {
+    const countries = await this.load<CountryRecord[]>('countries.json');
+
+    return countries.map((country) => ({
+      label: `${country.flag} ${country.name}`,
+      value: country.name,
     }));
   }
 
-  /** States/regions for a given country name */
-  public getStates(countryName: string): GeoOption[] {
-    const countryCode = this.countryNameToCode.get(countryName);
-    if (!countryCode) {
+  /** Regions for a country, by name. Empty when the country is unknown. */
+  public async getStates(countryName: string): Promise<GeoOption[]> {
+    const isoCode = await this.countryCode(countryName);
+
+    if (!isoCode) {
       return [];
     }
 
-    const states = State.getStatesOfCountry(countryCode);
+    const states = await this.load<StateRecord[]>(`states/${isoCode}.json`);
 
-    // Cache state name → isoCode for later city lookups
-    for (const s of states) {
-      this.stateNameToCode.set(`${countryName}|${s.name}`, s.isoCode);
-    }
-
-    return states.map((s) => ({ label: s.name, value: s.name }));
+    return states.map((state) => ({ label: state.name, value: state.name }));
   }
 
-  /** Cities for a given country name + state name */
-  public getCities(countryName: string, stateName: string): GeoOption[] {
-    const countryCode = this.countryNameToCode.get(countryName);
-    if (!countryCode) {
+  /** Cities for a country and region, both by name. */
+  public async getCities(countryName: string, stateName: string): Promise<GeoOption[]> {
+    const isoCode = await this.countryCode(countryName);
+
+    if (!isoCode) {
       return [];
     }
 
-    // Resolve state ISO code — try cache first, then live lookup
-    let stateCode = this.stateNameToCode.get(`${countryName}|${stateName}`);
+    const states = await this.load<StateRecord[]>(`states/${isoCode}.json`);
+    const stateCode = states.find((state) => state.name === stateName)?.isoCode;
+
     if (!stateCode) {
-      const states = State.getStatesOfCountry(countryCode);
-      const found = states.find((s) => s.name === stateName);
-      if (!found) {
-        return [];
-      }
-      stateCode = found.isoCode;
-      this.stateNameToCode.set(`${countryName}|${stateName}`, stateCode);
+      return [];
     }
 
-    return City.getCitiesOfState(countryCode, stateCode).map((city) => ({
-      label: city.name,
-      value: city.name,
-    }));
+    const cities = await this.load<CityRecord[]>(`cities/${isoCode}.json`);
+
+    return cities
+      .filter((city) => city.stateCode === stateCode)
+      .map((city) => ({ label: city.name, value: city.name }));
   }
 
-  /** Whether a country has any states/regions */
-  public hasStates(countryName: string): boolean {
-    const countryCode = this.countryNameToCode.get(countryName);
-    if (!countryCode) {
-      return false;
-    }
-    return State.getStatesOfCountry(countryCode).length > 0;
-  }
+  private async countryCode(countryName: string): Promise<string | undefined> {
+    const countries = await this.load<CountryRecord[]>('countries.json');
 
-  /** Whether a state has any cities */
-  public hasCities(countryName: string, stateName: string): boolean {
-    return this.getCities(countryName, stateName).length > 0;
+    return countries.find((country) => country.name === countryName)?.isoCode;
   }
 }

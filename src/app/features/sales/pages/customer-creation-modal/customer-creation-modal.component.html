@@ -78,7 +78,7 @@
           <app-select
             id="country"
             [control]="customerForm.controls.country"
-            [options]="countryOptions"
+            [options]="countryOptions()"
             [placeholder]="'Select country'"
             [showClear]="true"
           />
