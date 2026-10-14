@@ -39,15 +39,15 @@
     <div class="summary-grid">
       <div class="summary-row">
         <span class="summary-label">Grand Total</span>
-        <span class="summary-value">{{ formatGhs(saleTotal()) }}</span>
+        <span class="summary-value">{{ money(saleTotal()) }}</span>
       </div>
       <div class="summary-row">
         <span class="summary-label">Total Paid</span>
-        <span class="summary-value paid">{{ formatGhs(totalPaid()) }}</span>
+        <span class="summary-value paid">{{ money(totalPaid()) }}</span>
       </div>
       <div class="summary-row">
         <span class="summary-label">Balance Remaining</span>
-        <span class="summary-value balance">{{ formatGhs(balanceRemaining()) }}</span>
+        <span class="summary-value balance">{{ money(balanceRemaining()) }}</span>
       </div>
       <div class="summary-row">
         <span class="summary-label">Status</span>
@@ -133,7 +133,7 @@
           <tr>
             <td>{{ i + 1 }}</td>
             <td>{{ formatDate(payment.createdAt) }}</td>
-            <td class="amount-cell">{{ formatGhs(payment.amount) }}</td>
+            <td class="amount-cell">{{ money(payment.amount) }}</td>
             <td>{{ getMethodLabel(payment.paymentMethod) }}</td>
             <!-- Resolved server-side, so a payment still names its account after
                  that account has been retired and left the picker. -->
