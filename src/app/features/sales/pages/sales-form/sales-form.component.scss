@@ -229,3 +229,40 @@
 .delivery-address i {
   margin-right: 0.25rem;
 }
+
+/* Dispatched-sale notice. Amber, not red: the sale is fine, it is simply past
+   the point where its contents can change. */
+.dispatch-notice {
+  display: flex;
+  gap: 0.6rem;
+  align-items: flex-start;
+  margin-bottom: 1rem;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--yellow-300, #fde68a);
+  border-radius: 0.5rem;
+  background: var(--yellow-50, #fffbeb);
+  color: var(--yellow-900, #78350f);
+  font-size: 0.8rem;
+  line-height: 1.45;
+
+  > i {
+    margin-top: 0.15rem;
+  }
+
+  /* Once overridden the fields are live again, so the tone shifts from
+     "you cannot" to "be careful" — a warning rather than a locked door. */
+  &.overriding {
+    border-color: var(--red-300, #fca5a5);
+    background: var(--red-50, #fef2f2);
+    color: var(--red-900, #7f1d1d);
+  }
+}
+
+.dispatch-override {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: 0.5rem;
+  cursor: pointer;
+  font-weight: 600;
+}
