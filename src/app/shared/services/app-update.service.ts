@@ -1,4 +1,4 @@
-import { inject, Injectable } from '@angular/core';
+import { inject, Injectable, NgZone } from '@angular/core';
 import { NavigationEnd, NavigationError, NavigationStart, Router } from '@angular/router';
 import { SwUpdate } from '@angular/service-worker';
 import { filter } from 'rxjs/operators';
@@ -40,10 +40,14 @@ const CHUNK_LOAD_FAILURE = new RegExp(
 /** Remembers the URL a recovery reload was already attempted for. */
 const RECOVERY_KEY = 'maltiti:recovery-reload';
 
+/** Slow on purpose: a backstop for a session left open, not a poll. */
+const UPDATE_CHECK_INTERVAL_MS = 30 * 60 * 1000;
+
 @Injectable({ providedIn: 'root' })
 export class AppUpdateService {
   private readonly updates = inject(SwUpdate);
   private readonly router = inject(Router);
+  private readonly zone = inject(NgZone);
 
   /** Set once a newer version is downloaded and waiting to take over. */
   private updateReady = false;
@@ -67,6 +71,40 @@ export class AppUpdateService {
     this.updates.unrecoverable.subscribe(() => this.hardLoad(this.router.url));
 
     this.applyUpdateOnNextNavigation();
+    this.askWhetherAnUpdateExists();
+  }
+
+  /**
+   * Nothing above fires unless somebody asks the worker to look.
+   *
+   * Angular's service worker only checks for a new version when the browser
+   * makes a navigation request for the app. An installed PWA launched from the
+   * home screen does that once and then routes entirely on the client, so on a
+   * phone that is backgrounded rather than closed — which is how iOS treats
+   * them — the check may not happen for days. The app sits on an old build,
+   * `VERSION_READY` never fires, and every recovery path here stays asleep.
+   *
+   * So ask directly: on start, whenever the app is brought back to the
+   * foreground, and on a slow timer for a session left open all day.
+   */
+  private askWhetherAnUpdateExists(): void {
+    const check = (): void => {
+      /* Offline, or the worker is mid-install. Nothing to do but wait for the
+         next trigger; a rejection here must not take the app down. */
+      void this.updates.checkForUpdate().catch(() => undefined);
+    };
+
+    check();
+
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') {
+        check();
+      }
+    });
+
+    /* Outside Angular's zone: a repeating timer inside it would keep change
+       detection awake and stop the app ever reaching stability. */
+    this.zone.runOutsideAngular(() => setInterval(check, UPDATE_CHECK_INTERVAL_MS));
   }
 
   /**

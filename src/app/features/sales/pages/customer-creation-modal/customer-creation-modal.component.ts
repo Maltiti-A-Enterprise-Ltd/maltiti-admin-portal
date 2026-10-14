@@ -62,7 +62,7 @@ export class CustomerCreationModalComponent implements OnInit {
   public visible = signal(false);
 
   // Geo options
-  public readonly countryOptions = this.geoService.getCountries();
+  public readonly countryOptions = signal<GeoOption[]>([]);
   public readonly regionOptions = signal<GeoOption[]>([]);
   public readonly cityOptions = signal<GeoOption[]>([]);
 
@@ -85,6 +85,8 @@ export class CustomerCreationModalComponent implements OnInit {
   );
 
   public ngOnInit(): void {
+    void this.geoService.getCountries().then((o) => this.countryOptions.set(o));
+
     // Cascade: country → states/regions
     this.customerForm.controls.country.valueChanges
       .pipe(takeUntilDestroyed(this.destroyRef))
@@ -92,7 +94,11 @@ export class CustomerCreationModalComponent implements OnInit {
         this.customerForm.controls.region.reset('');
         this.customerForm.controls.city.reset('');
         this.cityOptions.set([]);
-        this.regionOptions.set(country ? this.geoService.getStates(country) : []);
+        if (country) {
+          void this.geoService.getStates(country).then((o) => this.regionOptions.set(o));
+        } else {
+          this.regionOptions.set([]);
+        }
       });
 
     // Cascade: region → cities
@@ -101,7 +107,11 @@ export class CustomerCreationModalComponent implements OnInit {
       .subscribe((region) => {
         this.customerForm.controls.city.reset('');
         const country = this.customerForm.controls.country.value ?? '';
-        this.cityOptions.set(region && country ? this.geoService.getCities(country, region) : []);
+        if (region && country) {
+          void this.geoService.getCities(country, region).then((o) => this.cityOptions.set(o));
+        } else {
+          this.cityOptions.set([]);
+        }
       });
 
     // Close on success
@@ -117,7 +127,7 @@ export class CustomerCreationModalComponent implements OnInit {
     this.customerForm.reset();
     // Default to Ghana
     this.customerForm.controls.country.setValue('Ghana', { emitEvent: false });
-    this.regionOptions.set(this.geoService.getStates('Ghana'));
+    void this.geoService.getStates('Ghana').then((o) => this.regionOptions.set(o));
     this.cityOptions.set([]);
     this.visible.set(true);
   }
