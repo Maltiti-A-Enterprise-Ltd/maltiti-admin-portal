@@ -155,3 +155,26 @@
     cursor: pointer;
   }
 }
+
+/* How long it has been waiting, beside what it is waiting on. */
+.attention-waiting {
+  color: var(--text-color-secondary);
+  font-weight: 400;
+}
+
+.flag-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-top: 0.3rem;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--primary-color, #166534);
+  font-size: 0.75rem;
+  cursor: pointer;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}

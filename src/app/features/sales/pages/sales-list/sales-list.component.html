@@ -15,6 +15,27 @@
   </div>
 </div>
 
+<!-- Which sales are asking for something. Two independent filters: the first
+     is derived from each sale's status, balance and age; the second is what an
+     admin marked by hand. Both on means both, not either. -->
+<div class="attention-chips">
+  @for (chip of attention.chips(); track chip.key) {
+    <button
+      class="attention-chip"
+      tooltipPosition="bottom"
+      type="button"
+      [class.active]="attention.isActive(chip.key)"
+      [class.urgent]="chip.tone === 'urgent' && chip.count > 0"
+      [disabled]="chip.count === 0 && !attention.isActive(chip.key)"
+      [pTooltip]="chip.hint"
+      (click)="onChipToggle(chip.key)"
+    >
+      {{ chip.label }}
+      <span class="attention-chip-count">{{ chip.count }}</span>
+    </button>
+  }
+</div>
+
 <!-- Filters Section -->
 <div class="filters-section">
   <div class="filters-row">
@@ -78,7 +99,18 @@
     </ng-template>
     <ng-template let-sale pTemplate="body">
       <tr>
-        <td class="sale-id-column" data-label="ID">{{ sale.id.split('-')[0] }}</td>
+        <td class="sale-id-column" data-label="ID">
+          {{ sale.id.split('-')[0] }}
+          <!-- An admin's own mark. Shown on the row so a flagged sale is
+               recognisable without filtering for it. -->
+          @if (sale.flaggedAt) {
+            <i
+              class="pi pi-flag-fill sale-flag"
+              tooltipPosition="top"
+              [pTooltip]="sale.flagReason || 'Flagged for attention'"
+            ></i>
+          }
+        </td>
         <td data-label="Customer">
           <div class="customer-cell">
             <span class="customer-name">{{ getCustomerLabel(sale.customer) }}</span>

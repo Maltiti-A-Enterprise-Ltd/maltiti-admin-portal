@@ -17,6 +17,10 @@ export const loadSales = createAction(
     paymentStatus?: PaymentStatus;
     customerId?: string;
     customerName?: string;
+    /** Only sales waiting on us, as assessed server-side. */
+    needsAttention?: boolean;
+    /** Only sales an admin flagged by hand. Combines with the above. */
+    flagged?: boolean;
   }>(),
 );
 
