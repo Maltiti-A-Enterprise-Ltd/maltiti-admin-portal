@@ -32,6 +32,7 @@ describe('InBoxPriceLink', () => {
     wholesale: FormControl<number | null>;
     quantityInBox: FormControl<number | null>;
     inBoxPrice: FormControl<number | null>;
+    inBoxPriceOverride: FormControl<boolean | null>;
   }>;
   let link: InBoxPriceLink;
 
@@ -47,6 +48,7 @@ describe('InBoxPriceLink', () => {
       wholesale: new FormControl<number | null>(0),
       quantityInBox: new FormControl<number | null>(1),
       inBoxPrice: new FormControl<number | null>(0),
+      inBoxPriceOverride: new FormControl<boolean | null>(false),
     });
   });
 
@@ -80,18 +82,47 @@ describe('InBoxPriceLink', () => {
     expect(link.calculated()).toBe(240);
   });
 
-  // Boxes are routinely discounted below the sum of their contents, so a
-  // hand-typed amount has to survive later edits to the other two fields.
-  describe('once the price is typed in by hand', () => {
+  /*
+   * The field is locked while the amount is derived. It used to be editable,
+   * and typing in it was what counted as an override — invisible, because a
+   * field that looks editable gets edited, and nothing then said the price
+   * had stopped tracking the quantity somebody went on to change.
+   */
+  describe('while the price is derived', () => {
     beforeEach(() => {
       connect();
       form.controls.wholesale.setValue(12);
       form.controls.quantityInBox.setValue(20);
+    });
+
+    it('locks the field', () => {
+      expect(form.controls.inBoxPrice.disabled).toBe(true);
+    });
+
+    /* A disabled control drops out of `form.value`, and the payload builder
+       turns a missing price into an explicit null — so the saved value has
+       to come from `getRawValue`, and it has to be the derived figure. */
+    it('still carries the amount in the raw value', () => {
+      expect(form.getRawValue().inBoxPrice).toBe(240);
+      expect(form.value.inBoxPrice).toBeUndefined();
+    });
+  });
+
+  describe('once the override is ticked', () => {
+    beforeEach(() => {
+      connect();
+      form.controls.wholesale.setValue(12);
+      form.controls.quantityInBox.setValue(20);
+      form.controls.inBoxPriceOverride.setValue(true);
       form.controls.inBoxPrice.setValue(225);
     });
 
-    it('marks the field as overridden', () => {
+    it('reports itself as overridden', () => {
       expect(link.overridden()).toBe(true);
+    });
+
+    it('unlocks the field', () => {
+      expect(form.controls.inBoxPrice.enabled).toBe(true);
     });
 
     it('keeps the typed amount when the wholesale price changes', () => {
@@ -112,11 +143,21 @@ describe('InBoxPriceLink', () => {
       expect(link.calculated()).toBe(288);
     });
 
+    /* Unticking must not leave the typed figure sitting in a field that now
+       claims to be calculated. */
+    it('goes back to the calculated amount when unticked', () => {
+      form.controls.inBoxPriceOverride.setValue(false);
+
+      expect(link.overridden()).toBe(false);
+      expect(form.getRawValue().inBoxPrice).toBe(240);
+      expect(form.controls.inBoxPrice.disabled).toBe(true);
+    });
+
     it('goes back to the calculated amount on reset', () => {
       link.reset();
 
       expect(link.overridden()).toBe(false);
-      expect(form.controls.inBoxPrice.value).toBe(240);
+      expect(form.getRawValue().inBoxPrice).toBe(240);
     });
   });
 
@@ -127,6 +168,7 @@ describe('InBoxPriceLink', () => {
       link.resync();
 
       expect(link.overridden()).toBe(false);
+      expect(form.controls.inBoxPriceOverride.value).toBe(false);
     });
 
     // Opening a product to fix a typo must not silently reprice its boxes.
@@ -136,11 +178,23 @@ describe('InBoxPriceLink', () => {
       link.resync();
 
       expect(link.overridden()).toBe(true);
-      expect(form.controls.inBoxPrice.value).toBe(225);
+      expect(form.getRawValue().inBoxPrice).toBe(225);
 
       form.controls.wholesale.setValue(15);
 
-      expect(form.controls.inBoxPrice.value).toBe(225);
+      expect(form.getRawValue().inBoxPrice).toBe(225);
+    });
+
+    /* The tick on screen has to agree with the state, or an admin opens a
+       discounted product, sees an unticked box, and is told the price is
+       calculated when it is not. */
+    it('ticks the box for a stored override', () => {
+      connect();
+      form.patchValue({ wholesale: 12, quantityInBox: 20, inBoxPrice: 225 });
+      link.resync();
+
+      expect(form.controls.inBoxPriceOverride.value).toBe(true);
+      expect(form.controls.inBoxPrice.enabled).toBe(true);
     });
 
     it('leaves a product with no quantity per box alone', () => {
@@ -150,7 +204,7 @@ describe('InBoxPriceLink', () => {
 
       expect(link.overridden()).toBe(false);
       expect(link.calculated()).toBeNull();
-      expect(form.controls.inBoxPrice.value).toBe(99);
+      expect(form.getRawValue().inBoxPrice).toBe(99);
     });
   });
 });

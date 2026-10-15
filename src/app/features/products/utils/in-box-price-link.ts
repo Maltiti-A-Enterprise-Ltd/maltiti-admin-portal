@@ -35,20 +35,24 @@ export interface InBoxPriceControls {
   wholesale: FormControl<number | null>;
   quantityInBox: FormControl<number | null>;
   inBoxPrice: FormControl<number | null>;
+  /** The "set it by hand" tick. Unticked, the amount is derived and locked. */
+  inBoxPriceOverride: FormControl<boolean | null>;
 }
 
 /**
  * Keeps In-Box Price in step with Wholesale Price and Quantity per Box.
  *
- * The field auto-fills while nobody has touched it, which is the common case:
- * a box is worth what its contents are worth. But In-Box Price is a real
- * customer-facing price — it has its own price-change email — and boxes are
- * often discounted below the sum of their parts, so a hand-typed amount wins
- * and stops the auto-fill until it is reset.
+ * A box is worth what its contents are worth, so the amount is **derived and
+ * the field is locked** — the figure is Wholesale × Quantity per Box and
+ * there is nothing to type. Boxes are routinely discounted below the sum of
+ * their parts, so an explicit tick unlocks the field and stops the auto-fill.
  *
- * An existing product whose stored price does not match the formula is treated
- * as already overridden, so opening a product for an unrelated edit never
- * silently reprices it.
+ * The tick replaces an older rule where simply typing counted as an override.
+ * That was invisible: the field looked editable, so people edited it, and
+ * nothing said the price had stopped tracking the quantity they then changed.
+ *
+ * An existing product whose stored price does not match the formula opens
+ * with the tick already set, so an unrelated edit never silently reprices it.
  */
 export class InBoxPriceLink {
   private readonly overriddenState = signal(false);
@@ -73,13 +77,34 @@ export class InBoxPriceLink {
       source.valueChanges.pipe(takeUntilDestroyed(destroyRef)).subscribe(() => this.refresh());
     }
 
-    this.controls.inBoxPrice.valueChanges
+    this.controls.inBoxPriceOverride.valueChanges
       .pipe(takeUntilDestroyed(destroyRef))
-      .subscribe(() => {
-        if (!this.applying) {
-          this.overriddenState.set(true);
-        }
-      });
+      .subscribe(override => this.applyOverride(!!override));
+
+    this.applyOverride(!!this.controls.inBoxPriceOverride.value);
+    this.refresh();
+  }
+
+  /**
+   * Locks or unlocks the amount.
+   *
+   * Unticking goes straight back to the calculated figure rather than
+   * leaving the last typed one sitting in a field that now claims to be
+   * derived — a number that says it is calculated and is not is the whole
+   * problem this replaced.
+   */
+  private applyOverride(override: boolean): void {
+    this.overriddenState.set(override);
+
+    /* `emitEvent: false` so toggling the lock is not itself read as a change
+       to the price. The control is disabled, not readonly, so the save path
+       has to use `getRawValue()` — `value` drops disabled controls, and the
+       payload builder turns a missing price into an explicit null. */
+    if (override) {
+      this.controls.inBoxPrice.enable({ emitEvent: false });
+    } else {
+      this.controls.inBoxPrice.disable({ emitEvent: false });
+    }
 
     this.refresh();
   }
@@ -95,16 +120,18 @@ export class InBoxPriceLink {
     );
     const current = this.controls.inBoxPrice.value;
 
+    const overridden =
+      calculated !== null && current !== null && Number(current) !== calculated;
+
     this.calculatedState.set(calculated);
-    this.overriddenState.set(
-      calculated !== null && current !== null && Number(current) !== calculated,
-    );
+    /* Through the control, so the tick on screen agrees with the state. */
+    this.controls.inBoxPriceOverride.setValue(overridden, { emitEvent: false });
+    this.applyOverride(overridden);
   }
 
   /** Drops a hand-typed amount and goes back to the calculated one. */
   public reset(): void {
-    this.overriddenState.set(false);
-    this.refresh();
+    this.controls.inBoxPriceOverride.setValue(false);
   }
 
   private refresh(): void {

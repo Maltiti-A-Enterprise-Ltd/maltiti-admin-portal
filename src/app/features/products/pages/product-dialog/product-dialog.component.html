@@ -128,8 +128,24 @@
           [value]="productForm.value.retail"
         />
 
-        <!-- Auto-derived from Wholesale x Quantity per Box, but a box is often
-             discounted below the sum of its contents, so a typed amount wins. -->
+        <!-- Quantity per Box sits immediately before the price it drives.
+             The two used to be in different sections, which made a derived
+             figure look unrelated to the field deriving it. -->
+        <app-field-renderer
+          id="quantityInBox"
+          [control]="productForm.controls.quantityInBox"
+          [hint]="isViewMode() ? '' : 'How many units a box holds. Sets the In-Box Price below.'"
+          [label]="'Quantity per Box'"
+          [min]="1"
+          [mode]="isViewMode() ? 'view' : 'edit'"
+          [placeholder]="'1'"
+          [type]="'number'"
+          [value]="productForm.value.quantityInBox"
+        />
+
+        <!-- Derived and locked. A box is worth what its contents are worth,
+             so there is normally nothing to type — but boxes are routinely
+             discounted, hence the tick below. -->
         <div class="in-box-price-field">
           <app-field-renderer
             id="inBoxPrice"
@@ -142,23 +158,24 @@
                   ? 'Set by hand. Wholesale Price × Quantity per Box gives ' +
                     (calculatedInBoxPrice() | number: '1.2-2') +
                     '.'
-                  : 'Calculated as Wholesale Price × Quantity per Box. Type an amount to override it.'
+                  : 'Wholesale Price × Quantity per Box. Tick below to set it yourself.'
             "
             [label]="'In-Box Price (GHS)'"
             [min]="0"
             [mode]="isViewMode() ? 'view' : 'edit'"
             [placeholder]="'0.00'"
             [type]="'number'"
-            [value]="productForm.value.inBoxPrice"
+            [value]="productForm.getRawValue().inBoxPrice"
           />
 
-          @if (!isViewMode() && inBoxPriceOverridden() && calculatedInBoxPrice() !== null) {
-            <p-button
-              severity="secondary"
-              styleClass="in-box-price-reset"
-              [label]="'Use calculated price'"
-              [link]="true"
-              (onClick)="resetInBoxPrice()"
+          @if (!isViewMode()) {
+            <app-field-renderer
+              id="inBoxPriceOverride"
+              [control]="productForm.controls.inBoxPriceOverride"
+              [label]="'Set the in-box price by hand'"
+              [mode]="'edit'"
+              [type]="'checkbox'"
+              [value]="productForm.value.inBoxPriceOverride"
             />
           }
         </div>
@@ -209,18 +226,6 @@
     <div class="form-section">
       <h3 class="section-title">Inventory</h3>
       <div class="form-grid">
-        <app-field-renderer
-          id="quantityInBox"
-          [control]="productForm.controls.quantityInBox"
-          [hint]="isViewMode() ? '' : 'How many units a box holds. Sets the In-Box Price.'"
-          [label]="'Quantity per Box'"
-          [min]="1"
-          [mode]="isViewMode() ? 'view' : 'edit'"
-          [placeholder]="'1'"
-          [type]="'number'"
-          [value]="productForm.value.quantityInBox"
-        />
-
         <app-field-renderer
           id="minOrderQuantity"
           [control]="productForm.controls.minOrderQuantity"

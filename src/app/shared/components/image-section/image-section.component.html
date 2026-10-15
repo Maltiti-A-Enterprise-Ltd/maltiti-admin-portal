@@ -24,6 +24,17 @@
             type="text"
             [value]="primaryImageControl()?.value"
           />
+          @if (!viewMode()) {
+            <button
+              aria-label="Remove primary image"
+              class="image-remove"
+              pTooltip="Remove this image"
+              type="button"
+              (click)="removePrimaryImage()"
+            >
+              <i aria-hidden="true" class="pi pi-trash"></i>
+            </button>
+          }
         </div>
       }
     </div>
@@ -44,7 +55,9 @@
       }
       @if (additionalImagesControl()?.value && additionalImagesControl()?.value.length > 0) {
         <div class="images-preview">
-          @for (imageUrl of additionalImagesControl()?.value; track imageUrl) {
+          <!-- Tracked by index, not by URL: the same image can legitimately
+               be added twice, and tracking by value would collapse them. -->
+          @for (imageUrl of additionalImagesControl()?.value; track $index) {
             <div class="image-item">
               <img alt="Product image" class="preview-image" [src]="imageUrl" />
               <input
@@ -54,6 +67,17 @@
                 type="text"
                 [value]="imageUrl"
               />
+              @if (!viewMode()) {
+                <button
+                  aria-label="Remove this image"
+                  class="image-remove"
+                  pTooltip="Remove this image"
+                  type="button"
+                  (click)="removeAdditionalImage($index)"
+                >
+                  <i aria-hidden="true" class="pi pi-trash"></i>
+                </button>
+              }
             </div>
           }
         </div>
