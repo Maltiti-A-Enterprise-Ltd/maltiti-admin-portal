@@ -56,6 +56,11 @@ import { APP_ROUTES } from '@config/routes.config';
 import { combineLatest } from 'rxjs';
 import { map, startWith } from 'rxjs/operators';
 import { saleFormTotals } from '../../utils/sale-form-totals';
+import { saleFormCatalogue } from '../../utils/sale-form-catalogue';
+import {
+  PaymentTerms,
+  PaymentTermsEditorComponent,
+} from '../payment-terms-editor/payment-terms-editor.component';
 import { lineItemSummarySignal } from '../../utils/line-item-summary';
 import { orderWeightSignal } from '../../utils/order-weight';
 import { deliveryAddressSignal } from '../../utils/delivery-address';
@@ -77,6 +82,7 @@ import { CurrencyRateState } from '../../services/currency-rate.state';
   templateUrl: './sales-form.component.html',
   styleUrls: ['./sales-form.component.scss'],
   imports: [
+    PaymentTermsEditorComponent,
     CommonModule,
     ReactiveFormsModule,
     FormsModule,
@@ -117,8 +123,9 @@ export class SalesFormComponent implements OnInit {
   /* The deal currency, pinned when the sale is created. Shared with the
      invoice dialog, which uses the same picker for a different purpose. */
   public readonly deal = inject(CurrencyRateState);
-  public readonly products = signal<LightProduct[]>([]);
-  public readonly batchesByProductId = signal<Map<string, Batch[]>>(new Map());
+  private readonly catalogue = saleFormCatalogue();
+  public readonly products = this.catalogue.products;
+  public readonly batchesByProductId = this.catalogue.batchesByProductId;
   public readonly confirmDeliveryDate = signal<string | null>(null);
   public readonly lineItemValidationErrors = signal<Map<number, boolean>>(new Map());
   public readonly hasLineItemErrors = signal<boolean>(false);
@@ -132,6 +139,10 @@ export class SalesFormComponent implements OnInit {
   public readonly totalPrice = this.totals.total;
   /** Just the premiums, so the total can say how much of it they are. */
   public readonly premiumTotal = this.totals.premium;
+  /* Owned by the editor below, which has its own rules about them. Null
+     until the admin names any, which is the great majority of sales. */
+  public readonly paymentTerms = signal<PaymentTerms | null>(null);
+  public readonly termsEditor = viewChild(PaymentTermsEditorComponent);
   public customerControl = new FormControl<string>('', Validators.required);
   public statusControl = new FormControl(OrderStatus.PENDING, Validators.required);
   public paymentStatusControl = new FormControl<PaymentStatus>(
@@ -172,55 +183,6 @@ export class SalesFormComponent implements OnInit {
 
   public ngOnInit(): void {
     this.checkEditMode();
-    this.loadProducts();
-  }
-
-  private loadProducts(): void {
-    this.productApiService
-      .getAllProductsSimple()
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({
-        next: (response) => {
-          this.products.set(response.data);
-          this.loadBatches();
-        },
-        error: () =>
-          this.messageService.add({
-            severity: 'error',
-            summary: 'Error',
-            detail: 'Failed to load products. Please refresh the page.',
-          }),
-      });
-  }
-
-  private loadBatches(): void {
-    const productIds = this.products().map((p) => p.id);
-    if (productIds.length === 0) {
-      return;
-    }
-    this.batchApiService
-      .getBatchesByProductIds(productIds)
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({
-        next: (response) => {
-          const batchesMap = new Map<string, Batch[]>();
-          response.data.forEach((batch) => {
-            const productId = batch.product?.id;
-            if (!productId) {
-              return;
-            }
-            batchesMap.set(productId, [...(batchesMap.get(productId) ?? []), batch]);
-          });
-          this.batchesByProductId.set(batchesMap);
-        },
-        error: () => {
-          this.messageService.add({
-            severity: 'error',
-            summary: 'Error',
-            detail: 'Failed to load batches. Please refresh the page.',
-          });
-        },
-      });
   }
 
   private checkEditMode(): void {
@@ -249,6 +211,11 @@ export class SalesFormComponent implements OnInit {
     this.salesForm.controls.deliveryFee.setValue(sale.deliveryFee);
 
     this.confirmDeliveryDate.set(sale.confirmedDeliveryDate || null);
+
+    this.termsEditor()?.seed({
+      instructions: sale.paymentInstructions ?? [],
+      remarks: sale.invoiceRemarks ?? null,
+    });
 
     this.lineItems.clear();
     this.lineItems.push(
@@ -343,6 +310,10 @@ export class SalesFormComponent implements OnInit {
         deliveryFee: Number(this.salesForm.value.deliveryFee ?? 0),
         lineItems: formValue.line_items as SaleLineItemDto[],
         notifyCustomer: !!this.notifyCustomerControl.value,
+        /* Empty array rather than omitted, so removing every instruction
+           clears the stored ones instead of leaving them untouched. */
+        paymentInstructions: this.paymentTerms()?.instructions ?? [],
+        invoiceRemarks: this.paymentTerms()?.remarks ?? null,
       };
 
       if (this.isEditMode && this.saleId) {

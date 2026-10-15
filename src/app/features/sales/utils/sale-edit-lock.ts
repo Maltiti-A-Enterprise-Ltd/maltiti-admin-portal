@@ -2,6 +2,7 @@ import { computed, effect, signal, Signal, WritableSignal } from '@angular/core'
 import { AbstractControl } from '@angular/forms';
 import { Role } from '@models/user.model';
 import {
+  PaymentInstructionDto,
   CreateSaleDto,
   InvoiceCurrency,
   OrderStatus,
@@ -40,6 +41,9 @@ interface UpdatePayloadInput {
   readonly deliveryFee: number;
   readonly lineItems: readonly SaleLineItemDto[];
   readonly notifyCustomer: boolean;
+  /** How the invoice says it is to be paid. Empty array clears them. */
+  readonly paymentInstructions?: PaymentInstructionDto[];
+  readonly invoiceRemarks?: string | null;
   /** False when the sale is dispatched and the editor has not overridden. */
   readonly canEditContents: boolean;
   /** True only when a super admin deliberately asked to edit a locked sale. */
@@ -55,6 +59,25 @@ interface UpdatePayloadInput {
  * stored ones would still read as an attempt to rewrite a dispatched sale and
  * be refused.
  */
+/**
+ * A line's premium, or nothing at all.
+ *
+ * Both payload builders list their fields by hand, so anything not named
+ * here never reaches the API. The premium fields were added to the line
+ * editor without being added here, which left the whole feature inert —
+ * collected in the form and dropped on the way out.
+ *
+ * Sent only as a pair. Half a premium is rejected by the API, and sending
+ * `undefined` for one of them would turn a valid line into a 400.
+ */
+function premiumOf(
+  item: SaleLineItemDto,
+): Pick<SaleLineItemDto, 'premiumType' | 'premiumValue'> | Record<string, never> {
+  return item.premiumType && item.premiumValue
+    ? { premiumType: item.premiumType, premiumValue: item.premiumValue }
+    : {};
+}
+
 export function buildSaleUpdatePayload(input: UpdatePayloadInput): UpdateSaleDto {
   const payload: UpdateSaleDto = {
     orderStatus: input.orderStatus,
@@ -74,11 +97,17 @@ export function buildSaleUpdatePayload(input: UpdatePayloadInput): UpdateSaleDto
 
   payload.customerId = input.customerId;
   payload.deliveryFee = input.deliveryFee;
+  /* Behind the content lock with the line items: terms are what the
+     customer agreed to pay, not a rendering choice, so a dispatched sale
+     should not have them rewritten from here. */
+  payload.paymentInstructions = input.paymentInstructions ?? [];
+  payload.invoiceRemarks = input.invoiceRemarks ?? null;
   payload.lineItems = input.lineItems.map((item) => ({
     productId: item.productId,
     requestedQuantity: item.requestedQuantity,
     batchAllocations: item.batchAllocations,
     customPrice: item.customPrice || undefined,
+    ...premiumOf(item),
   }));
 
   return payload;
@@ -140,6 +169,9 @@ export function buildSaleCreatePayload(input: {
   deliveryFee: number;
   lineItems: readonly SaleLineItemDto[];
   notifyCustomer: boolean;
+  /** How the invoice says it is to be paid. Empty array clears them. */
+  paymentInstructions?: PaymentInstructionDto[];
+  invoiceRemarks?: string | null;
   /** The deal currency, pinned with its rate. Omitted for a cedi sale. */
   currency?: InvoiceCurrency;
   exchangeRate?: number;
@@ -156,10 +188,13 @@ export function buildSaleCreatePayload(input: {
       requestedQuantity: item.requestedQuantity,
       batchAllocations: item.batchAllocations,
       customPrice: item.customPrice || undefined,
+      ...premiumOf(item),
     })),
     // Omitted when off: the API rejects unknown properties, so an older
     // deployment must not see the key at all.
     notifyCustomer: input.notifyCustomer || undefined,
+    paymentInstructions: input.paymentInstructions ?? [],
+    invoiceRemarks: input.invoiceRemarks ?? null,
     /* Only sent for a foreign deal. A cedi sale omits both, which is what
        the API defaults to — and sending GHS with a rate of 1 would just be
        noise on every ordinary order. */
