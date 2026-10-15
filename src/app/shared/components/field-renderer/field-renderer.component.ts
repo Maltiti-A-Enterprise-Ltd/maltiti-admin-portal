@@ -71,6 +71,10 @@ export class FieldRendererComponent {
   public readonly min = input<number | null>(null);
   public readonly locale = input<string>('en-GH');
   public readonly numberMode = input<'currency' | undefined>(undefined);
+
+  /** Decimal places for a `number` field. See `NumberInputComponent`. */
+  public readonly minFractionDigits = input<number | undefined>(undefined);
+  public readonly maxFractionDigits = input<number | undefined>(undefined);
   public readonly currency = input<string>('GHS');
   public readonly maxSelectedLabels = input<number>(3);
   public readonly selectedItemsLabel = input<string>('{0} items selected');
