@@ -75,6 +75,8 @@ import { SalesMetricsPanelComponent } from '../sales-metrics-panel/sales-metrics
 
 import { formatSaleAmount } from '@shared/utils/sale-money';
 import { buildSaleActionMenu } from '../../utils/sale-action-menu';
+import { ArrivalDateModalComponent } from '../arrival-date-modal/arrival-date-modal.component';
+import { arrivalStatus } from '../../utils/arrival-date';
 @Component({
   selector: 'app-sales-list',
   standalone: true,
@@ -103,6 +105,7 @@ import { buildSaleActionMenu } from '../../utils/sale-action-menu';
     DeliveryCostUpdateModalComponent,
     CancelSaleByAdminModalComponent,
     SalesMetricsPanelComponent,
+    ArrivalDateModalComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   providers: [ConfirmationService],
@@ -137,6 +140,7 @@ export class SalesListComponent implements OnInit {
   public readonly waybillModal = viewChild.required(WaybillGenerationModalComponent);
   public readonly deliveryCostModal = viewChild.required(DeliveryCostUpdateModalComponent);
   public readonly cancelModal = viewChild.required(CancelSaleByAdminModalComponent);
+  public readonly arrivalDateModal = viewChild.required(ArrivalDateModalComponent);
 
   // Lists live beside the form's, so a new status is added once.
   public readonly statusOptions = ORDER_STATUS_FILTER_OPTIONS;
@@ -212,6 +216,14 @@ export class SalesListComponent implements OnInit {
   public readonly notifyOnStatusChange = signal(false);
 
   public onUpdateStatus(sale: Sale, newStatus: OrderStatus): void {
+    /* Dispatching is the one moment somebody actually knows when the goods
+       are due, so ask then rather than hoping they remember later. The modal
+       makes the status change itself once a date is picked. */
+    if (newStatus === OrderStatus.IN_TRANSIT) {
+      this.arrivalDateModal().open(sale, true);
+      return;
+    }
+
     this.notifyOnStatusChange.set(false);
 
     this.confirmationService.confirm({
@@ -264,12 +276,24 @@ export class SalesListComponent implements OnInit {
     this.loadSales();
   }
 
+  /* Reloads rather than patching the row: saving a date can also dispatch
+     the order, so the status, the attention bucket and the chip counts all
+     move together. */
+  public onArrivalDateSaved(): void {
+    this.loadSales();
+  }
+
   public getPaymentProgress(sale: Sale): number {
     const totalPaid = sale.totalPaid;
     if (!sale.total || sale.total <= 0 || !totalPaid) {
       return 0;
     }
     return Math.min(100, Math.round((totalPaid / sale.total) * 100));
+  }
+
+  /** "Due 3 Nov" / "3 days late", or null when there is nothing to say. */
+  public arrival(sale: Sale): ReturnType<typeof arrivalStatus> {
+    return arrivalStatus(sale.estimatedArrivalDate);
   }
 
   public getActionMenuItems(sale: Sale): void {
@@ -284,6 +308,7 @@ export class SalesListComponent implements OnInit {
         updateDeliveryCost: (s) => this.onUpdateDeliveryCost(s),
         cancel: (s) => this.onCancelSale(s),
         updateStatus: (s, status) => this.onUpdateStatus(s, status),
+        setArrivalDate: (s) => this.arrivalDateModal().open(s),
       }),
     );
   }

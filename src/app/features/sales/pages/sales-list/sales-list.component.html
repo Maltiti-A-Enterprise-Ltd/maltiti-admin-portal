@@ -148,6 +148,17 @@
             [severity]="getStatusSeverity(sale.orderStatus)"
             [value]="getStatusLabel(sale.orderStatus)"
           />
+          <!-- Under the status rather than in a column of its own: it only
+               ever applies to a shipment on its way, so a column would be
+               empty on most rows. -->
+          @if (arrival(sale); as due) {
+            <span class="arrival-note" [class.is-late]="due.isLate">
+              @if (due.isLate) {
+                <i aria-hidden="true" class="pi pi-exclamation-circle"></i>
+              }
+              {{ due.text }}
+            </span>
+          }
         </td>
         <td data-label="Payment Status">
           <p-tag
@@ -311,3 +322,7 @@
 
 <!-- Cancel Sale By Admin Modal -->
 <app-cancel-sale-by-admin-modal (saleCancelled)="onSaleCancelled()" />
+
+<!-- Estimated arrival date: set on dispatch, revised whenever the agent
+     quotes a new one. -->
+<app-arrival-date-modal (saved)="onArrivalDateSaved()" />

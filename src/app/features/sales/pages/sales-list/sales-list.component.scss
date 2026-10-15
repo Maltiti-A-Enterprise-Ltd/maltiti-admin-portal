@@ -340,3 +340,21 @@
   color: var(--p-text-muted-color);
   font-size: 0.75rem;
 }
+
+/* The expected arrival, under the order status. Quiet while it is still in
+   the future; it only earns colour once it has passed, which is the whole
+   point of recording it. */
+.arrival-note {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  margin-top: 0.25rem;
+  font-size: 0.75rem;
+  color: var(--p-text-muted-color);
+  white-space: nowrap;
+
+  &.is-late {
+    color: var(--p-orange-600, #ea580c);
+    font-weight: 600;
+  }
+}
