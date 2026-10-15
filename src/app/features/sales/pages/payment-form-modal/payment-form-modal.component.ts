@@ -45,6 +45,8 @@ import {
 } from '../../models/sale.model';
 
 import { currencySymbol, formatSaleAmount } from '@shared/utils/sale-money';
+import { CrossCurrencyPayment } from '../../utils/cross-currency-payment';
+import { DecimalPipe } from '@angular/common';
 interface PaymentMethodOption {
   label: string;
   value: PaymentMethod;
@@ -62,6 +64,7 @@ interface PaymentStatusOption {
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     ReactiveFormsModule,
+    DecimalPipe,
     DialogModule,
     ButtonModule,
     InputNumberModule,
@@ -134,7 +137,21 @@ export class PaymentFormModalComponent {
     // Optional: cash arrives in no account, and the business may not care to
     // record one. Only accounts still in use are offered.
     paymentAccountId: [null as string | null],
+    /* What the customer actually handed over, when that was not the sale's
+       own money. Left on the sale's currency these do nothing. */
+    receivedCurrency: [null as InvoiceCurrency | null],
+    receivedAmount: [null as number | null],
+    receivedRate: [null as number | null],
   });
+
+  /** The money that actually arrived, when it was not the sale's own. */
+  public readonly received = new CrossCurrencyPayment(
+    this.form.controls.receivedCurrency,
+    this.form.controls.receivedAmount,
+    this.form.controls.receivedRate,
+    this.currency,
+    this.form.controls.amount,
+  );
 
   // ─── Select options ──────────────────────────────────────────────────────────
   public readonly methodOptions: PaymentMethodOption[] = (
@@ -298,11 +315,35 @@ export class PaymentFormModalComponent {
   }
 
   private recordBody(): RecordPaymentRequest {
-    const { amount, paymentMethod, status, reference, note, paymentAccountId } =
-      this.form.getRawValue();
+    const {
+      amount,
+      paymentMethod,
+      status,
+      reference,
+      note,
+      paymentAccountId,
+      receivedCurrency,
+      receivedAmount,
+      receivedRate,
+    } = this.form.getRawValue();
+
+    /* Sent only when the money really did arrive in something else. The API
+       derives the settled amount from these, so the figure on the bank
+       statement is what gets typed and the conversion is not done twice. */
+    const crossCurrency = this.received.isCrossCurrency()
+      ? {
+          receivedAmount: receivedAmount ?? undefined,
+          receivedCurrency: receivedCurrency ?? undefined,
+          receivedRate: receivedRate ?? undefined,
+        }
+      : {};
 
     return {
-      amount: amount ?? 0,
+      ...crossCurrency,
+      /* Omitted on a cross-currency payment: the API derives it from what
+         arrived, and sending both invites two numbers that disagree about
+         the same payment. */
+      amount: this.received.isCrossCurrency() ? undefined : (amount ?? 0),
       paymentMethod: paymentMethod ?? PaymentMethod.BANK_TRANSFER,
       status: status ?? PaymentRecordStatus.CONFIRMED,
       reference: reference || undefined,

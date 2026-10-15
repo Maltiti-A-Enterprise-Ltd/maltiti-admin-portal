@@ -14,7 +14,7 @@ import {
   signal,
   viewChild,
 } from '@angular/core';
-import { CommonModule, DecimalPipe } from '@angular/common';
+import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
@@ -57,9 +57,7 @@ import { WaybillGenerationModalComponent } from '../waybill-generation-modal/way
 import { DeliveryCostUpdateModalComponent } from '../delivery-cost-update-modal/delivery-cost-update-modal.component';
 import { CancelSaleByAdminModalComponent } from '../cancel-sale-by-admin-modal/cancel-sale-by-admin-modal.component';
 import { InvoicePreviewModalComponent } from '../invoice-preview-modal/invoice-preview-modal.component';
-import { Role } from '@models/user.model';
 import {
-  getNextStatuses,
   getPaymentStatusSeverity,
   getStatusLabel,
   getStatusSeverity,
@@ -97,7 +95,6 @@ import { buildSaleActionMenu } from '../../utils/sale-action-menu';
     MenuModule,
     InputTextModule,
     ProgressBarModule,
-    DecimalPipe,
     ButtonComponent,
     SelectComponent,
     InvoicePreviewModalComponent,
