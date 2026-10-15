@@ -115,6 +115,17 @@
     margin-top: variables.$spacing-xs;
   }
 
+  /* The per-kg/per-litre rate. A derived figure, not one that was typed, so
+     it stays quieter than the price above it — but tabular, because it is
+     read by scanning down a column of line items. */
+  .unit-rate {
+    display: block;
+    color: var(--p-text-muted-color);
+    font-size: variables.$font-size-sm;
+    font-variant-numeric: tabular-nums;
+    margin-top: variables.$spacing-xs;
+  }
+
   .total-price {
     display: flex;
     flex-direction: column;
