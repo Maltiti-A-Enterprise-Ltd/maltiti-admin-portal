@@ -1,0 +1,99 @@
+@use '../../../../../styles/variables' as variables;
+
+.terms-editor {
+  display: flex;
+  flex-direction: column;
+  gap: variables.$spacing-sm;
+}
+
+.terms-header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+
+.terms-title {
+  margin: 0;
+  font-size: variables.$font-size-base;
+  font-weight: variables.$font-weight-medium;
+  color: var(--p-text-color);
+}
+
+.terms-hint {
+  color: var(--p-text-muted-color);
+  font-size: variables.$font-size-xs;
+}
+
+.terms-row {
+  display: flex;
+  align-items: center;
+  gap: variables.$spacing-sm;
+
+  /* The milestone takes the room; the percentage only ever holds three
+     digits and a sign. */
+  ::ng-deep .terms-milestone {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  ::ng-deep .terms-percentage input {
+    width: 7rem;
+  }
+
+  /* Stacked on a phone: three controls side by side squeezes the select
+     to the point where the milestone cannot be read. */
+  @media (max-width: 640px) {
+    flex-wrap: wrap;
+
+    ::ng-deep .terms-milestone {
+      flex-basis: 100%;
+    }
+  }
+}
+
+/* What the invoice will actually say, so the wording is never a surprise. */
+.terms-preview {
+  padding: variables.$spacing-sm;
+  border-radius: variables.$border-radius-sm;
+  background: var(--p-content-hover-background);
+
+  ul {
+    margin: 0.25rem 0 0;
+    padding-left: 1.1rem;
+    font-size: variables.$font-size-sm;
+    color: var(--p-text-color);
+  }
+}
+
+.terms-preview-label {
+  font-size: variables.$font-size-xs;
+  font-weight: variables.$font-weight-medium;
+  color: var(--p-text-muted-color);
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.terms-total {
+  display: block;
+  margin-top: 0.375rem;
+  color: var(--p-text-muted-color);
+  font-size: variables.$font-size-xs;
+}
+
+.terms-remarks {
+  display: flex;
+  flex-direction: column;
+  gap: variables.$spacing-xs;
+
+  label {
+    font-size: variables.$font-size-sm;
+    font-weight: variables.$font-weight-medium;
+    color: var(--p-text-color);
+  }
+
+  textarea {
+    width: 100%;
+    /* iOS zooms into anything under 16px and does not zoom back out. */
+    font-size: 1rem;
+  }
+}
