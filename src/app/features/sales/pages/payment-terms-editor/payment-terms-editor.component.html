@@ -1,0 +1,84 @@
+<div class="terms-editor">
+  <div class="terms-header">
+    <h3 class="terms-title">Payment Terms</h3>
+    <small class="terms-hint">
+      Printed on the invoice. Leave a percentage empty to mean the balance.
+    </small>
+  </div>
+
+  @for (instruction of instructions(); track $index) {
+    <div class="terms-row">
+      <p-select
+        appendTo="body"
+        optionLabel="label"
+        optionValue="value"
+        styleClass="terms-milestone"
+        [ngModel]="instruction.type"
+        [options]="options"
+        (ngModelChange)="setType($index, $event)"
+      />
+
+      <p-inputnumber
+        placeholder="Balance"
+        suffix="%"
+        [max]="100"
+        [min]="0"
+        [ngModel]="instruction.percentage"
+        [styleClass]="'terms-percentage'"
+        (ngModelChange)="setPercentage($index, $event)"
+      />
+
+      <p-button
+        ariaLabel="Remove this instruction"
+        icon="pi pi-trash"
+        severity="danger"
+        [rounded]="true"
+        [text]="true"
+        (onClick)="remove($index)"
+      />
+    </div>
+  }
+
+  @if (canAdd()) {
+    <p-button
+      icon="pi pi-plus"
+      label="Add instruction"
+      severity="secondary"
+      [text]="true"
+      (onClick)="add()"
+    />
+  }
+
+  <!-- Named before the save fails. The API refuses the same terms, but
+       finding out from a 400 after filling in everything else is a poor
+       way to learn the rule. -->
+  @if (problem(); as issue) {
+    <p-message severity="warn" styleClass="terms-problem">{{ issue }}</p-message>
+  } @else if (preview().length) {
+    <div class="terms-preview">
+      <span class="terms-preview-label">On the invoice:</span>
+      <ul>
+        @for (line of preview(); track line) {
+          <li>{{ line }}</li>
+        }
+      </ul>
+      @if (total() > 0 && total() < 100) {
+        <small class="terms-total">
+          {{ total() }}% named — the rest is left unstated.
+        </small>
+      }
+    </div>
+  }
+
+  <div class="terms-remarks">
+    <label for="invoiceRemarks">Remarks (optional)</label>
+    <textarea
+      id="invoiceRemarks"
+      pTextarea
+      rows="3"
+      [ngModel]="remarks()"
+      [placeholder]="'Anything else to print on the invoice'"
+      (ngModelChange)="setRemarks($event)"
+    ></textarea>
+  </div>
+</div>

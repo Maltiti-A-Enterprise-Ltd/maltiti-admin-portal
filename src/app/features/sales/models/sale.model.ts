@@ -16,6 +16,11 @@ import { Product, QuantityUnit } from '../../products/models/product.model';
 /* Re-exported so the many existing `from './sale.model'` imports keep working;
    the definitions moved out when this file hit its 400-line ceiling. */
 export * from './sale-attention.model';
+/* Split out when this file hit its 400-line ceiling, the same way the
+   currency, payment and attention models were. Re-exported so the many
+   existing `from './sale.model'` imports keep working. */
+export * from './sale-invoice-terms.model';
+import { PaymentInstructionDto } from './sale-invoice-terms.model';
 import { SaleAttention } from './sale-attention.model';
 
 export enum PaymentStatus {
@@ -144,6 +149,13 @@ export interface CreateSaleDto {
   lineItems: SaleLineItemDto[];
   deliveryFee?: number;
   /**
+   * How the invoice says this sale is to be paid, and anything else worth
+   * printing on it. Stored on the sale, so a reissued or emailed invoice
+   * carries the same terms. An empty array clears them.
+   */
+  paymentInstructions?: PaymentInstructionDto[];
+  invoiceRemarks?: string | null;
+  /**
    * The currency the deal was struck in, with the rate it was agreed at as
    * cedis per one unit. Omit both for an ordinary cedi sale; the API refuses
    * a foreign currency without a rate rather than guessing one.
@@ -164,6 +176,11 @@ export interface UpdateSaleLineItemDto {
   batchAllocations?: BatchAllocationDto[];
   requestedQuantity?: number;
   customPrice?: number;
+  /* Declared, not merely tolerated. These reached the API through a spread,
+     which excess-property checking does not police — so the type said the
+     premium was not sent while the code sent it. */
+  premiumType?: PremiumType | null;
+  premiumValue?: number | null;
 }
 
 export interface UpdateSaleDto {
@@ -172,6 +189,9 @@ export interface UpdateSaleDto {
   paymentStatus?: PaymentStatus;
   lineItems?: UpdateSaleLineItemDto[];
   deliveryFee?: number;
+  /** See `CreateSaleDto`. An empty array clears the stored terms. */
+  paymentInstructions?: PaymentInstructionDto[];
+  invoiceRemarks?: string | null;
   /**
    * The currency the deal was struck in, with the rate it was agreed at as
    * cedis per one unit. Omit both for an ordinary cedi sale; the API refuses
@@ -297,6 +317,10 @@ export interface Sale {
    * the balance and the invoice were worked out from.
    */
   premiumTotal?: number;
+  /** How this sale's invoice says it is to be paid. */
+  paymentInstructions?: PaymentInstructionDto[] | null;
+  /** Free text printed under the terms. */
+  invoiceRemarks?: string | null;
   /** The sale's customer as returned by the API (not the linked user account). */
   customer?: Customer;
   orderStatus: OrderStatus;

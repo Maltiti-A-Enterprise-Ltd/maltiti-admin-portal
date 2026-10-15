@@ -202,6 +202,12 @@
           <p>{{ confirmDeliveryDate() | date:'medium' }}</p>
         </div>
       }
+      <!-- How the invoice says it is to be paid. Stored on the sale, so a
+           reissued or emailed invoice carries the same terms. -->
+      <div class="form-field payment-terms-field">
+        <app-payment-terms-editor (changed)="paymentTerms.set($event)" />
+      </div>
+
       <!-- Opt-in on both paths: saving is silent unless this is ticked, so a
            past or offline sale can be recorded and later corrected without
            the customer hearing about it. -->
