@@ -96,12 +96,36 @@ export interface BatchAllocationDto {
   quantity: number;
 }
 
+/**
+ * How a line's premium is expressed. Both scale with quantity — a cash
+ * premium is charged per unit, a percentage is taken off the line's total.
+ *
+ * Not to be confused with the `premium` product *grade*, which describes the
+ * quality of the goods rather than what is charged for them.
+ */
+export enum PremiumType {
+  AMOUNT = 'amount',
+  PERCENT = 'percent',
+}
+
+export const PREMIUM_TYPE_OPTIONS: { label: string; value: PremiumType }[] = [
+  { label: 'Amount per unit', value: PremiumType.AMOUNT },
+  { label: 'Percentage', value: PremiumType.PERCENT },
+];
+
 export interface SaleLineItemDto {
   productId: string;
   batchAllocations: BatchAllocationDto[];
   requestedQuantity: number;
   finalPrice?: number;
   customPrice?: number;
+  /**
+   * An optional premium charged on top of this line — a certification, a
+   * grade, a specification a buyer asked for. Sent together or not at all:
+   * the API rejects a type with no value, or a value with no type.
+   */
+  premiumType?: PremiumType | null;
+  premiumValue?: number | null;
 }
 
 export interface CreateSaleDto {
@@ -258,6 +282,12 @@ export interface Sale {
    * after delivery as a record of what was promised.
    */
   estimatedArrivalDate?: string;
+  /**
+   * What the premiums across this sale's lines come to, in its own currency.
+   * Served rather than re-derived here, so the figure on screen is the one
+   * the balance and the invoice were worked out from.
+   */
+  premiumTotal?: number;
   /** The sale's customer as returned by the API (not the linked user account). */
   customer?: Customer;
   orderStatus: OrderStatus;

@@ -55,7 +55,7 @@ import { LightProduct } from '@features/products/models/product.model';
 import { APP_ROUTES } from '@config/routes.config';
 import { combineLatest } from 'rxjs';
 import { map, startWith } from 'rxjs/operators';
-import { lineItemsTotalPrice } from '@shared/utils/totalPriceCalculator';
+import { saleFormTotals } from '../../utils/sale-form-totals';
 import { lineItemSummarySignal } from '../../utils/line-item-summary';
 import { orderWeightSignal } from '../../utils/order-weight';
 import { deliveryAddressSignal } from '../../utils/delivery-address';
@@ -128,13 +128,10 @@ export class SalesFormComponent implements OnInit {
     deliveryFee: [0, [Validators.required, Validators.min(0)]],
   });
   private readonly fee = this.salesForm.controls.deliveryFee;
-  public readonly totalPrice = toSignal(
-    combineLatest([
-      this.lineItems.valueChanges.pipe(startWith(this.lineItems.value)),
-      this.fee.valueChanges.pipe(startWith(this.fee.value)),
-    ]).pipe(map(([items, fee]) => Number(fee) + lineItemsTotalPrice(items))),
-    { initialValue: 0 },
-  );
+  private readonly totals = saleFormTotals(this.lineItems, this.fee);
+  public readonly totalPrice = this.totals.total;
+  /** Just the premiums, so the total can say how much of it they are. */
+  public readonly premiumTotal = this.totals.premium;
   public customerControl = new FormControl<string>('', Validators.required);
   public statusControl = new FormControl(OrderStatus.PENDING, Validators.required);
   public paymentStatusControl = new FormControl<PaymentStatus>(
