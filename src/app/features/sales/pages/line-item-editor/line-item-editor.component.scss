@@ -210,4 +210,19 @@
       font-weight: variables.$font-weight-medium;
     }
   }
+
+  /* The optional premium. Quiet until it has a value — most lines carry
+     none, and an empty pair of fields should not shout. */
+  .premium-field {
+    display: flex;
+    flex-direction: column;
+    gap: variables.$spacing-xs;
+  }
+
+  .premium-note {
+    display: block;
+    color: var(--p-text-muted-color);
+    font-size: variables.$font-size-sm;
+    font-variant-numeric: tabular-nums;
+  }
 }

@@ -150,6 +150,48 @@
         }
       </div>
 
+      <!-- Optional. Some goods go out above the catalogue rate — a
+           certification, a grade, a spec a buyer asked for — and that is
+           worth recording rather than hiding inside the unit price. -->
+      <div class="form-field premium-field">
+        <app-select
+          id="premiumType"
+          [control]="lineItemForm.controls.premiumType"
+          [label]="'Premium (optional)'"
+          [options]="premium.options"
+          [placeholder]="'No premium'"
+          [showClear]="true"
+        />
+
+        @if (lineItemForm.controls.premiumType.value) {
+          <app-number-input
+            id="premiumValue"
+            [control]="lineItemForm.controls.premiumValue"
+            [label]="
+              lineItemForm.controls.premiumType.value === 'percent'
+                ? 'Premium (%)'
+                : 'Premium per unit (' + price.symbol() + ')'
+            "
+            [min]="0"
+            [mode]="'decimal'"
+            [placeholder]="'0.00'"
+            [style]="{ width: '100%' }"
+          />
+        }
+
+        @if (premium.incomplete()) {
+          <p-message severity="warn" styleClass="premium-warning">
+            Choose a type and enter a value, or clear both — a premium needs
+            each half to mean anything.
+          </p-message>
+        } @else if (premium.amount(); as premiumAmount) {
+          <small class="premium-note">
+            Adds {{ price.symbol() }} {{ premiumAmount | number: '1.2-2' }} to
+            this line.
+          </small>
+        }
+      </div>
+
       <div class="form-field">
         <div class="total-price">
           <span>Total</span>

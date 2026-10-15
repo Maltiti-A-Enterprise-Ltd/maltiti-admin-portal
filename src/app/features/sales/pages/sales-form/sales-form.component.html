@@ -228,6 +228,13 @@
       <div class="total-wrapper">
         <div>Total Amount</div>
         <div class="total-amount">{{ deal.symbol() }} {{ totalPrice() | number: '1.2-2' }}</div>
+        <!-- Named rather than buried: the invoice prints the premium on its
+             own row, so the figure here has to be explainable against it. -->
+        @if (premiumTotal(); as premium) {
+          <div class="total-premium">
+            includes {{ deal.symbol() }} {{ premium | number: '1.2-2' }} premium
+          </div>
+        }
         <!-- What it comes to in cedis, at the rate pinned on the deal. Shown
              only where the two differ, so an ordinary sale is not cluttered. -->
         @if (deal.isForeign() && deal.exchangeRate(); as rate) {
