@@ -298,6 +298,63 @@
       </div>
     </div>
 
+    <!-- Shown only for products sold in something with a shape worth
+         measuring — see `UNITS_WITH_DIMENSIONS`. A set of empty boxes on
+         every product form is how a field gets ignored. -->
+    @if (showDimensions()) {
+      <div class="form-section" formGroupName="dimensions">
+        <h3 class="section-title">Dimensions</h3>
+        <p class="section-note">
+          The size of one {{ productForm.value.quantityUnit }}. Fill in what you
+          know — a partial set is still useful for working out what fits in a
+          container.
+        </p>
+        <div class="form-grid">
+          <app-field-renderer
+            id="dimensionLength"
+            [control]="productForm.controls.dimensions.controls.length"
+            [label]="'Length'"
+            [mode]="isViewMode() ? 'view' : 'edit'"
+            [placeholder]="'e.g. 40'"
+            [type]="'number'"
+            [value]="productForm.value.dimensions?.length"
+          />
+
+          <app-field-renderer
+            id="dimensionBreadth"
+            [control]="productForm.controls.dimensions.controls.breadth"
+            [hint]="'Also called width or depth.'"
+            [label]="'Breadth'"
+            [mode]="isViewMode() ? 'view' : 'edit'"
+            [placeholder]="'e.g. 30'"
+            [type]="'number'"
+            [value]="productForm.value.dimensions?.breadth"
+          />
+
+          <app-field-renderer
+            id="dimensionHeight"
+            [control]="productForm.controls.dimensions.controls.height"
+            [label]="'Height'"
+            [mode]="isViewMode() ? 'view' : 'edit'"
+            [placeholder]="'e.g. 25'"
+            [type]="'number'"
+            [value]="productForm.value.dimensions?.height"
+          />
+
+          <app-field-renderer
+            id="dimensionUnit"
+            [control]="productForm.controls.dimensions.controls.unit"
+            [hint]="'Inches are here because a forwarder will quote a carton in them.'"
+            [label]="'Measured in'"
+            [mode]="isViewMode() ? 'view' : 'edit'"
+            [options]="dimensionUnitOptions"
+            [type]="'select'"
+            [value]="productForm.value.dimensions?.unit"
+          />
+        </div>
+      </div>
+    }
+
     <!-- Features Section -->
     <div class="form-section">
       <h3 class="section-title">Features & Certifications</h3>

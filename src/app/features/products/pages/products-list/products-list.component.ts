@@ -48,6 +48,7 @@ import { InputComponent } from '@shared/components/input/input.component';
 import { ButtonComponent } from '@shared/components/button/button.component';
 import { SelectComponent } from '@shared/components/select/select.component';
 import { ProductDialogComponent } from '../product-dialog/product-dialog.component';
+import { formatDimensions } from '../../utils/product-dimensions';
 import { ProductApiService } from '../../services/product-api.service';
 import { PRODUCT_CATEGORIES } from '../../constants/product-options.constants';
 import { ProductNamePipe } from '@shared/pipes/product-name.pipe';
@@ -285,6 +286,11 @@ export class ProductsListComponent {
       default:
         return 'secondary';
     }
+  }
+
+  /** `"40 × 30 × 25 cm"`, or null for a product with no container measured. */
+  public dimensionsOf(product: Product): string | null {
+    return formatDimensions(product.dimensions);
   }
 
   public formatCurrency(value: number): string {
