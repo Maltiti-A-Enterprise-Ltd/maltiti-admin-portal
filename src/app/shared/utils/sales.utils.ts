@@ -26,6 +26,10 @@ export function getPaymentStatusSeverity(
       return 'success';
     case PaymentStatus.PENDING_PAYMENT:
       return 'warn';
+    /* Not 'warn' like pending: looking identical to it is the thing this
+       status exists to stop. Money is moving, so it reads as progress. */
+    case PaymentStatus.PART_PAYMENT:
+      return 'info';
     case PaymentStatus.INVOICE_REQUESTED:
       return 'danger';
     case PaymentStatus.REFUNDED:

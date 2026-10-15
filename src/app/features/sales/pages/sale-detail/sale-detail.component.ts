@@ -128,6 +128,8 @@ export class SaleDetailComponent implements OnInit {
         return 'success';
       case PaymentStatus.PENDING_PAYMENT:
         return 'warn';
+      case PaymentStatus.PART_PAYMENT:
+        return 'info';
       case PaymentStatus.INVOICE_REQUESTED:
         return 'danger';
       case PaymentStatus.REFUNDED:
