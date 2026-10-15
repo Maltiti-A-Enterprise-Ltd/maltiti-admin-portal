@@ -164,9 +164,16 @@ export interface UpdateSaleDto {
 
 
 export interface UpdateSaleStatusDto {
-  orderStatus: OrderStatus;
+  /** Optional: the arrival date can be revised without moving the status. */
+  orderStatus?: OrderStatus;
   /** As above: the status change is silent unless this is set. */
   notifyCustomer?: boolean;
+  /**
+   * When the shipment is expected, as an ISO date. Omitted leaves whatever
+   * is stored alone; `null` clears it. Those are different requests, so the
+   * field must not be dropped just because it is empty.
+   */
+  estimatedArrivalDate?: string | null;
 }
 
 export interface AssignBatchesDto {
@@ -245,6 +252,12 @@ export interface Sale {
   balanceRemainingGhs?: number;
   customerId: string;
   confirmedDeliveryDate?: string;
+  /**
+   * When this shipment was last said to be arriving. Absent when nobody gave
+   * a date, which leaves the sale on the blunt 56-day in-transit rule. Kept
+   * after delivery as a record of what was promised.
+   */
+  estimatedArrivalDate?: string;
   /** The sale's customer as returned by the API (not the linked user account). */
   customer?: Customer;
   orderStatus: OrderStatus;

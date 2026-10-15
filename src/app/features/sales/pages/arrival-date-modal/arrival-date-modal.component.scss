@@ -1,0 +1,38 @@
+@use '../../../../../styles/variables' as variables;
+
+.arrival-form {
+  display: flex;
+  flex-direction: column;
+  gap: variables.$spacing-md;
+}
+
+.form-field {
+  display: flex;
+  flex-direction: column;
+  gap: variables.$spacing-xs;
+
+  label {
+    font-size: variables.$font-size-sm;
+    font-weight: variables.$font-weight-medium;
+    color: var(--p-text-color);
+  }
+}
+
+.field-hint {
+  color: var(--p-text-muted-color);
+  font-size: variables.$font-size-xs;
+  line-height: 1.4;
+}
+
+.arrival-current {
+  margin: 0;
+  font-size: variables.$font-size-sm;
+  color: var(--p-text-muted-color);
+
+  /* Already overdue is the reason the admin is in this dialog at all, so it
+     is worth more than the same grey as everything else. */
+  &.is-late {
+    color: var(--p-orange-500, #f97316);
+    font-weight: variables.$font-weight-medium;
+  }
+}

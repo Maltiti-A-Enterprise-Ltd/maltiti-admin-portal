@@ -23,6 +23,7 @@ export interface SaleMenuActions {
   updateDeliveryCost: (sale: Sale) => void;
   cancel: (sale: Sale) => void;
   updateStatus: (sale: Sale, status: OrderStatus) => void;
+  setArrivalDate: (sale: Sale) => void;
 }
 
 export function buildSaleActionMenu(
@@ -67,6 +68,19 @@ export function buildSaleActionMenu(
       label: 'Generate Receipt',
       icon: 'pi pi-receipt',
       command: (): void => actions.generateReceipt(sale),
+    });
+  }
+
+  /* Only while it is actually on its way. A date on something still being
+     packed says nothing, and one on a delivered order is history rather
+     than something to edit. Revising is the common case — far more often
+     than the date is first set — so it gets its own entry rather than
+     hiding behind the dispatch step. */
+  if (sale.orderStatus === OrderStatus.IN_TRANSIT) {
+    items.push({
+      label: sale.estimatedArrivalDate ? 'Update arrival date' : 'Set arrival date',
+      icon: 'pi pi-calendar',
+      command: (): void => actions.setArrivalDate(sale),
     });
   }
 
