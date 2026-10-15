@@ -21,6 +21,14 @@ import { SaleAttention } from './sale-attention.model';
 export enum PaymentStatus {
   INVOICE_REQUESTED = 'invoice_requested',
   PENDING_PAYMENT = 'pending_payment',
+  /**
+   * Some money is in, but not all of it.
+   *
+   * Derived server-side from the confirmed payments against the total and
+   * never set by hand, which is why it is absent from the form's status
+   * list and present only in the filter.
+   */
+  PART_PAYMENT = 'part_payment',
   PAID = 'paid',
   REFUNDED = 'refunded',
   AWAITING_DELIVERY = 'awaiting_delivery',
@@ -86,6 +94,7 @@ export const PAYMENT_STATUS_CONFIG: Record<
 > = {
   [PaymentStatus.INVOICE_REQUESTED]: { label: 'Invoice Requested', colour: 'gray' },
   [PaymentStatus.PENDING_PAYMENT]: { label: 'Pending Payment', colour: 'yellow' },
+  [PaymentStatus.PART_PAYMENT]: { label: 'Part Payment', colour: 'blue' },
   [PaymentStatus.AWAITING_DELIVERY]: { label: 'Awaiting Delivery', colour: 'blue' },
   [PaymentStatus.PAID]: { label: 'Paid', colour: 'green' },
   [PaymentStatus.REFUNDED]: { label: 'Refunded', colour: 'purple' },
