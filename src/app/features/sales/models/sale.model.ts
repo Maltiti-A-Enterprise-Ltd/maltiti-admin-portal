@@ -8,10 +8,7 @@ export {
   type SendInvoiceEmailDto,
   type GenerateInvoiceDto,
 } from './sale-currency.model';
-import {
-  InvoiceCurrency,
-  InvoiceCurrencyOptions,
-} from './sale-currency.model';
+import { InvoiceCurrency } from './sale-currency.model';
 
 import { Customer } from '@models/customer.model';
 import { Product, QuantityUnit } from '../../products/models/product.model';

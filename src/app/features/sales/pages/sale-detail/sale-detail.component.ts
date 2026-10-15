@@ -13,7 +13,7 @@ import {
   signal,
 } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { CurrencyPipe, DatePipe, DecimalPipe } from '@angular/common';
+import { DatePipe } from '@angular/common';
 
 // PrimeNG
 import { CardModule } from 'primeng/card';
@@ -41,8 +41,6 @@ import { formatSaleAmount } from '@shared/utils/sale-money';
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     DatePipe,
-    CurrencyPipe,
-    DecimalPipe,
     CardModule,
     TagModule,
     ButtonModule,
