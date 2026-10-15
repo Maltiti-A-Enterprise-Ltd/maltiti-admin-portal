@@ -104,4 +104,68 @@ describe('LineItemEditorComponent', () => {
 
     expect(errors.at(-1)).toBeFalse();
   });
+
+  /**
+   * `LinePrice` is covered on its own; what these add is that the figure
+   * actually reaches the page. A rate computed correctly and never rendered
+   * looks exactly like a working feature in a unit test.
+   */
+  describe('the price per kg on the page', () => {
+    const rateText = (): string | null =>
+      fixture.nativeElement.querySelector('.unit-rate')?.textContent?.trim() ?? null;
+
+    const useSizedProduct = (): void => {
+      fixture.componentRef.setInput('products', [
+        { ...product, weight: '25', unitOfMeasurement: 'kilogram' } as LightProduct,
+      ]);
+      component.lineItemForm.controls.productId.setValue(product.id);
+      fixture.detectChanges();
+    };
+
+    it('shows the rate once a price is entered', () => {
+      useSizedProduct();
+
+      component.lineItemForm.controls.customPrice.setValue(60);
+      fixture.detectChanges();
+
+      expect(rateText()).toBe('GH₵ 2.40 / kg');
+    });
+
+    it('follows the price as it is edited', () => {
+      useSizedProduct();
+
+      component.lineItemForm.controls.customPrice.setValue(60);
+      fixture.detectChanges();
+      component.lineItemForm.controls.customPrice.setValue(100);
+      fixture.detectChanges();
+
+      expect(rateText()).toBe('GH₵ 4.00 / kg');
+    });
+
+    /* The default product carries no weight, so there is no rate to show and
+       no empty element left sitting under the price field. */
+    it('renders nothing at all for a product with no size', () => {
+      component.lineItemForm.controls.customPrice.setValue(60);
+      fixture.detectChanges();
+
+      expect(rateText()).toBeNull();
+    });
+  });
+
+  /* Built in the component now rather than assembled from five template
+     reads of the same control. */
+  describe('the batch allocation summary', () => {
+    it('reads the requested quantity that is currently on the form', () => {
+      component.lineItemForm.controls.requestedQuantity.setValue(5);
+
+      expect(component.allocationSummaryText()).toBe('Allocated: 0 / 5 (5 remaining)');
+    });
+
+    it('follows the quantity when it is edited', () => {
+      component.lineItemForm.controls.requestedQuantity.setValue(5);
+      component.lineItemForm.controls.requestedQuantity.setValue(2);
+
+      expect(component.allocationSummaryText()).toBe('Allocated: 0 / 2 (2 remaining)');
+    });
+  });
 });

@@ -1,6 +1,6 @@
 import { signal } from '@angular/core';
 import { FormControl } from '@angular/forms';
-import { LightProduct } from '@features/products/models/product.model';
+import { LightProduct, UnitOfMeasurement } from '@features/products/models/product.model';
 import { InvoiceCurrency, PriceType } from '../models/sale.model';
 import { LinePrice } from './line-price';
 
@@ -128,6 +128,108 @@ describe('LinePrice', () => {
 
     expect(line.symbol()).toBe('GH₵');
     expect(line.isForeign()).toBe(false);
+  });
+
+  describe('the rate per kilogram or litre', () => {
+    const sized = (
+      weight: string,
+      unitOfMeasurement: UnitOfMeasurement,
+      over: { price?: number; currency?: InvoiceCurrency; type?: PriceType } = {},
+    ): LinePrice =>
+      build(over.currency, {
+        price: over.price,
+        type: over.type,
+        product: product({ weight, unitOfMeasurement }),
+      }).line;
+
+    it('divides the typed price by the size of one unit', () => {
+      const line = sized('25', UnitOfMeasurement.KILOGRAM, { price: 60 });
+
+      expect(line.perBulkUnit()).toBe('GH₵ 2.40 / kg');
+    });
+
+    /* Nobody prices a tub in grams, but comparing a 500 g tub against a 25 kg
+       sack is the whole point — so grams roll up to the kilogram. */
+    it('rolls grams up to a price per kilogram', () => {
+      const line = sized('500', UnitOfMeasurement.GRAM, { price: 4.5 });
+
+      expect(line.perBulkUnit()).toBe('GH₵ 9.00 / kg');
+    });
+
+    it('prices a volume per litre, not per kilogram', () => {
+      const line = sized('5', UnitOfMeasurement.LITRE, { price: 75 });
+
+      expect(line.perBulkUnit()).toBe('GH₵ 15.00 / L');
+    });
+
+    it('rolls millilitres up to a price per litre', () => {
+      const line = sized('250', UnitOfMeasurement.MILLILITRE, { price: 6 });
+
+      expect(line.perBulkUnit()).toBe('GH₵ 24.00 / L');
+    });
+
+    /* Falling back to the shelf price is what the line itself charges, so the
+       rate has to follow it — otherwise it reads as 0 until someone types. */
+    it('uses the catalogue price when none was typed', () => {
+      const line = sized('25', UnitOfMeasurement.KILOGRAM);
+
+      expect(line.perBulkUnit()).toBe('GH₵ 1.60 / kg');
+    });
+
+    it('follows the retail price when that is the chosen type', () => {
+      const line = sized('25', UnitOfMeasurement.KILOGRAM, { type: 'retail' });
+
+      expect(line.perBulkUnit()).toBe('GH₵ 2.40 / kg');
+    });
+
+    it('labels the rate in the currency the sale was agreed in', () => {
+      const line = sized('25', UnitOfMeasurement.KILOGRAM, {
+        price: 250,
+        currency: InvoiceCurrency.CAD,
+      });
+
+      expect(line.perBulkUnit()).toBe('CAD 10.00 / kg');
+    });
+
+    /* A bar of soap sold by the piece has no weight recorded, and inventing a
+       rate for it would be worse than showing none. */
+    it('shows nothing for a product that records no size', () => {
+      expect(build(undefined, { price: 60 }).line.perBulkUnit()).toBeNull();
+    });
+
+    it('shows nothing with no product chosen', () => {
+      expect(build(undefined, { product: null, price: 60 }).line.perBulkUnit()).toBeNull();
+    });
+
+    /* A foreign line starts empty — see above — so there is no price to
+       divide until one is agreed and typed. */
+    it('shows nothing before a price exists on a foreign line', () => {
+      const line = sized('25', UnitOfMeasurement.KILOGRAM, { currency: InvoiceCurrency.CAD });
+
+      expect(line.perBulkUnit()).toBeNull();
+    });
+
+    it('is not fooled by a weight of zero', () => {
+      const line = sized('0', UnitOfMeasurement.KILOGRAM, { price: 60 });
+
+      expect(line.perBulkUnit()).toBeNull();
+    });
+
+    /* "0.00 / kg" is true to the arithmetic and useless on the screen. */
+    it('keeps more decimals when the rate is under a pesewa', () => {
+      const line = sized('1000', UnitOfMeasurement.KILOGRAM, { price: 5 });
+
+      expect(line.perBulkUnit()).toBe('GH₵ 0.005 / kg');
+    });
+
+    /* Pounds convert rather than getting a "/ lb" of their own, matching how
+       the total-weight field already treats them. One rate per product means
+       two products can be compared; two rates means they cannot. */
+    it('converts a weight given in pounds to a price per kilogram', () => {
+      const line = sized('5', UnitOfMeasurement.POUND, { price: 50 });
+
+      expect(line.perBulkUnit()).toBe('GH₵ 22.05 / kg');
+    });
   });
 
   /* An existing sale loaded before its currency arrives, and every sale that

@@ -3,6 +3,7 @@ import { FormControl } from '@angular/forms';
 import { LightProduct } from '@features/products/models/product.model';
 import { InvoiceCurrency, PriceType } from '../models/sale.model';
 import { currencySymbol } from '@shared/utils/sale-money';
+import { unitSizeInBulk } from './weight-quantity-link';
 
 /**
  * What a line item costs, and where that figure comes from.
@@ -69,8 +70,43 @@ export class LinePrice {
     }
   }
 
+  /** The price in force on this line: the typed one, else the shelf price. */
+  public effective(): number {
+    return this.customPrice.value || this.catalogue();
+  }
+
   /** Quantity times the price actually in force on this line. */
   public total(): number {
-    return (this.quantity.value || 0) * (this.customPrice.value || this.catalogue());
+    return (this.quantity.value || 0) * this.effective();
+  }
+
+  /**
+   * What this line comes to per kilogram or per litre, e.g. `"GH₵ 2.40 / kg"`.
+   *
+   * A 25 kg sack at 60 and a 500 g tub at 4.50 are not comparable figures
+   * until somebody divides, and that division is exactly what a buyer quotes
+   * back at you. Doing it in your head during a call is how a sack goes out
+   * underpriced.
+   *
+   * Null where the figure would mean nothing: no price entered yet, or a
+   * product that records no size — a bar of soap sold by the piece has no
+   * price per kilogram, and inventing one would be worse than showing none.
+   */
+  public perBulkUnit(): string | null {
+    const { size, label } = unitSizeInBulk(this.product());
+    const price = this.effective();
+
+    if (!size || !price) {
+      return null;
+    }
+
+    const rate = price / size;
+
+    return `${this.symbol()} ${rate.toLocaleString('en-GH', {
+      minimumFractionDigits: 2,
+      /* A rate under a pesewa would otherwise print as "0.00 / kg" — true to
+         the arithmetic and useless on the screen. */
+      maximumFractionDigits: rate < 0.01 ? 4 : 2,
+    })} / ${label}`;
   }
 }

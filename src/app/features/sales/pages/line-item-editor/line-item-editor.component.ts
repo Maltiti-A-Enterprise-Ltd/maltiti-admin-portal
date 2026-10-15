@@ -36,6 +36,7 @@ import { productName } from '@shared/utils/product-name';
 
 import { LinePrice } from '../../utils/line-price';
 import { batchInfo, controlAt } from '../../utils/batch-allocation-lookup';
+import { allocationSummary } from '../../utils/allocation-summary';
 @Component({
   selector: 'app-line-item-editor',
   standalone: true,
@@ -334,6 +335,14 @@ export class LineItemEditorComponent implements OnInit {
 
   public getTotalPrice(): number {
     return this.price.total();
+  }
+
+  /** "Allocated: 3 / 5 (2 remaining)" — see `allocationSummary`. */
+  public allocationSummaryText(): string {
+    return allocationSummary(
+      this.totalAllocatedQuantity(),
+      this.lineItemForm.controls.requestedQuantity.value || 0,
+    );
   }
 
   /**
