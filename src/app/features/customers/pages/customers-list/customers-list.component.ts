@@ -88,6 +88,9 @@ export class CustomersListComponent implements OnInit {
   public readonly totalItems = this.store.selectSignal(selectTotalItems);
   public readonly currentPage = this.store.selectSignal(selectCurrentPage);
   public readonly limit = this.store.selectSignal(selectLimit);
+  /** Keeps the paginator on the page actually being shown after a filter
+      sends us back to the first one. */
+  public readonly firstRow = computed(() => (this.currentPage() - 1) * this.limit());
 
   // Dialog ref
   public readonly formDialog = viewChild.required(CustomerFormDialogComponent);
@@ -301,17 +304,28 @@ export class CustomersListComponent implements OnInit {
     this.selectedCustomer.set(null);
   }
 
+  /**
+   * Reset every filter and reload once.
+   *
+   * Each `reset()` fires its own `valueChanges`, and every one of those
+   * triggers a load — so clearing used to dispatch eight overlapping
+   * requests whose responses could arrive out of order, leaving the table
+   * showing a stale filtered result. Silenced here and reloaded explicitly.
+   */
   public clearFilters(): void {
-    this.searchControl.reset('');
-    this.countryControl.reset(null);
-    this.regionControl.reset('');
-    this.cityControl.reset('');
-    this.startDateControl.reset(null);
-    this.endDateControl.reset(null);
-    this.sortByControl.reset(CustomerSortBy.CREATED_AT);
-    this.sortOrderControl.reset(SortOrder.DESC);
+    const quietly = { emitEvent: false };
+
+    this.searchControl.reset('', quietly);
+    this.countryControl.reset(null, quietly);
+    this.regionControl.reset('', quietly);
+    this.cityControl.reset('', quietly);
+    this.startDateControl.reset(null, quietly);
+    this.endDateControl.reset(null, quietly);
+    this.sortByControl.reset(CustomerSortBy.CREATED_AT, quietly);
+    this.sortOrderControl.reset(SortOrder.DESC, quietly);
     this.regionOptions.set([]);
     this.cityOptions.set([]);
+    this.loadCustomers(1);
   }
 
   public toggleAdvancedFilters(): void {

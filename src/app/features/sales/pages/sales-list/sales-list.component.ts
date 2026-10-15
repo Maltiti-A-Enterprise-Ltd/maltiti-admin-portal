@@ -7,6 +7,7 @@
 import {
   ChangeDetectionStrategy,
   Component,
+  computed,
   DestroyRef,
   inject,
   OnInit,
@@ -16,13 +17,14 @@ import {
 import { CommonModule, DecimalPipe } from '@angular/common';
 import { Router } from '@angular/router';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { debounceTime } from 'rxjs/operators';
+import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 
 // PrimeNG Imports
 import { TableModule, TablePageEvent } from 'primeng/table';
 import { ButtonModule } from 'primeng/button';
 import { TagModule } from 'primeng/tag';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
+import { DialogModule } from 'primeng/dialog';
 import { CheckboxModule } from 'primeng/checkbox';
 import { ConfirmationService, MenuItem, MessageService, PrimeTemplate } from 'primeng/api';
 import { TooltipModule } from 'primeng/tooltip';
@@ -74,6 +76,7 @@ import { isWeightPartial, orderWeightLabel, weightCaveat } from '../../utils/ord
 import { SalesMetricsPanelComponent } from '../sales-metrics-panel/sales-metrics-panel.component';
 
 import { formatSaleAmount } from '@shared/utils/sale-money';
+import { buildSaleActionMenu } from '../../utils/sale-action-menu';
 @Component({
   selector: 'app-sales-list',
   standalone: true,
@@ -87,6 +90,7 @@ import { formatSaleAmount } from '@shared/utils/sale-money';
     ButtonModule,
     TagModule,
     ConfirmDialogModule,
+    DialogModule,
     CheckboxModule,
     PrimeTemplate,
     TooltipModule,
@@ -145,8 +149,11 @@ export class SalesListComponent implements OnInit {
   public paymentStatusFilterControl = new FormControl<PaymentStatus | null>(null);
   public customerNameFilterControl = new FormControl<string>('');
 
-  public selectedStatus: OrderStatus | null = null;
-  public selectedPaymentStatus: PaymentStatus | null = null;
+  /** The page being requested. Every filter change resets it to the first. */
+  private requestedPage = 1;
+  /** Where the paginator widget should sit, so it follows a filter reset
+      instead of still highlighting the page we have just left. */
+  public readonly firstRow = computed(() => (this.page() - 1) * this.limit());
 
   public ngOnInit(): void {
     this.loadSales();
@@ -154,37 +161,38 @@ export class SalesListComponent implements OnInit {
     // Subscribe to status filter changes
     this.statusFilterControl.valueChanges
       .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe((status) => this.onOrderStatusFilterChange(status));
+      .subscribe(() => this.onFilterChange());
     this.paymentStatusFilterControl.valueChanges
       .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe((status) => this.onPaymentStatusFilterChange(status));
-    // Typed rather than picked, so it waits for a pause before reloading.
+      .subscribe(() => this.onFilterChange());
+    /* Typed rather than picked, so it waits for a pause — and ignores a
+       re-emit of the same text, which a trailing debounce otherwise turns
+       into a second identical request. */
     this.customerNameFilterControl.valueChanges
-      .pipe(takeUntilDestroyed(this.destroyRef), debounceTime(300))
-      .subscribe((name) => this.onCustomerNameFilterChange(name));
+      .pipe(
+        takeUntilDestroyed(this.destroyRef),
+        debounceTime(300),
+        distinctUntilChanged(),
+      )
+      .subscribe(() => this.onFilterChange());
   }
 
-  public onOrderStatusFilterChange(status: OrderStatus | null): void {
-    this.selectedStatus = status;
-    this.loadSales({ orderStatus: status ?? undefined, page: 1 });
-  }
-
-  public onPaymentStatusFilterChange(status: PaymentStatus | null): void {
-    this.selectedPaymentStatus = status;
-    this.loadSales({ paymentStatus: status ?? undefined, page: 1 });
-  }
-
-  public onCustomerNameFilterChange(name: string | null): void {
-    this.loadSales({ customerName: name ?? undefined, page: 1 });
+  /**
+   * Any filter changing re-runs the whole query from the first page.
+   *
+   * Every handler used to build a query out of its own value alone, so
+   * setting a second filter silently dropped the first — which is why a
+   * filter often looked broken until it was cleared and set again. The
+   * controls are the only state now, and `loadSales` reads all of them.
+   */
+  public onFilterChange(): void {
+    this.requestedPage = 1;
+    this.loadSales();
   }
 
   public onPageChange(event: TablePageEvent): void {
-    const page = event.first / event.rows + 1;
-    this.loadSales({
-      orderStatus: this.selectedStatus ?? undefined,
-      paymentStatus: this.selectedPaymentStatus ?? undefined,
-      page,
-    });
+    this.requestedPage = event.first / event.rows + 1;
+    this.loadSales();
   }
 
   public onCreateSale(): void {
@@ -268,108 +276,38 @@ export class SalesListComponent implements OnInit {
   }
 
   public getActionMenuItems(sale: Sale): void {
-    const isAdmin = this.userRole() === Role.Admin || this.userRole() === Role.SuperAdmin;
-    const canCancel = isAdmin && sale.orderStatus !== OrderStatus.CANCELLED;
-
-    // Add status change options
-    const nextStatuses = getNextStatuses(sale.orderStatus);
-    const statusItems: MenuItem[] =
-      nextStatuses.length > 0
-        ? [
-            { separator: true },
-            {
-              label: 'Change Status',
-              icon: 'pi pi-refresh',
-              items: nextStatuses.map((status) => ({
-                label: getStatusLabel(status),
-                command: (): void => this.onUpdateStatus(sale, status),
-              })),
-            },
-          ]
-        : [];
-
-    const actionItems: MenuItem[] = [
-      {
-        label: 'View / Edit Sale',
-        icon: 'pi pi-pencil',
-        command: (): void => this.onEditSale(sale),
-      },
-      {
-        label: sale.flaggedAt ? 'Remove flag' : 'Flag for attention',
-        icon: sale.flaggedAt ? 'pi pi-flag-fill' : 'pi pi-flag',
-        command: (): void => this.onToggleFlag(sale),
-      },
-      {
-        label: 'View Payments',
-        icon: 'pi pi-credit-card',
-        command: (): void => this.onViewPayments(sale),
-      },
-      {
-        label: 'Generate Invoice',
-        icon: 'pi pi-file-pdf',
-        command: (): void => this.onGenerateInvoice(sale),
-      },
-      {
-        label: 'Generate Waybill',
-        icon: 'pi pi-truck',
-        command: (): void => this.onGenerateWaybill(sale),
-      },
-      ...(sale.paymentStatus === PaymentStatus.PAID
-        ? [
-            {
-              label: 'Generate Receipt',
-              icon: 'pi pi-receipt',
-              command: (): void => this.onGenerateReceipt(sale),
-            },
-          ]
-        : []),
-      ...(sale.paymentStatus === PaymentStatus.AWAITING_DELIVERY
-        ? [
-            {
-              label: 'Update Delivery Cost',
-              icon: 'pi pi-dollar',
-              command: (): void => this.onUpdateDeliveryCost(sale),
-            },
-          ]
-        : []),
-      ...(canCancel
-        ? [
-            {
-              separator: true,
-            },
-            {
-              label: 'Cancel Order',
-              icon: 'pi pi-times',
-              command: (): void => this.onCancelSale(sale),
-            },
-          ]
-        : []),
-    ];
-
-    const menuItems: MenuItem[] = [
-      {
-        label: 'Actions',
-        items: actionItems,
-      },
-      ...statusItems,
-    ];
-    this.menuItems.set(menuItems);
+    this.menuItems.set(
+      buildSaleActionMenu(sale, this.userRole(), {
+        edit: (s) => this.onEditSale(s),
+        toggleFlag: (s) => this.onToggleFlag(s),
+        viewPayments: (s) => this.onViewPayments(s),
+        generateInvoice: (s) => this.onGenerateInvoice(s),
+        generateWaybill: (s) => this.onGenerateWaybill(s),
+        generateReceipt: (s) => this.onGenerateReceipt(s),
+        updateDeliveryCost: (s) => this.onUpdateDeliveryCost(s),
+        cancel: (s) => this.onCancelSale(s),
+        updateStatus: (s, status) => this.onUpdateStatus(s, status),
+      }),
+    );
   }
 
-  private loadSales(params?: {
-    orderStatus?: OrderStatus;
-    paymentStatus?: PaymentStatus;
-    customerName?: string;
-    page?: number;
-  }): void {
+  /**
+   * Builds the query from every filter currently set, never from one of them.
+   *
+   * A blank is sent as `undefined` rather than an empty value, so clearing a
+   * filter actually drops it from the request instead of asking the API for
+   * sales whose customer is named "".
+   */
+  private loadSales(): void {
     this.store.dispatch(
       loadSales({
-        orderStatus: params?.orderStatus ?? this.selectedStatus ?? undefined,
-        paymentStatus: params?.paymentStatus ?? this.selectedPaymentStatus ?? undefined,
-        customerName: params?.customerName ?? undefined,
+        orderStatus: this.statusFilterControl.value ?? undefined,
+        paymentStatus: this.paymentStatusFilterControl.value ?? undefined,
+        customerName: this.customerNameFilterControl.value?.trim() || undefined,
         needsAttention: this.attention.isActive('needsAttention') || undefined,
         flagged: this.attention.isActive('flagged') || undefined,
-        page: params?.page ?? 1,
+        attention: this.attention.activeBucket() ?? undefined,
+        page: this.requestedPage,
         limit: 10,
       }),
     );
@@ -385,7 +323,7 @@ export class SalesListComponent implements OnInit {
 
   public onChipToggle(key: AttentionChipKey): void {
     this.attention.toggleChip(key);
-    this.loadSales({ page: 1 });
+    this.onFilterChange();
   }
 
   public onToggleFlag = (sale: Sale): void =>

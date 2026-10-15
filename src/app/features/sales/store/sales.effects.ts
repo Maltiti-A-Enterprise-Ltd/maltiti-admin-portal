@@ -28,9 +28,11 @@ export class SalesEffects {
           customerName,
           needsAttention,
           flagged,
+          attention,
         }) =>
         this.salesApi
           .getSales(orderStatus, paymentStatus, customerId, customerName, page, limit, {
+            bucket: attention,
             needsAttention,
             flagged,
           })

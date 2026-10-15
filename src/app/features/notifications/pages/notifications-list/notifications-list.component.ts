@@ -186,10 +186,6 @@ export class NotificationsListComponent implements OnInit, AfterViewInit {
     this.notificationService.markAllAsRead();
   }
 
-  public onFilterChange(filter: FilterOption): void {
-    this.selectedFilter.set(filter.value);
-  }
-
   public onSearchChange(event: Event): void {
     const target = event.target as HTMLInputElement;
     this.searchQuery.set(target.value);

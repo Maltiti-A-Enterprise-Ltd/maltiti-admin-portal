@@ -4,6 +4,11 @@ import { MessageService } from 'primeng/api';
 import { SalesApiService } from './sales-api.service';
 import { Sale, SaleAttentionSummary } from '../models/sale.model';
 import {
+  SALE_ATTENTION_LABELS,
+  SALE_ATTENTION_RULES,
+  SaleAttention,
+} from '../models/sale-attention.model';
+import {
   AttentionChipKey,
   buildAttentionChips,
   EMPTY_ATTENTION_SUMMARY,
@@ -33,8 +38,46 @@ export class SalesAttentionStore {
 
   public readonly chips = computed(() => buildAttentionChips(this.summary()));
 
+  /** Whether the "how this is decided" panel is open. */
+  public readonly explaining = signal(false);
+
+  /**
+   * Each bucket with the rule behind it, numbers filled in from the API.
+   *
+   * Empty until the summary has loaded: showing the rules with invented
+   * thresholds would be worse than showing nothing, since the whole point
+   * is to tell an admin what the system actually does.
+   */
+  public readonly rules = computed(() => {
+    const thresholds = this.summary().thresholds;
+
+    if (!thresholds) {
+      return [];
+    }
+
+    return SALE_ATTENTION_RULES.map(({ bucket, rule }) => ({
+      label: SALE_ATTENTION_LABELS[bucket],
+      rule: rule(thresholds),
+      count: this.summary().buckets[bucket] ?? 0,
+    }));
+  });
+
   public isActive(key: AttentionChipKey): boolean {
     return this.activeChips().includes(key);
+  }
+
+  /**
+   * The bucket chip that is on, if any.
+   *
+   * Separate from the two booleans because the API treats it differently:
+   * `needsAttention` and `flagged` narrow the whole set, while this picks one
+   * bucket out of it. It was never sent at all, so the "Paid, not delivered"
+   * chip used to light up and change nothing.
+   */
+  public activeBucket(): SaleAttention | null {
+    return this.isActive(SaleAttention.PAID_NOT_DELIVERED)
+      ? SaleAttention.PAID_NOT_DELIVERED
+      : null;
   }
 
   public toggleChip(key: AttentionChipKey): void {

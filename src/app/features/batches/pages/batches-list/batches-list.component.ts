@@ -43,6 +43,7 @@ import { getQualityStatusSeverity } from '@shared/utils/quality-status.util';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ProductNamePipe } from '@shared/pipes/product-name.pipe';
 
+import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 @Component({
   selector: 'app-batches-list',
   standalone: true,
@@ -146,10 +147,19 @@ export class BatchesListComponent implements OnInit {
     return new Date(dateString).toLocaleDateString('en-GB');
   }
 
+  /**
+   * Clear every filter and reload once.
+   *
+   * Each `setValue` fires its own `valueChanges`, and each of those reloads
+   * — so clearing used to send four requests for one click. Silenced here
+   * and reloaded explicitly.
+   */
   public onClearFilters(): void {
-    this.productFilterControl.setValue(null);
-    this.batchNumberFilterControl.setValue('');
-    this.qualityStatusFilterControl.setValue(null);
+    const quietly = { emitEvent: false };
+
+    this.productFilterControl.setValue(null, quietly);
+    this.batchNumberFilterControl.setValue('', quietly);
+    this.qualityStatusFilterControl.setValue(null, quietly);
     this.currentFilters.set({});
     this.loadBatches();
   }
@@ -161,8 +171,14 @@ export class BatchesListComponent implements OnInit {
         this.updateFilters('productId', value);
       });
 
+    /* Typed rather than picked, so it waits for a pause instead of sending
+       a request per keystroke, and ignores a re-emit of the same text. */
     this.batchNumberFilterControl.valueChanges
-      .pipe(takeUntilDestroyed(this.destroyRef))
+      .pipe(
+        takeUntilDestroyed(this.destroyRef),
+        debounceTime(400),
+        distinctUntilChanged(),
+      )
       .subscribe((value) => {
         this.updateFilters('batchNumber', value);
       });

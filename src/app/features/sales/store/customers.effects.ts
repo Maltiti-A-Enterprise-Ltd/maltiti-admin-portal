@@ -1,6 +1,6 @@
 import { inject, Injectable } from '@angular/core';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
-import { catchError, map, mergeMap, tap } from 'rxjs/operators';
+import { catchError, map, mergeMap, switchMap, tap } from 'rxjs/operators';
 import { of } from 'rxjs';
 import { MessageService } from 'primeng/api';
 import { CustomersApiService } from '../services/customers-api.service';
@@ -27,7 +27,10 @@ export class CustomersEffects {
   public loadCustomers$ = createEffect(() =>
     this.actions$.pipe(
       ofType(loadCustomers),
-      mergeMap(({ query }) =>
+      /* switchMap, not mergeMap: a newer query supersedes an older one, and
+         with concurrent requests the last *response* to land wins rather
+         than the last one asked for — which showed stale filtered results. */
+      switchMap(({ query }) =>
         this.customersApi.getCustomers(query).pipe(
           map(({ data }) => loadCustomersSuccess({ response: data })),
           catchError((error) =>

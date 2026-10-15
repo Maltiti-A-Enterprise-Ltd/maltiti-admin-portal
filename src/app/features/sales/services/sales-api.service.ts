@@ -27,6 +27,7 @@ import {
   UpdateSaleStatusDto,
 } from '../models/sale.model';
 import { IPaginationResponse } from '@models/response.model';
+import { SaleAttention } from '../models/sale-attention.model';
 import { SalesMetrics } from '../models/sales-metrics.model';
 
 @Injectable({
@@ -58,7 +59,12 @@ export class SalesApiService {
     /* Grouped rather than two more positional booleans: the signature is
        already long enough that a bare `true, false` at the end would be
        unreadable at the call site. */
-    attention?: { needsAttention?: boolean; flagged?: boolean },
+    attention?: {
+      needsAttention?: boolean;
+      flagged?: boolean;
+      /** One bucket, e.g. paid-but-not-delivered. */
+      bucket?: SaleAttention;
+    },
   ): Observable<IPaginationResponse<Sale>> {
     let params = new HttpParams().set('page', page.toString()).set('limit', limit.toString());
 
@@ -79,6 +85,11 @@ export class SalesApiService {
     }
     if (attention?.flagged) {
       params = params.set('flagged', 'true');
+    }
+    /* Was never forwarded, so the "Paid, not delivered" chip toggled its own
+       appearance and changed nothing about the list. */
+    if (attention?.bucket) {
+      params = params.set('attention', attention.bucket);
     }
 
     return this.http.get<IPaginationResponse<Sale>>(this.baseUrl, { params });

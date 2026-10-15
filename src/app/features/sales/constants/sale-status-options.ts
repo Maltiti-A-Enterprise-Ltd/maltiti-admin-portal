@@ -8,8 +8,13 @@ export const ORDER_STATUS_OPTIONS = [
   { label: 'Cancelled', value: OrderStatus.CANCELLED },
 ];
 
+/* In the order a sale moves through them, which is also the order the API
+   declares. "Awaiting delivery" was missing here and bolted onto the filter
+   list below instead — so it could be filtered for but never actually set,
+   which is the drift the note under this list warns about. */
 export const PAYMENT_STATUS_OPTIONS = [
   { label: 'Invoice Requested', value: PaymentStatus.INVOICE_REQUESTED },
+  { label: 'Awaiting Delivery', value: PaymentStatus.AWAITING_DELIVERY },
   { label: 'Pending Payment', value: PaymentStatus.PENDING_PAYMENT },
   { label: 'Paid', value: PaymentStatus.PAID },
   { label: 'Refunded', value: PaymentStatus.REFUNDED },
@@ -28,5 +33,4 @@ export const ORDER_STATUS_FILTER_OPTIONS = [
 export const PAYMENT_STATUS_FILTER_OPTIONS = [
   { label: 'All Payment Statuses', value: null },
   ...PAYMENT_STATUS_OPTIONS,
-  { label: 'Awaiting Delivery', value: PaymentStatus.AWAITING_DELIVERY },
 ];
