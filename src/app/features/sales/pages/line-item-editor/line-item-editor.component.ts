@@ -17,7 +17,13 @@ import { InputNumberModule } from 'primeng/inputnumber';
 import { CardModule } from 'primeng/card';
 import { MessageService } from 'primeng/api';
 import { RadioButtonModule } from 'primeng/radiobutton';
-import { InvoiceCurrency, PriceType, SaleLineItemDto } from '../../models/sale.model';
+import {
+  InvoiceCurrency,
+  PremiumType,
+  PriceType,
+  SaleLineItemDto,
+} from '../../models/sale.model';
+import { LinePremium } from '../../utils/line-premium';
 import { ButtonComponent } from '@shared/components/button/button.component';
 import { NumberInputComponent } from '@shared/components/number-input/number-input.component';
 import { SelectComponent } from '@shared/components/select/select.component';
@@ -37,6 +43,11 @@ import { productName } from '@shared/utils/product-name';
 import { LinePrice } from '../../utils/line-price';
 import { batchInfo, controlAt } from '../../utils/batch-allocation-lookup';
 import { allocationSummary } from '../../utils/allocation-summary';
+import {
+  allocationQuantityControlsFor,
+  batchControlsFor,
+  lineItemFormSeed,
+} from '../../utils/line-item-seed';
 @Component({
   selector: 'app-line-item-editor',
   standalone: true,
@@ -78,6 +89,10 @@ export class LineItemEditorComponent implements OnInit {
     customPrice: [undefined as number | undefined, Validators.min(0)],
     finalPrice: [undefined as number | undefined, Validators.min(0)],
     priceType: ['wholesale' as PriceType],
+    /* Optional, and sent together or not at all — the API rejects a type
+       with no value and a value with no type. */
+    premiumType: [null as PremiumType | null],
+    premiumValue: [null as number | null],
   });
 
   public readonly productId = toSignal(this.lineItemForm.controls.productId.valueChanges, {
@@ -98,6 +113,14 @@ export class LineItemEditorComponent implements OnInit {
     this.lineItemForm.controls.priceType,
     this.selectedProduct,
     this.currency,
+  );
+
+  /** The optional premium on this line. */
+  public readonly premium = new LinePremium(
+    this.lineItemForm.controls.premiumType,
+    this.lineItemForm.controls.premiumValue,
+    this.lineItemForm.controls.requestedQuantity,
+    () => this.price.effective(),
   );
 
   public readonly boxLink = new BoxQuantityLink(
@@ -180,39 +203,11 @@ export class LineItemEditorComponent implements OnInit {
   }
 
   private loadLineItem(item: SaleLineItemDto): void {
-    this.lineItemForm.patchValue({
-      productId: item.productId,
-      requestedQuantity: item.requestedQuantity,
-      customPrice: item.customPrice ? Number(item.customPrice) : undefined,
-      finalPrice: item.finalPrice ? Number(item.finalPrice) : undefined,
-      priceType: 'retail', // Default to retail
-    });
+    this.lineItemForm.patchValue(lineItemFormSeed(item));
 
-    if (item.batchAllocations && item.batchAllocations.length > 0) {
-      this.batchControls.update((batchMap) => {
-        const newMap = new Map(batchMap);
-        newMap.clear();
-        item.batchAllocations.forEach((allocation, index) => {
-          const batchControl = new FormControl(allocation.batchId, {
-            validators: Validators.required,
-          });
-          newMap.set(index, batchControl);
-        });
-        return newMap;
-      });
-
-      this.quantityControls.update((quantityMap) => {
-        const newMap = new Map(quantityMap);
-        newMap.clear();
-        item.batchAllocations.forEach((allocation, index) => {
-          const quantityControl = new FormControl(allocation.quantity, {
-            validators: Validators.required,
-          });
-          newMap.set(index, quantityControl);
-        });
-        return newMap;
-      });
-
+    if (item.batchAllocations?.length) {
+      this.batchControls.set(batchControlsFor(item));
+      this.quantityControls.set(allocationQuantityControlsFor(item));
       this.allocationBehavior.next();
     }
   }
