@@ -235,11 +235,6 @@ export class ProductDialogComponent {
     });
   }
 
-  /** Drops a hand-typed In-Box Price in favour of the calculated one. */
-  public resetInBoxPrice(): void {
-    this.inBoxPriceLink.reset();
-  }
-
   public onHide(): void {
     this.visibleChange.emit(false);
     this.errorMessage.set(null); // Clear error message
@@ -251,7 +246,12 @@ export class ProductDialogComponent {
       this.productForm.markAllAsTouched();
       return;
     }
-    const productData = buildProductPayload(this.productForm.value as ProductFormValue);
+    /* `getRawValue`, not `value`: In-Box Price is disabled while it is being
+       derived, and `value` drops disabled controls — which the payload
+       builder would turn into an explicit null and wipe the stored price. */
+    const productData = buildProductPayload(
+      this.productForm.getRawValue() as ProductFormValue,
+    );
     this.performSave(productData);
   }
 

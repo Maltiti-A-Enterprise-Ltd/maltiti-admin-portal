@@ -38,6 +38,10 @@ export function createProductForm(fb: FormBuilder): ProductFormGroup {
     wholesale: fb.control(0, { validators: [Validators.required, Validators.min(0)] }),
     retail: fb.control(0, { validators: [Validators.required, Validators.min(0)] }),
     inBoxPrice: fb.control(0, { validators: [Validators.min(0)] }),
+    /* Not sent to the API — it describes how the price above was arrived at,
+       not the product. `buildProductPayload` lists its fields explicitly, so
+       this simply never reaches the request. */
+    inBoxPriceOverride: fb.control(false),
     costPrice: fb.control(0, { validators: [Validators.min(0)] }),
 
     // Inventory
