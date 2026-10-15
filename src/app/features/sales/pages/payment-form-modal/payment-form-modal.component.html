@@ -18,7 +18,12 @@
 
     <!-- Amount -->
     <div class="form-field">
-      <label for="amount">Amount ({{ symbol() }}) <span class="required">*</span></label>
+      <label for="amount">
+        Amount ({{ symbol() }})
+        @if (!received.isCrossCurrency()) {
+          <span class="required">*</span>
+        }
+      </label>
       <p-inputNumber
         id="amount"
         locale="en-GH"
@@ -29,6 +34,64 @@
         [minFractionDigits]="2"
         [prefix]="symbol() + ' '"
       />
+      <!-- Paid in something else. Left on the sale's own currency this does
+           nothing; pick another and the amount above is derived from what
+           actually arrived, so the bank statement figure is what gets typed. -->
+      <div class="cross-currency">
+        <label for="receivedCurrency">Paid in</label>
+        <p-select
+          inputId="receivedCurrency"
+          optionLabel="label"
+          optionValue="value"
+          [formControl]="form.controls.receivedCurrency"
+          [options]="received.options"
+          [placeholder]="symbol()"
+          [showClear]="true"
+        />
+
+        @if (received.isCrossCurrency()) {
+          <div class="cross-currency-row">
+            <div>
+              <label for="receivedAmount">Amount received</label>
+              <p-inputNumber
+                inputId="receivedAmount"
+                locale="en-GH"
+                mode="decimal"
+                [formControl]="form.controls.receivedAmount"
+                [maxFractionDigits]="2"
+                [min]="0.01"
+                [minFractionDigits]="2"
+                [prefix]="form.controls.receivedCurrency.value + ' '"
+              />
+            </div>
+            <div>
+              <label for="receivedRate">
+                1 {{ form.controls.receivedCurrency.value }} =
+              </label>
+              <p-inputNumber
+                inputId="receivedRate"
+                [formControl]="form.controls.receivedRate"
+                [maxFractionDigits]="6"
+                [min]="0"
+                [minFractionDigits]="2"
+                [suffix]="' ' + symbol()"
+              />
+            </div>
+          </div>
+
+          @if (received.settled(); as settled) {
+            <small class="form-help">
+              Settles {{ symbol() }} {{ settled | number: '1.2-2' }} against this
+              sale. Amount above is worked out from these — leave it alone.
+            </small>
+          } @else {
+            <small class="form-help">
+              Enter the amount and the rate you were given.
+            </small>
+          }
+        }
+      </div>
+
       @if (form.controls.amount.invalid && form.controls.amount.touched) {
         <small class="field-error">Amount must be greater than 0.</small>
       }

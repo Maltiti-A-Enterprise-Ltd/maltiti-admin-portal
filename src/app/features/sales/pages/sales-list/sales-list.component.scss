@@ -324,3 +324,19 @@
   font-size: 0.82rem;
   line-height: 1.45;
 }
+
+/* The outstanding figure, under the paid-of-total pair. Amber rather than
+   red: at Maltiti an unpaid delivered order is ordinary, not a fault. */
+.payment-balance {
+  display: block;
+  color: var(--p-amber-700, #b45309);
+  font-size: 0.75rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.payment-settled {
+  display: block;
+  color: var(--p-text-muted-color);
+  font-size: 0.75rem;
+}

@@ -166,6 +166,16 @@
               <span class="payment-progress-label">
                 {{ money(sale.totalPaid, sale) }} / {{ money(sale.total, sale) }}
               </span>
+              <!-- What is actually still owed. The paid-of-total pair makes
+                   you do the subtraction, and that is the number anyone
+                   chasing a payment is after. -->
+              @if (sale.balanceRemaining) {
+                <span class="payment-balance">
+                  {{ money(sale.balanceRemaining, sale) }} left
+                </span>
+              } @else {
+                <span class="payment-settled">Settled</span>
+              }
             } @else {
               <span class="payment-progress-na">—</span>
             }
