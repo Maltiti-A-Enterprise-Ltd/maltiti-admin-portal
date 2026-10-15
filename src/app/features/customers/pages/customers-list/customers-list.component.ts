@@ -52,6 +52,7 @@ import {
   selectTotalItems,
 } from '@features/sales/store/customers.selectors';
 import { CustomerFormDialogComponent } from '../customer-form-dialog/customer-form-dialog.component';
+import { CopyButtonComponent } from '@shared/components/copy-button/copy-button.component';
 
 @Component({
   selector: 'app-customers-list',
@@ -74,6 +75,7 @@ import { CustomerFormDialogComponent } from '../customer-form-dialog/customer-fo
     InputComponent,
     SelectComponent,
     CustomerFormDialogComponent,
+    CopyButtonComponent,
   ],
 })
 export class CustomersListComponent implements OnInit {
