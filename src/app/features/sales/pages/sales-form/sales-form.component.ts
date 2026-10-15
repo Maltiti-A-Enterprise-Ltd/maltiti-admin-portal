@@ -226,6 +226,10 @@ export class SalesFormComponent implements OnInit {
           batchAllocations: item.batchAllocations || [],
           customPrice: item.customPrice,
           finalPrice: Number(item.finalPrice),
+          /* Carried through, or opening a sale to change anything at all
+             would strip the premium off every line on the next save. */
+          premiumType: item.premiumType ?? null,
+          premiumValue: item.premiumValue ?? null,
         }),
       ),
     );

@@ -20,6 +20,10 @@ export * from './sale-attention.model';
    currency, payment and attention models were. Re-exported so the many
    existing `from './sale.model'` imports keep working. */
 export * from './sale-invoice-terms.model';
+/* Also split out at the 400-line ceiling. Re-exported, so the many
+   existing `from './sale.model'` imports keep working. */
+export * from './sale-premium.model';
+import { PremiumType } from './sale-premium.model';
 import { PaymentInstructionDto } from './sale-invoice-terms.model';
 import { SaleAttention } from './sale-attention.model';
 
@@ -109,23 +113,6 @@ export interface BatchAllocationDto {
   batchId: string;
   quantity: number;
 }
-
-/**
- * How a line's premium is expressed. Both scale with quantity — a cash
- * premium is charged per unit, a percentage is taken off the line's total.
- *
- * Not to be confused with the `premium` product *grade*, which describes the
- * quality of the goods rather than what is charged for them.
- */
-export enum PremiumType {
-  AMOUNT = 'amount',
-  PERCENT = 'percent',
-}
-
-export const PREMIUM_TYPE_OPTIONS: { label: string; value: PremiumType }[] = [
-  { label: 'Amount per unit', value: PremiumType.AMOUNT },
-  { label: 'Percentage', value: PremiumType.PERCENT },
-];
 
 export interface SaleLineItemDto {
   productId: string;
@@ -282,6 +269,10 @@ export interface SaleLineItem {
   requestedQuantity: number;
   customPrice?: number;
   finalPrice?: number;
+  /** See `PremiumOnALine`. Needed on the way back as well as out. */
+  premiumType?: PremiumType | null;
+  premiumValue?: number | null;
+  premiumAmount?: number;
   totalPrice: number;
   createdAt: string;
   updatedAt: string;
