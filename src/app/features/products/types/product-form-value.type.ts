@@ -19,6 +19,8 @@ export interface ProductFormValue {
   wholesale: number | null;
   retail: number | null;
   inBoxPrice: number | null;
+  /** Whether the in-box price was set by hand rather than derived. */
+  inBoxPriceOverride: boolean | null;
   costPrice: number | null;
   quantityInBox: number | null;
   minOrderQuantity: number | null;
@@ -59,6 +61,7 @@ export type ProductFormGroup = FormGroup<{
   wholesale: FormControl<number | null>;
   retail: FormControl<number | null>;
   inBoxPrice: FormControl<number | null>;
+  inBoxPriceOverride: FormControl<boolean | null>;
   costPrice: FormControl<number | null>;
   quantityInBox: FormControl<number | null>;
   minOrderQuantity: FormControl<number | null>;
