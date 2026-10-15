@@ -255,3 +255,106 @@
   font-size: 0.75rem;
   cursor: help;
 }
+
+/* A quiet question mark beside the chips. The rules behind them are not
+   guessable from the labels, so there has to be somewhere to look. */
+.attention-explain {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  border: 1px solid var(--p-content-border-color);
+  border-radius: 999px;
+  background: var(--p-content-background);
+  color: var(--p-text-muted-color);
+  cursor: pointer;
+
+  &:hover {
+    background: var(--p-content-hover-background);
+    color: var(--p-text-color);
+  }
+}
+
+.attention-rules-intro {
+  margin: 0 0 1rem;
+  color: var(--p-text-muted-color);
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+
+.attention-rules {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  li + li {
+    margin-top: 0.85rem;
+    padding-top: 0.85rem;
+    border-top: 1px solid var(--p-content-border-color);
+  }
+}
+
+.attention-rule-head {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+}
+
+.attention-rule-name {
+  font-weight: 600;
+}
+
+// The live count, so the rule and what it currently matches sit together.
+.attention-rule-count {
+  min-width: 1.4rem;
+  padding: 0 0.35rem;
+  border-radius: 999px;
+  background: var(--p-content-hover-background);
+  color: var(--p-text-muted-color);
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+
+.attention-rule-text {
+  margin: 0.2rem 0 0;
+  color: var(--p-text-muted-color);
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+
+/* The outstanding figure, under the paid-of-total pair. Amber rather than
+   red: at Maltiti an unpaid delivered order is ordinary, not a fault. */
+.payment-balance {
+  display: block;
+  color: var(--p-amber-700, #b45309);
+  font-size: 0.75rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.payment-settled {
+  display: block;
+  color: var(--p-text-muted-color);
+  font-size: 0.75rem;
+}
+
+/* The expected arrival, under the order status. Quiet while it is still in
+   the future; it only earns colour once it has passed, which is the whole
+   point of recording it. */
+.arrival-note {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  margin-top: 0.25rem;
+  font-size: 0.75rem;
+  color: var(--p-text-muted-color);
+  white-space: nowrap;
+
+  &.is-late {
+    color: var(--p-orange-600, #ea580c);
+    font-weight: 600;
+  }
+}

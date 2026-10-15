@@ -1,0 +1,38 @@
+<p-dialog
+  [closable]="true"
+  [header]="header()"
+  [modal]="true"
+  [style]="{ width: '420px' }"
+  [visible]="visible()"
+  (onHide)="close()"
+>
+  <form class="arrival-form" [formGroup]="form">
+    <div class="form-field">
+      <label for="estimatedArrivalDate">Expected arrival</label>
+      <p-datepicker
+        inputId="estimatedArrivalDate"
+        placeholder="Pick a date"
+        [formControl]="form.controls.estimatedArrivalDate"
+        [minDate]="minDate"
+        [showButtonBar]="true"
+        [showIcon]="true"
+        [style]="{ width: '100%' }"
+      />
+      <small class="field-hint">
+        Once this date passes the sale is flagged for attention until it is confirmed delivered or
+        given a new date. Leave it empty to remove the date altogether.
+      </small>
+    </div>
+
+    <!-- What is being replaced. Revising is the common case, and a new date
+         is much easier to judge against the one it supersedes. -->
+    @if (existing(); as current) {
+      <p class="arrival-current" [class.is-late]="current.isLate">Currently: {{ current.text }}</p>
+    }
+  </form>
+
+  <ng-template pTemplate="footer">
+    <p-button label="Cancel" severity="contrast" [outlined]="true" (onClick)="close()" />
+    <p-button icon="pi pi-check" label="Save date" severity="primary" (onClick)="save()" />
+  </ng-template>
+</p-dialog>

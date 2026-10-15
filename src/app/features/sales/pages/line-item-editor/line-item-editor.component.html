@@ -132,6 +132,11 @@
           [placeholder]="price.isForeign() ? 'Enter the agreed price' : 'Override with custom price'"
           [style]="{'width': '100%'}"
         />
+        <!-- What the price works out to per kg or per litre. Sized products
+             get argued over at this rate, not at the price of one sack. -->
+        @if (price.perBulkUnit(); as rate) {
+          <small class="unit-rate">{{ rate }}</small>
+        }
         <!-- The catalogue is in cedis, so on a sale agreed in another
              currency there is nothing safe to fall back to — the negotiated
              price is not the shelf price converted. -->
@@ -223,14 +228,7 @@
 
         @if (totalAllocatedQuantity() > 0) {
           <div class="allocation-summary">
-            <small>
-              Allocated: {{ totalAllocatedQuantity() }} / {{ lineItemForm.get('requestedQuantity')?.value || 0 }}
-              @if (totalAllocatedQuantity() < (lineItemForm.get('requestedQuantity')?.value || 0)) {
-                ({{ (lineItemForm.get('requestedQuantity')?.value || 0) - totalAllocatedQuantity() }} remaining)
-              } @else if (totalAllocatedQuantity() > (lineItemForm.get('requestedQuantity')?.value || 0)) {
-                ({{ totalAllocatedQuantity() - (lineItemForm.get('requestedQuantity')?.value || 0) }} over-allocated)
-              }
-            </small>
+            <small>{{ allocationSummaryText() }}</small>
           </div>
         }
       </div>

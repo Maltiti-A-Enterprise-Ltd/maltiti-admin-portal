@@ -1,6 +1,7 @@
 // filepath: c:\Users\BilalAbubakari\Desktop\PROJECTS\maltiti-admin-portal\src\app\features\products\types\product-form-value.type.ts
 
 import {
+  DimensionUnit,
   ProductCategory,
   ProductGrade,
   ProductStatus,
@@ -34,13 +35,26 @@ export interface ProductFormValue {
   image: string | null;
   supplierReference: string | null;
   certifications: string[] | null;
+  /**
+   * Only meaningful for products sold in a container — see `hasDimensions`.
+   * The group itself always exists; its measurements are what may be empty.
+   */
+  dimensions: {
+    length: number | null;
+    breadth: number | null;
+    height: number | null;
+    unit: DimensionUnit | null;
+  };
 }
 
 export type ProductFormGroup = FormGroup<{
   name: FormControl<string | null>;
   sku: FormControl<string | null>;
   description: FormControl<string | null>;
-  category: FormControl<string | null>;
+  /* Was `string | null`, which disagreed with both the control it describes
+     and `ProductFormValue.category` above. Nothing caught it while the form
+     was built inline and its type inferred. */
+  category: FormControl<ProductCategory | null>;
   status: FormControl<ProductStatus | null>;
   wholesale: FormControl<number | null>;
   retail: FormControl<number | null>;
@@ -61,4 +75,10 @@ export type ProductFormGroup = FormGroup<{
   image: FormControl<string | null>;
   supplierReference: FormControl<string | null>;
   certifications: FormControl<string[] | null>;
+  dimensions: FormGroup<{
+    length: FormControl<number | null>;
+    breadth: FormControl<number | null>;
+    height: FormControl<number | null>;
+    unit: FormControl<DimensionUnit | null>;
+  }>;
 }>;

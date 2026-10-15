@@ -28,22 +28,24 @@ export class SalesEffects {
           customerName,
           needsAttention,
           flagged,
+          attention,
         }) =>
-        this.salesApi
-          .getSales(orderStatus, paymentStatus, customerId, customerName, page, limit, {
-            needsAttention,
-            flagged,
-          })
-          .pipe(
-            map((response) => SalesActions.loadSalesSuccess({ response })),
-            catchError((error) =>
-              of(
-                SalesActions.loadSalesFailure({
-                  error: error.error.message || 'Failed to load sales',
-                }),
+          this.salesApi
+            .getSales(orderStatus, paymentStatus, customerId, customerName, page, limit, {
+              bucket: attention,
+              needsAttention,
+              flagged,
+            })
+            .pipe(
+              map((response) => SalesActions.loadSalesSuccess({ response })),
+              catchError((error) =>
+                of(
+                  SalesActions.loadSalesFailure({
+                    error: error.error.message || 'Failed to load sales',
+                  }),
+                ),
               ),
             ),
-          ),
       ),
     ),
   );
@@ -103,17 +105,26 @@ export class SalesEffects {
   public updateSaleStatus$ = createEffect(() =>
     this.actions$.pipe(
       ofType(SalesActions.updateSaleStatus),
-      mergeMap(({ id, orderStatus, notifyCustomer }) =>
-        this.salesApi.updateSaleStatus(id, { orderStatus, notifyCustomer }).pipe(
-          map((sale) => SalesActions.updateSaleStatusSuccess({ sale })),
-          catchError((error) =>
-            of(
-              SalesActions.updateSaleStatusFailure({
-                error: error.error.message || 'Failed to update sale status',
-              }),
+      mergeMap(({ id, orderStatus, notifyCustomer, estimatedArrivalDate }) =>
+        this.salesApi
+          .updateSaleStatus(id, {
+            orderStatus,
+            notifyCustomer,
+            /* Spread so an omitted date stays omitted. Sending `undefined`
+               explicitly is the same thing over HTTP, but sending `null`
+               would clear a date the caller never mentioned. */
+            ...(estimatedArrivalDate !== undefined ? { estimatedArrivalDate } : {}),
+          })
+          .pipe(
+            map((sale) => SalesActions.updateSaleStatusSuccess({ sale })),
+            catchError((error) =>
+              of(
+                SalesActions.updateSaleStatusFailure({
+                  error: error.error.message || 'Failed to update sale status',
+                }),
+              ),
             ),
           ),
-        ),
       ),
     ),
   );

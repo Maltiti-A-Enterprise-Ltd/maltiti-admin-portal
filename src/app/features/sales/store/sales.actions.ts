@@ -1,3 +1,4 @@
+import { SaleAttention } from '../models/sale-attention.model';
 import { createAction, props } from '@ngrx/store';
 import {
   CreateSaleDto,
@@ -21,6 +22,8 @@ export const loadSales = createAction(
     needsAttention?: boolean;
     /** Only sales an admin flagged by hand. Combines with the above. */
     flagged?: boolean;
+    /** Only sales in one attention bucket, e.g. paid but not delivered. */
+    attention?: SaleAttention;
   }>(),
 );
 
@@ -72,7 +75,15 @@ export const updateSaleFailure = createAction(
 
 export const updateSaleStatus = createAction(
   '[Sales] Update Sale Status',
-  props<{ id: string; orderStatus: OrderStatus; notifyCustomer?: boolean }>(),
+  props<{
+    id: string;
+    /* Optional: revising the arrival date is a status update with no status
+       in it, which saves a second endpoint doing almost the same thing. */
+    orderStatus?: OrderStatus;
+    notifyCustomer?: boolean;
+    /** ISO date, or null to clear it. Omitted leaves it as it is. */
+    estimatedArrivalDate?: string | null;
+  }>(),
 );
 
 export const updateSaleStatusSuccess = createAction(

@@ -49,6 +49,11 @@ import {
 
 import { ProductFormValue } from '../../types/product-form-value.type';
 import { buildProductPayload } from '../../utils/product-payload';
+import { createProductForm } from '../../utils/product-form';
+import {
+  DIMENSION_UNIT_OPTIONS,
+  hasDimensions,
+} from '../../utils/product-dimensions';
 import { InBoxPriceLink } from '../../utils/in-box-price-link';
 import { PRODUCT_FORM_DEFAULTS } from '../../utils/product-form-defaults';
 import { productFormSeed } from '../../utils/product-form-seed';
@@ -121,59 +126,22 @@ export class ProductDialogComponent {
   );
   public readonly productBatches = signal<Batch[]>([]);
 
-  public readonly productForm = this.fb.group({
-    // Basic Info
-    name: this.fb.control('', {
-      validators: [Validators.required, Validators.minLength(2), Validators.maxLength(100)],
-    }),
-    sku: this.fb.control('', { validators: [Validators.maxLength(50)] }),
-    description: this.fb.control('', {
-      validators: [Validators.required, Validators.maxLength(1000)],
-    }),
-    category: this.fb.control<ProductCategory | null>(null, {
-      validators: [Validators.required],
-    }),
-    status: this.fb.control<ProductStatus>('active', { validators: [Validators.required] }),
+  public readonly productForm = createProductForm(this.fb);
 
-    // Pricing
-    wholesale: this.fb.control(0, { validators: [Validators.required, Validators.min(0)] }),
-    retail: this.fb.control(0, { validators: [Validators.required, Validators.min(0)] }),
-    inBoxPrice: this.fb.control(0, { validators: [Validators.min(0)] }),
-    costPrice: this.fb.control(0, { validators: [Validators.min(0)] }),
+  /* Mirrors the control so `showDimensions` can be a computed. The section
+     appears and disappears as the sold-in unit is changed, which is the
+     moment the admin is thinking about the container. */
+  private readonly quantityUnitValue = toSignal(
+    this.productForm.controls.quantityUnit.valueChanges,
+    { initialValue: this.productForm.controls.quantityUnit.value },
+  );
 
-    // Inventory
-    quantityInBox: this.fb.control(1, { validators: [Validators.min(1)] }),
-    minOrderQuantity: this.fb.control(1, { validators: [Validators.required, Validators.min(1)] }),
+  /** Whether this product is sold in something with dimensions worth taking. */
+  public readonly showDimensions = computed(() =>
+    hasDimensions(this.quantityUnitValue()),
+  );
 
-    // Product Details
-    unitOfMeasurement: this.fb.control<UnitOfMeasurement | null>(null),
-    quantityUnit: this.fb.control<QuantityUnit>(QuantityUnit.PIECE),
-    grade: this.fb.control<ProductGrade | null>(null),
-    // Numbers only — the unit lives in `unitOfMeasurement`, and the two are
-    // joined for display ("500" + Gram → "500g"). A unit typed in here would
-    // show up twice.
-    weight: this.fb.control('', { validators: [CustomValidators.numeric] }),
-    ingredients: this.fb.control<string[]>([], {
-      validators: [Validators.required, Validators.minLength(1)],
-    }),
-
-    // Opt-in notification. Describes the save action, not the product, so it
-    // is never seeded from the loaded product and resets with the form.
-    notifyPriceChange: this.fb.control(false),
-    notifyNewProduct: this.fb.control(false),
-
-    // Features
-    isFeatured: this.fb.control(false),
-    isOrganic: this.fb.control(false),
-
-    // Images
-    images: this.fb.control<string[]>([]),
-    image: this.fb.control(''),
-
-    // Additional
-    supplierReference: this.fb.control(''),
-    certifications: this.fb.control<string[]>([]),
-  });
+  public readonly dimensionUnitOptions = DIMENSION_UNIT_OPTIONS;
 
   /** Derives In-Box Price from Wholesale Price x Quantity per Box. */
   private readonly inBoxPriceLink = new InBoxPriceLink(this.productForm.controls);

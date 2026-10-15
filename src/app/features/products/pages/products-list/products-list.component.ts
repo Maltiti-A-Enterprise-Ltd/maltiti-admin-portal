@@ -11,12 +11,13 @@ import {
   effect,
   inject,
   signal,
+  untracked,
 } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { Store } from '@ngrx/store';
-import { debounceTime, startWith } from 'rxjs/operators';
+import { debounceTime, distinctUntilChanged, startWith } from 'rxjs/operators';
 
 // PrimeNG Imports
 import { TableModule, TablePageEvent } from 'primeng/table';
@@ -47,6 +48,7 @@ import { InputComponent } from '@shared/components/input/input.component';
 import { ButtonComponent } from '@shared/components/button/button.component';
 import { SelectComponent } from '@shared/components/select/select.component';
 import { ProductDialogComponent } from '../product-dialog/product-dialog.component';
+import { formatDimensions } from '../../utils/product-dimensions';
 import { ProductApiService } from '../../services/product-api.service';
 import { PRODUCT_CATEGORIES } from '../../constants/product-options.constants';
 import { ProductNamePipe } from '@shared/pipes/product-name.pipe';
@@ -89,8 +91,14 @@ export class ProductsListComponent {
 
   public searchControl = new FormControl('');
 
+  /* 400ms rather than a full second, and ignoring a re-emit of the same
+     text — typing then backspacing used to fire the identical query twice. */
   public readonly searchTerm = toSignal(
-    this.searchControl.valueChanges.pipe(startWith(''), debounceTime(1000)),
+    this.searchControl.valueChanges.pipe(
+      startWith(''),
+      debounceTime(400),
+      distinctUntilChanged(),
+    ),
     { initialValue: '' },
   );
 
@@ -108,6 +116,9 @@ export class ProductsListComponent {
 
   public readonly pageSize = signal(10);
   private readonly currentPage = signal(1);
+  /** Where the paginator should sit. Without it the widget keeps showing the
+      old page after a filter sends us back to the first one. */
+  public readonly firstRow = computed(() => (this.currentPage() - 1) * this.pageSize());
   public readonly reloadTrigger = signal(0);
 
   // Dialog signals
@@ -137,12 +148,23 @@ export class ProductsListComponent {
   }));
 
   constructor() {
+    /* Any filter moving puts us back on the first page. Narrowing the results
+       while sitting on page 3 used to request page 3 of a shorter list and
+       show an empty table, which reads as "the filter is broken". */
+    effect(() => {
+      this.searchTerm();
+      this.category();
+      this.status();
+      untracked(() => this.currentPage.set(1));
+    });
+
     effect(() => {
       this.reloadTrigger(); // Trigger reload
       this.store.dispatch(ProductsActions.loadProducts({ params: this.queryParams() }));
     });
   }
 
+  /** Enter just forces the pending search through; the page is already reset. */
   public onSearch(): void {
     this.currentPage.set(1);
   }
@@ -264,6 +286,11 @@ export class ProductsListComponent {
       default:
         return 'secondary';
     }
+  }
+
+  /** `"40 × 30 × 25 cm"`, or null for a product with no container measured. */
+  public dimensionsOf(product: Product): string | null {
+    return formatDimensions(product.dimensions);
   }
 
   public formatCurrency(value: number): string {

@@ -15,6 +15,16 @@
       padding-bottom: 0.5rem;
       border-bottom: 1px solid var(--surface-border, #e9ecef);
     }
+
+    /* Sits under a section title where the heading alone does not say what
+       is wanted. The dimensions section needs it: "fill in what you know" is
+       not obvious from four empty number fields. */
+    .section-note {
+      margin: -1.25rem 0 1.5rem;
+      font-size: 0.8125rem;
+      line-height: 1.5;
+      color: var(--p-text-muted-color);
+    }
   }
 
   .form-grid {

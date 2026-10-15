@@ -208,10 +208,21 @@ $avatar-colors: (
 }
 
 .customer-email {
+  display: flex;
+  align-items: center;
+  gap: 2px;
   font-size: variables.$font-size-xs;
   color: var(--text-color-secondary);
   text-decoration: none;
   &:hover { text-decoration: underline; color: var(--primary-500, #0f6938); }
+}
+
+/* Keeps the number and its copy button on one line. Without this the button
+   drops below the link, because `.contact-cell` stacks its children. */
+.contact-row {
+  display: flex;
+  align-items: center;
+  gap: 2px;
 }
 
 // ── Contact cell ──────────────────────────────────────────

@@ -24,6 +24,19 @@
      is derived from each sale's status, balance and age; the second is what an
      admin marked by hand. Both on means both, not either. -->
 <div class="attention-chips">
+  <!-- An admin reading "payment overdue" has no way to know whether that
+       means a week or a month. The numbers come from the API, so this cannot
+       drift from the rule it describes. -->
+  <button
+    class="attention-explain"
+    pTooltip="What these mean"
+    tooltipPosition="bottom"
+    type="button"
+    (click)="attention.explaining.set(true)"
+  >
+    <i class="pi pi-question-circle"></i>
+  </button>
+
   @for (chip of attention.chips(); track chip.key) {
     <button
       class="attention-chip"
@@ -78,6 +91,7 @@
   <p-table
     currentPageReportTemplate="Showing {first} to {last} of {totalRecords} entries"
     styleClass="table-cards"
+    [first]="firstRow()"
     [lazy]="true"
     [loading]="loading()"
     [paginator]="true"
@@ -134,6 +148,17 @@
             [severity]="getStatusSeverity(sale.orderStatus)"
             [value]="getStatusLabel(sale.orderStatus)"
           />
+          <!-- Under the status rather than in a column of its own: it only
+               ever applies to a shipment on its way, so a column would be
+               empty on most rows. -->
+          @if (arrival(sale); as due) {
+            <span class="arrival-note" [class.is-late]="due.isLate">
+              @if (due.isLate) {
+                <i aria-hidden="true" class="pi pi-exclamation-circle"></i>
+              }
+              {{ due.text }}
+            </span>
+          }
         </td>
         <td data-label="Payment Status">
           <p-tag
@@ -152,6 +177,16 @@
               <span class="payment-progress-label">
                 {{ money(sale.totalPaid, sale) }} / {{ money(sale.total, sale) }}
               </span>
+              <!-- What is actually still owed. The paid-of-total pair makes
+                   you do the subtraction, and that is the number anyone
+                   chasing a payment is after. -->
+              @if (sale.balanceRemaining) {
+                <span class="payment-balance">
+                  {{ money(sale.balanceRemaining, sale) }} left
+                </span>
+              } @else {
+                <span class="payment-settled">Settled</span>
+              }
             } @else {
               <span class="payment-progress-na">—</span>
             }
@@ -219,6 +254,38 @@
 <!-- The status-change confirmation carries its own opt-in, so the choice to
      write to the customer is made at the moment of changing the status rather
      than being implied by it. -->
+<!-- What the chips above actually mean. The thresholds come from the API,
+     so tuning a rule server-side changes what admins are told here. -->
+<p-dialog
+  header="How these are decided"
+  [draggable]="false"
+  [modal]="true"
+  [style]="{ width: '640px', maxWidth: '92vw' }"
+  [visible]="attention.explaining()"
+  (visibleChange)="attention.explaining.set($event)"
+>
+  @if (attention.rules().length) {
+    <p class="attention-rules-intro">
+      A sale is finished once it is delivered and paid, or cancelled — everything
+      else is open. These are the buckets an open sale falls into, in the order
+      they take precedence.
+    </p>
+    <ul class="attention-rules">
+      @for (rule of attention.rules(); track rule.label) {
+        <li>
+          <div class="attention-rule-head">
+            <span class="attention-rule-name">{{ rule.label }}</span>
+            <span class="attention-rule-count">{{ rule.count }}</span>
+          </div>
+          <p class="attention-rule-text">{{ rule.rule }}</p>
+        </li>
+      }
+    </ul>
+  } @else {
+    <p class="attention-rules-intro">Loading the current settings…</p>
+  }
+</p-dialog>
+
 <p-confirmDialog>
   <ng-template let-message pTemplate="message">
     <div class="confirm-body">
@@ -255,3 +322,7 @@
 
 <!-- Cancel Sale By Admin Modal -->
 <app-cancel-sale-by-admin-modal (saleCancelled)="onSaleCancelled()" />
+
+<!-- Estimated arrival date: set on dispatch, revised whenever the agent
+     quotes a new one. -->
+<app-arrival-date-modal (saved)="onArrivalDateSaved()" />

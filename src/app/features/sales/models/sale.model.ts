@@ -1,3 +1,5 @@
+export * from './sale-payment.model';
+import { SalePaymentRecord } from './sale-payment.model';
 export {
   InvoiceCurrency,
   INVOICE_CURRENCY_LABELS,
@@ -6,10 +8,7 @@ export {
   type SendInvoiceEmailDto,
   type GenerateInvoiceDto,
 } from './sale-currency.model';
-import {
-  InvoiceCurrency,
-  InvoiceCurrencyOptions,
-} from './sale-currency.model';
+import { InvoiceCurrency } from './sale-currency.model';
 
 import { Customer } from '@models/customer.model';
 import { Product, QuantityUnit } from '../../products/models/product.model';
@@ -56,91 +55,6 @@ export enum PaymentRecordStatus {
 // ─── Payment Record Types ──────────────────────────────────────────────────────
 
 /** A single payment instalment record for a sale */
-export interface SalePaymentRecord {
-  id: string;
-  saleId: string;
-  /** Amount, in the sale's own currency. */
-  amount: number;
-  /** The currency `amount` is in — always the sale's. */
-  currency?: InvoiceCurrency;
-  /**
-   * Cedis per one unit of `currency` at the moment the money arrived.
-   * The settlement rate, not the sale's pinned one; the gap between the two
-   * is the FX gain or loss.
-   */
-  exchangeRate?: number;
-  paymentMethod: PaymentMethod;
-  status: PaymentRecordStatus;
-  reference?: string;
-  note?: string;
-  /** Which of our accounts received this money. Null for cash, and for
-      payments recorded before the link existed. */
-  paymentAccountId?: string | null;
-  /** Resolved server-side, so a payment still names its account after that
-      account is retired and drops out of the picker. */
-  paymentAccountLabel?: string | null;
-  /** true = recorded by customer (e.g. Paystack), false = recorded by admin */
-  isCustomerInitiated: boolean;
-  createdAt: string;
-  updatedAt: string;
-}
-
-/** Summary returned by GET /sales/:saleId/payments */
-export interface SalePaymentSummary {
-  saleId: string;
-  /** Grand total for the sale, in the sale's own currency. */
-  saleTotal: number;
-  /** Sum of all CONFIRMED payment amounts */
-  totalPaid: number;
-  /** saleTotal - totalPaid (min 0) */
-  balanceRemaining: number;
-  isFullyPaid: boolean;
-  payments: SalePaymentRecord[];
-}
-
-// ─── Request Bodies ────────────────────────────────────────────────────────────
-
-/** Body for POST /sales/:saleId/payments */
-export interface RecordPaymentRequest {
-  /** Must be > 0. In the sale's own currency. */
-  amount: number;
-  /**
-   * Cedis per one unit of the sale's currency at the moment the money
-   * arrived. Only meaningful on a foreign sale; omitted, the API uses the
-   * sale's pinned rate.
-   */
-  exchangeRate?: number;
-  paymentMethod: PaymentMethod;
-  status: PaymentRecordStatus;
-  reference?: string;
-  note?: string;
-  /** Optional: which of our accounts received the money. */
-  paymentAccountId?: string | null;
-  /** When true, records as customer-initiated; defaults to false (admin) */
-  isCustomerInitiated?: boolean;
-}
-
-/**
- * Body for PATCH /sales/:saleId/payments/:paymentId — correcting a payment.
- *
- * Every field is optional and anything left out is left alone, so `null` is
- * the only way to clear a reference, note or account. An emptied box has to
- * be sent as null rather than omitted, or it would read as "unchanged".
- */
-export interface UpdatePaymentRequest {
-  amount?: number;
-  paymentMethod?: PaymentMethod;
-  status?: PaymentRecordStatus;
-  reference?: string | null;
-  note?: string | null;
-  paymentAccountId?: string | null;
-}
-
-/** Body for PATCH /sales/:saleId/payments/:paymentId/status */
-export interface UpdatePaymentStatusRequest {
-  status: PaymentRecordStatus;
-  note?: string;
-}
 
 // ─── Display Helpers ───────────────────────────────────────────────────────────
 
@@ -250,9 +164,16 @@ export interface UpdateSaleDto {
 
 
 export interface UpdateSaleStatusDto {
-  orderStatus: OrderStatus;
+  /** Optional: the arrival date can be revised without moving the status. */
+  orderStatus?: OrderStatus;
   /** As above: the status change is silent unless this is set. */
   notifyCustomer?: boolean;
+  /**
+   * When the shipment is expected, as an ISO date. Omitted leaves whatever
+   * is stored alone; `null` clears it. Those are different requests, so the
+   * field must not be dropped just because it is empty.
+   */
+  estimatedArrivalDate?: string | null;
 }
 
 export interface AssignBatchesDto {
@@ -331,6 +252,12 @@ export interface Sale {
   balanceRemainingGhs?: number;
   customerId: string;
   confirmedDeliveryDate?: string;
+  /**
+   * When this shipment was last said to be arriving. Absent when nobody gave
+   * a date, which leaves the sale on the blunt 56-day in-transit rule. Kept
+   * after delivery as a record of what was promised.
+   */
+  estimatedArrivalDate?: string;
   /** The sale's customer as returned by the API (not the linked user account). */
   customer?: Customer;
   orderStatus: OrderStatus;

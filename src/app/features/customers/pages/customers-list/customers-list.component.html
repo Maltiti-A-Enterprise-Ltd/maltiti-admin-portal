@@ -172,8 +172,9 @@
   <!-- Table -->
   <div class="table-card">
     <p-table
-    styleClass="table-cards"
-      currentPageReportTemplate="Showing {first} to {last} of {totalRecords} customers"
+    currentPageReportTemplate="Showing {first} to {last} of {totalRecords} customers"
+      styleClass="table-cards"
+      [first]="firstRow()"
       [lazy]="true"
       [loading]="loading()"
       [paginator]="true"
@@ -201,7 +202,7 @@
       <ng-template #body let-customer let-rowIndex="rowIndex">
         <tr>
           <!-- Index -->
-          <td data-label="#" class="row-index">{{ (currentPage() - 1) * limit() + rowIndex + 1 }}</td>
+          <td class="row-index" data-label="#">{{ (currentPage() - 1) * limit() + rowIndex + 1 }}</td>
 
           <!-- Customer: avatar + name + organization/email -->
           <td data-label="Customer">
@@ -216,7 +217,10 @@
                     <i class="pi pi-building"></i>{{ organization }}
                   </span>
                 }
-                <span class="customer-email">{{ customer.email || '—' }}</span>
+                <span class="customer-email">
+                  {{ customer.email || '—' }}
+                  <app-copy-button label="email address" [value]="customer.email" />
+                </span>
               </div>
             </div>
           </td>
@@ -224,15 +228,21 @@
           <!-- Contact: primary phone / alt phone -->
           <td data-label="Contact">
             <div class="contact-cell">
-              @if (getPrimaryPhone(customer)) {
-                <a class="contact-link" [href]="'tel:' + getPrimaryPhone(customer)">
-                  <i class="pi pi-phone contact-icon"></i>{{ getPrimaryPhone(customer) }}
-                </a>
+              @if (getPrimaryPhone(customer); as primary) {
+                <span class="contact-row">
+                  <a class="contact-link" [href]="'tel:' + primary">
+                    <i class="pi pi-phone contact-icon"></i>{{ primary }}
+                  </a>
+                  <app-copy-button label="phone number" [value]="primary" />
+                </span>
               }
-              @if (getSecondaryPhone(customer)) {
-                <a class="contact-link secondary" [href]="'tel:' + getSecondaryPhone(customer)">
-                  <i class="pi pi-mobile contact-icon"></i>{{ getSecondaryPhone(customer) }}
-                </a>
+              @if (getSecondaryPhone(customer); as secondary) {
+                <span class="contact-row">
+                  <a class="contact-link secondary" [href]="'tel:' + secondary">
+                    <i class="pi pi-mobile contact-icon"></i>{{ secondary }}
+                  </a>
+                  <app-copy-button label="second phone number" [value]="secondary" />
+                </span>
               }
               @if (!getPrimaryPhone(customer)) {
                 <span class="no-data">—</span>

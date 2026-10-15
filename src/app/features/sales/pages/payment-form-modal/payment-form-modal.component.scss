@@ -60,3 +60,34 @@
   font-size: 0.875rem;
 }
 
+
+/* The "paid in another currency" block. Set apart from the plain amount
+   above it so it reads as an alternative route to the same figure rather
+   than as more required fields. */
+.cross-currency {
+  margin-top: 0.75rem;
+  padding: 0.75rem;
+  border: 1px dashed var(--p-content-border-color);
+  border-radius: 6px;
+  background: var(--p-content-hover-background);
+
+  label {
+    display: block;
+    margin-bottom: 0.25rem;
+    font-size: 0.8rem;
+    color: var(--p-text-muted-color);
+  }
+}
+
+.cross-currency-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+  margin-top: 0.6rem;
+}
+
+@media (max-width: 520px) {
+  .cross-currency-row {
+    grid-template-columns: 1fr;
+  }
+}
