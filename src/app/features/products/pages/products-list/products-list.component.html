@@ -117,6 +117,14 @@
               @if (product.isOrganic) {
                 <span class="organic-badge" pTooltip="Organic Certified">🌿</span>
               }
+              <!-- Under the name rather than in a column: only products sold
+                   in a container have these, so a column would be empty on
+                   most rows. -->
+              @if (dimensionsOf(product); as size) {
+                <span class="product-dimensions" pTooltip="Size of one unit">
+                  <i aria-hidden="true" class="pi pi-box"></i>{{ size }}
+                </span>
+              }
             </div>
           </td>
 

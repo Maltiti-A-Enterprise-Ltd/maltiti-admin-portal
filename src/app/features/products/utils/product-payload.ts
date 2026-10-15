@@ -1,6 +1,7 @@
 import { CreateProductDto, ProductStatus, UpdateProductDto } from '../models/product.model';
 import { ProductFormValue } from '../types/product-form-value.type';
 import { cleared } from './cleared';
+import { dimensionsPayload } from './product-dimensions';
 
 /**
  * Turns the dialog's form into the payload the API expects.
@@ -40,4 +41,7 @@ export const buildProductPayload = (
   images: formValue.images || [],
   image: cleared(formValue.image),
   costPrice: cleared(formValue.costPrice),
+  /* Already null rather than undefined when empty — emptying the fields has
+     to clear what is stored, and an omitted key means "unchanged". */
+  dimensions: dimensionsPayload(formValue.dimensions),
 });

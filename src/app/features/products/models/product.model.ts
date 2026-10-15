@@ -49,6 +49,36 @@ export type ProductStatus = 'active' | 'inactive' | 'out_of_stock' | 'discontinu
 
 export type ProductGrade = 'A' | 'B' | 'premium' | 'standard' | 'organic';
 
+/**
+ * What a product's dimensions are measured in.
+ *
+ * Centimetres for anything packed here. Inches because a freight forwarder
+ * or an overseas buyer will quote a carton in them, and converting in your
+ * head before typing is its own way to get a container load wrong.
+ */
+export enum DimensionUnit {
+  CENTIMETRE = 'cm',
+  INCH = 'in',
+}
+
+/**
+ * How big one of whatever this product is sold in actually is.
+ *
+ * Deliberately not `boxLength` / `boxHeight` / `boxBreadth`: boxes prompted
+ * it, but a drum has a diameter and no breadth. The product's own
+ * `quantityUnit` says what these describe, so a new container is a new
+ * optional field here and nothing else.
+ *
+ * Measurements are optional — a half-filled set is still useful. The unit is
+ * not: numbers without one are ambiguous rather than incomplete.
+ */
+export interface ProductDimensions {
+  length?: number;
+  breadth?: number;
+  height?: number;
+  unit: DimensionUnit;
+}
+
 export interface Product {
   id: string;
   sku: string;
@@ -66,6 +96,7 @@ export interface Product {
   retail: number;
   inBoxPrice: number;
   quantityInBox: number;
+  dimensions?: ProductDimensions | null;
   favorite: boolean;
   rating: number;
   reviews: number;
@@ -114,6 +145,8 @@ export interface CreateProductDto {
   retail: number;
   inBoxPrice?: number | null;
   quantityInBox?: number | null;
+  /** Omitted leaves them alone; null clears them. */
+  dimensions?: ProductDimensions | null;
   grade?: ProductGrade | null;
   isFeatured?: boolean;
   isOrganic?: boolean;

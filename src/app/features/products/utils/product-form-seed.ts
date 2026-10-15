@@ -1,5 +1,6 @@
 import { Product } from '../models/product.model';
 import { ProductFormValue } from '../types/product-form-value.type';
+import { dimensionsSeed } from './product-dimensions';
 
 /**
  * The values the product dialog's form opens on for an existing product.
@@ -51,5 +52,9 @@ export function productFormSeed(
     isFeatured: product.isFeatured,
     isOrganic: product.isOrganic,
     supplierReference: product.supplierReference,
+
+    /* Carried into a duplicate too: the same container is exactly what a
+       copy of a product is most likely to ship in. */
+    dimensions: dimensionsSeed(product),
   };
 }
