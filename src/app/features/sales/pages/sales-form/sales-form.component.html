@@ -202,6 +202,29 @@
           <p>{{ confirmDeliveryDate() | date:'medium' }}</p>
         </div>
       }
+      <!-- Only while the order is on its way. Appears the moment the
+           status is switched to in transit, which is when an admin is
+           thinking about when it lands. -->
+      @if (showArrivalDate()) {
+        <div class="form-field">
+          <label for="estimatedArrivalDate">Estimated Arrival Date</label>
+          <p-datepicker
+            appendTo="body"
+            inputId="estimatedArrivalDate"
+            placeholder="Pick a date"
+            [formControl]="arrivalDateControl"
+            [showButtonBar]="true"
+            [showIcon]="true"
+            [style]="{ width: '100%' }"
+          />
+          <small class="form-help">
+            Once this date arrives the sale is flagged for attention, and it
+            appears in the morning email until it is marked delivered or given
+            a new date. Leave it empty to remove the date.
+          </small>
+        </div>
+      }
+
       <!-- How the invoice says it is to be paid. Stored on the sale, so a
            reissued or emailed invoice carries the same terms. -->
       <div class="form-field payment-terms-field">

@@ -9,7 +9,11 @@
   <form class="arrival-form" [formGroup]="form">
     <div class="form-field">
       <label for="estimatedArrivalDate">Expected arrival</label>
+      <!-- Rendered on the body, or the calendar is clipped by the dialog
+           it opens inside — every other overlay in this app does the same
+           for the same reason. -->
       <p-datepicker
+        appendTo="body"
         inputId="estimatedArrivalDate"
         placeholder="Pick a date"
         [formControl]="form.controls.estimatedArrivalDate"
