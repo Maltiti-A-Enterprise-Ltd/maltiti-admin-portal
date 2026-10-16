@@ -13,6 +13,7 @@
         id="deliveryCost"
         placeholder="Enter delivery cost"
         [formControl]="deliveryCostForm.controls.deliveryCost"
+        [maxFractionDigits]="2"
         [min]="0"
         [suffix]="' ' + symbol()"
       />

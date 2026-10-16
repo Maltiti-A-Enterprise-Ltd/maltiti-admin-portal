@@ -24,6 +24,7 @@
         id="discount"
         placeholder="Enter discount amount"
         [formControl]="receiptForm.controls.discount"
+        [maxFractionDigits]="2"
         [min]="0"
         [suffix]="' ' + symbol()"
       />
@@ -36,6 +37,7 @@
         id="transportation"
         placeholder="Enter transportation cost"
         [formControl]="receiptForm.controls.transportation"
+        [maxFractionDigits]="2"
         [min]="0"
         [suffix]="' ' + symbol()"
       />
