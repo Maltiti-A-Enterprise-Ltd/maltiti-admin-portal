@@ -44,6 +44,8 @@ interface UpdatePayloadInput {
   /** How the invoice says it is to be paid. Empty array clears them. */
   readonly paymentInstructions?: PaymentInstructionDto[];
   readonly invoiceRemarks?: string | null;
+  /** When the shipment is expected. Null removes the date. */
+  readonly estimatedArrivalDate?: string | null;
   /** False when the sale is dispatched and the editor has not overridden. */
   readonly canEditContents: boolean;
   /** True only when a super admin deliberately asked to edit a locked sale. */
@@ -85,6 +87,12 @@ export function buildSaleUpdatePayload(input: UpdatePayloadInput): UpdateSaleDto
     // Omitted when off, like the create path: the API rejects unknown
     // properties, so an older deployment must not see the key at all.
     notifyCustomer: input.notifyCustomer || undefined,
+    /* Outside the content lock below on purpose: in transit is exactly
+       when a date needs revising, and those sales are locked. The API
+       agrees — it keeps the date out of its own content-field list. */
+    ...(input.estimatedArrivalDate !== undefined
+      ? { estimatedArrivalDate: input.estimatedArrivalDate }
+      : {}),
   };
 
   if (input.overriding) {

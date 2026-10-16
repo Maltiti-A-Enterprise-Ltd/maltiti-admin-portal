@@ -85,3 +85,23 @@ export function formatDay(date: Date): string {
     year: 'numeric',
   });
 }
+
+/**
+ * The calendar day an admin picked, as the API wants it.
+ *
+ * UTC midnight, so a date chosen in Accra does not land on the previous
+ * day for anyone reading it elsewhere — the same conversion the dispatch
+ * dialog does, shared so the two cannot drift.
+ *
+ * Null for an empty field, which is how a date is removed rather than
+ * left alone.
+ */
+export function arrivalDateForApi(date: Date | null | undefined): string | null {
+  if (!date) {
+    return null;
+  }
+
+  return new Date(
+    Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()),
+  ).toISOString();
+}

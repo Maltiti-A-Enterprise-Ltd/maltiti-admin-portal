@@ -180,6 +180,12 @@ export interface UpdateSaleDto {
   paymentInstructions?: PaymentInstructionDto[];
   invoiceRemarks?: string | null;
   /**
+   * When the shipment is expected. Omitted leaves whatever is stored
+   * alone; `null` removes it. Also settable through the status endpoint,
+   * which is where it is set at dispatch.
+   */
+  estimatedArrivalDate?: string | null;
+  /**
    * The currency the deal was struck in, with the rate it was agreed at as
    * cedis per one unit. Omit both for an ordinary cedi sale; the API refuses
    * a foreign currency without a rate rather than guessing one.
