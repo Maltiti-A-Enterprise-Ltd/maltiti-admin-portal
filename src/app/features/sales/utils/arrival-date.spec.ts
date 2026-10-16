@@ -17,16 +17,27 @@ describe('arrivalStatus', () => {
     expect(arrivalStatus(daysAgo(1), NOW)?.text).toBe('1 day late');
   });
 
-  /* Promised this morning and still missing this evening should read as
-     late, not as zero days late. */
-  it('counts part of a day as a full day', () => {
-    const anHourAgo = new Date(NOW.getTime() - 3_600_000);
+  /*
+   * The day a shipment was promised for is the day to go and check it, so
+   * it earns the warning styling — but it is not late yet, and an admin
+   * reading "1 day late" chases an agent for no reason.
+   */
+  it('reads as due today on the day itself', () => {
+    const eightAm = new Date('2026-03-20T08:00:00Z');
 
-    expect(arrivalStatus(anHourAgo, NOW)).toEqual({
-      text: '1 day late',
+    expect(arrivalStatus(new Date('2026-03-20T00:00:00Z'), eightAm)).toEqual({
+      text: 'Due today',
       isLate: true,
-      daysLate: 1,
+      daysLate: 0,
     });
+  });
+
+  it('counts whole calendar days once the date has passed', () => {
+    const eightAm = new Date('2026-03-20T08:00:00Z');
+
+    expect(arrivalStatus(new Date('2026-03-18T00:00:00Z'), eightAm)?.text).toBe(
+      '2 days late',
+    );
   });
 
   it('shows the date itself while it is still to come', () => {
@@ -49,16 +60,20 @@ describe('arrivalStatus', () => {
     expect(arrivalStatus('not a date', NOW)).toBeNull();
   });
 
-  /* The API sends ISO strings, not Date objects. Midnight on the 17th to
-     09:00 on the 20th is three and a bit days, and a bit counts as a whole
-     one — the goods were due and are not here. */
+  /* The API sends ISO strings, not Date objects. Counted in whole
+     calendar days: the 17th to the 20th is three. */
   it('accepts an ISO string as well as a Date', () => {
-    expect(arrivalStatus('2026-03-17T00:00:00.000Z', NOW)?.text).toBe('4 days late');
+    expect(arrivalStatus('2026-03-17T00:00:00.000Z', NOW)?.text).toBe('3 days late');
   });
 
-  /* Exactly now is not yet late — the day is not over. */
-  it('treats the moment itself as still to come', () => {
-    expect(arrivalStatus(NOW, NOW)?.isLate).toBeFalse();
+  /* The same day, however the clock reads: the date has arrived, so the
+     shipment is worth checking on, but it is not late. */
+  it('treats the moment itself as due today', () => {
+    expect(arrivalStatus(NOW, NOW)).toEqual({
+      text: 'Due today',
+      isLate: true,
+      daysLate: 0,
+    });
   });
 });
 
