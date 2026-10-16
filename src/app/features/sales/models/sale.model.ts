@@ -33,9 +33,9 @@ export enum PaymentStatus {
   /**
    * Some money is in, but not all of it.
    *
-   * Derived server-side from the confirmed payments against the total and
-   * never set by hand, which is why it is absent from the form's status
-   * list and present only in the filter.
+   * Derived server-side from the confirmed payments against the total, and
+   * settable by hand as well — a deposit taken in cash leaves no payment
+   * record for the server to derive anything from.
    */
   PART_PAYMENT = 'part_payment',
   PAID = 'paid',
