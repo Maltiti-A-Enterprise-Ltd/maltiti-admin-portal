@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
 import { ReactiveFormsModule } from '@angular/forms';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { MessageModule } from 'primeng/message';
@@ -29,6 +29,43 @@ export class NumberInputComponent extends FormFieldBaseComponent {
    */
   public readonly minFractionDigits = input<number | undefined>(undefined);
   public readonly maxFractionDigits = input<number | undefined>(undefined);
+
+  /**
+   * How many decimals a decimal field takes when nobody has said.
+   *
+   * Leaving this undefined is what stopped a box dimension, and then a
+   * sale price in CAD, from accepting a decimal point at all. PrimeNG
+   * gates the keystroke on the input being set:
+   *
+   * ```ts
+   * else if (decimalCharIndex === -1 && this.maxFractionDigits) {
+   * ```
+   *
+   * — so on a field with no decimal point in it yet, pressing `.` with
+   * `maxFractionDigits` undefined is swallowed and nothing happens. It is
+   * only the *typing* path; writing a value in programmatically always
+   * worked, which is why this survived the tests written for the
+   * dimensions report.
+   *
+   * Three places, because that is what `Intl.NumberFormat` already
+   * resolves for this locale — so nothing's display changes, only the
+   * keystroke gate opens. A field that must stay whole says `0`, which is
+   * falsy and so keeps the gate shut, now by declaration rather than by
+   * accident.
+   *
+   * Currency mode needs nothing: it pads to the currency's own two places,
+   * so the decimal point is always already there and the keystroke takes
+   * the ordinary digit path.
+   */
+  protected readonly resolvedMaxFractionDigits = computed(() => {
+    const stated = this.maxFractionDigits();
+
+    if (stated !== undefined) {
+      return stated;
+    }
+
+    return this.mode() === 'decimal' ? 3 : undefined;
+  });
   public readonly prefix = input<string>('');
   public readonly suffix = input<string>('');
   public readonly disabled = input<boolean>(false);

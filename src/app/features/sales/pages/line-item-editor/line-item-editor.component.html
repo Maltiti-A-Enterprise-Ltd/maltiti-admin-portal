@@ -72,6 +72,7 @@
             id="boxes"
             label="Boxes"
             [control]="boxLink.boxesControl"
+            [maxFractionDigits]="0"
             [min]="0"
           />
           <small class="form-help">
@@ -89,6 +90,7 @@
             id="totalWeight"
             [control]="weightLink.totalControl"
             [label]="'Total (' + weightLink.unitLabel() + ')'"
+            [maxFractionDigits]="3"
             [min]="0"
           />
           <small class="form-help">
@@ -108,6 +110,7 @@
             id="quantity"
             label="Quantity *"
             [control]="lineItemForm.controls.requestedQuantity"
+            [maxFractionDigits]="0"
             [min]="1"
           />
           @if (lineItemForm.get('requestedQuantity')?.hasError('batchOverAllocated')) {
@@ -241,6 +244,7 @@
                 <app-number-input
                   id="quantity-{{i}}"
                   [control]="getQuantityControl(i)"
+                  [maxFractionDigits]="0"
                   [min]="1"
                   [style]="{'width': '30%'}"
                 />
