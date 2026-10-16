@@ -36,6 +36,13 @@ export interface InvoiceCurrencyOptions {
    * balance due. Off by default; has no effect when nothing is confirmed.
    */
   includePayments?: boolean;
+  /**
+   * Also print weights in pounds, for a client who reads in them —
+   * "55.12 lb / 25 kg". Both units, never one: the stored weight and the
+   * price stay metric. Volume is left in litres, because "gallons" is
+   * ambiguous between imperial and US.
+   */
+  showImperialWeights?: boolean;
 }
 
 /** Body for POST /sales/:id/invoice/email */

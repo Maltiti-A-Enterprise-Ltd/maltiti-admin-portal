@@ -95,6 +95,10 @@ export class InvoicePreviewModalComponent {
    * paid and a balance due.
    */
   public readonly includePayments = signal(false);
+  /* Off by default: the business works in SI, and this is for the one
+     client who asked. Regenerates on toggle like the payments option,
+     so the preview is always what would be sent. */
+  public readonly showImperialWeights = signal(false);
 
   public readonly sending = signal(false);
   public readonly previewUrl = signal<SafeResourceUrl | null>(null);
@@ -158,6 +162,7 @@ export class InvoicePreviewModalComponent {
     this.customerEmail.set(customerEmail?.trim() || null);
     this.currencyState.reset(invoiceCurrency, invoiceExchangeRate);
     this.includePayments.set(false);
+    this.showImperialWeights.set(false);
     this.form.reset({
       recipient: customerEmail?.trim() ? 'customer' : 'other',
       email: '',
@@ -181,6 +186,11 @@ export class InvoicePreviewModalComponent {
 
   public toggleIncludePayments(): void {
     this.includePayments.update((shown) => !shown);
+    this.regenerate();
+  }
+
+  public toggleImperialWeights(): void {
+    this.showImperialWeights.update((shown) => !shown);
     this.regenerate();
   }
 
@@ -242,6 +252,7 @@ export class InvoicePreviewModalComponent {
     this.selectedAccountIds.set([]);
     this.currencyState.reset();
     this.includePayments.set(false);
+    this.showImperialWeights.set(false);
     this.form.reset({ recipient: 'customer', email: '' });
   }
 
@@ -293,6 +304,7 @@ export class InvoicePreviewModalComponent {
         paymentAccountIds: this.selectedAccountIds(),
         ...this.currencyState.payload(),
         includePayments: this.includePayments(),
+        showImperialWeights: this.showImperialWeights(),
       })
       .pipe(take(1))
       .subscribe({
@@ -330,6 +342,7 @@ export class InvoicePreviewModalComponent {
         paymentAccountIds: this.selectedAccountIds(),
         ...this.currencyState.payload(),
         includePayments: this.includePayments(),
+        showImperialWeights: this.showImperialWeights(),
       })
       .pipe(take(1))
       .subscribe({

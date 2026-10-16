@@ -103,6 +103,26 @@
         Lists the confirmed payments for this sale, with an amount paid and a
         balance due. Pending and failed payments are left out.
       </p>
+
+      <!-- For the client who reads in pounds. Both units are printed, so
+           the figure the goods were weighed against stays on the page. -->
+      <div class="payments-option">
+        <p-checkbox
+          ariaLabel="Also show weights in pounds"
+          inputId="showImperialWeights"
+          [binary]="true"
+          [disabled]="generating()"
+          [ngModel]="showImperialWeights()"
+          [ngModelOptions]="{ standalone: true }"
+          (onChange)="toggleImperialWeights()"
+        />
+        <label for="showImperialWeights">Also show weights in pounds</label>
+      </div>
+      <p class="payments-hint">
+        Prints "55.12 lb / 25 kg" instead of "25 kg". Both units, so the
+        figure the goods were weighed against is still on the invoice.
+        Anything sold by volume stays in litres.
+      </p>
     </div>
 
     <!-- Which accounts to print. Ticking regenerates the preview, so what is
