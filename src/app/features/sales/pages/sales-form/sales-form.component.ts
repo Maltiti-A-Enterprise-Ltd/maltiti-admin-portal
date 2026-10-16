@@ -56,7 +56,9 @@ import { APP_ROUTES } from '@config/routes.config';
 import { combineLatest } from 'rxjs';
 import { map, startWith } from 'rxjs/operators';
 import { saleFormTotals } from '../../utils/sale-form-totals';
+import { DatePickerModule } from 'primeng/datepicker';
 import { saleFormCatalogue } from '../../utils/sale-form-catalogue';
+import { arrivalDateForApi } from '../../utils/arrival-date';
 import {
   PaymentTerms,
   PaymentTermsEditorComponent,
@@ -82,6 +84,7 @@ import { CurrencyRateState } from '../../services/currency-rate.state';
   templateUrl: './sales-form.component.html',
   styleUrls: ['./sales-form.component.scss'],
   imports: [
+    DatePickerModule,
     PaymentTermsEditorComponent,
     CommonModule,
     ReactiveFormsModule,
@@ -142,9 +145,21 @@ export class SalesFormComponent implements OnInit {
   /* Owned by the editor below, which has its own rules about them. Null
      until the admin names any, which is the great majority of sales. */
   public readonly paymentTerms = signal<PaymentTerms | null>(null);
+  /* Only meaningful once an order is on its way, so the field appears
+     with that status rather than sitting empty on every sale. */
+  public readonly arrivalDateControl = new FormControl<Date | null>(null);
+  public readonly showArrivalDate = computed(
+    () => this.orderStatusValue() === OrderStatus.IN_TRANSIT,
+  );
   public readonly termsEditor = viewChild(PaymentTermsEditorComponent);
   public customerControl = new FormControl<string>('', Validators.required);
   public statusControl = new FormControl(OrderStatus.PENDING, Validators.required);
+  /* Mirrors the control so `showArrivalDate` can be a computed — the
+     field has to appear the moment the status is switched to in transit,
+     which is when an admin is thinking about the date. */
+  private readonly orderStatusValue = toSignal(this.statusControl.valueChanges, {
+    initialValue: this.statusControl.value,
+  });
   public paymentStatusControl = new FormControl<PaymentStatus>(
     PaymentStatus.INVOICE_REQUESTED,
     Validators.required,
@@ -211,6 +226,10 @@ export class SalesFormComponent implements OnInit {
     this.salesForm.controls.deliveryFee.setValue(sale.deliveryFee);
 
     this.confirmDeliveryDate.set(sale.confirmedDeliveryDate || null);
+
+    this.arrivalDateControl.setValue(
+      sale.estimatedArrivalDate ? new Date(sale.estimatedArrivalDate) : null,
+    );
 
     this.termsEditor()?.seed({
       instructions: sale.paymentInstructions ?? [],
@@ -318,6 +337,12 @@ export class SalesFormComponent implements OnInit {
            clears the stored ones instead of leaving them untouched. */
         paymentInstructions: this.paymentTerms()?.instructions ?? [],
         invoiceRemarks: this.paymentTerms()?.remarks ?? null,
+        /* Sent only while the field is on screen. Including it for a
+           sale that is not in transit would clear a date the admin was
+           never shown and had no chance to keep. */
+        ...(this.showArrivalDate()
+          ? { estimatedArrivalDate: arrivalDateForApi(this.arrivalDateControl.value) }
+          : {}),
       };
 
       if (this.isEditMode && this.saleId) {
