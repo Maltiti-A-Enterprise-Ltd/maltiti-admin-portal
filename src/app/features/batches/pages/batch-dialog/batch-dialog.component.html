@@ -30,6 +30,7 @@
           [control]="batchForm.controls.quantity"
           [disabled]="viewMode()"
           [label]="'Quantity *'"
+          [maxFractionDigits]="0"
           [min]="1"
           [placeholder]="'Enter quantity'"
         />

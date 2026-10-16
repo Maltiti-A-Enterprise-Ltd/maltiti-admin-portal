@@ -152,4 +152,94 @@ describe('NumberInputComponent — decimals', () => {
       expect(await displayFor(40.5)).toContain('40.5');
     });
   });
+  /**
+   * The reported symptom, twice: a box dimension and then a sale price in
+   * CAD, both refusing a decimal point.
+   *
+   * It is the *typing* path alone, which is why the tests above — which
+   * write values in through the control — all passed while the field was
+   * still broken in front of the admin. PrimeNG gates the keystroke:
+   *
+   *     else if (decimalCharIndex === -1 && this.maxFractionDigits)
+   *
+   * With no fraction digits set, pressing `.` on a field that has no
+   * decimal point in it yet is swallowed and nothing reaches the control.
+   */
+  describe('typing a decimal point', () => {
+    /* The real path: PrimeNG binds (keypress) and reads the character off
+       `which`, which cannot be set through the event's initialiser. */
+    const press = (input: HTMLInputElement, char: string): void => {
+      const event = new KeyboardEvent('keypress', {
+        bubbles: true,
+        cancelable: true,
+      });
+      Object.defineProperty(event, 'which', { get: () => char.charCodeAt(0) });
+      Object.defineProperty(event, 'keyCode', { get: () => char.charCodeAt(0) });
+
+      input.dispatchEvent(event);
+    };
+
+    const typeOut = async (
+      text: string,
+      inputs: Record<string, unknown> = {},
+    ): Promise<string> => {
+      const input = await build(inputs);
+
+      input.focus();
+      for (const char of text) {
+        input.setSelectionRange(input.value.length, input.value.length);
+        press(input, char);
+        fixture.detectChanges();
+      }
+      await fixture.whenStable();
+
+      return input.value;
+    };
+
+    it('takes the decimal point and what follows it', async () => {
+      expect(await typeOut('42.55')).toBe('42.55');
+    });
+
+    it('takes a single place', async () => {
+      expect(await typeOut('42.5')).toBe('42.5');
+    });
+
+    /* Millimetres on a box dimension in centimetres — the third place is a
+       real measurement, and the locale already shows three. */
+    it('takes three places', async () => {
+      expect(await typeOut('40.125')).toBe('40.125');
+    });
+
+    it('still takes a whole number', async () => {
+      expect(await typeOut('42')).toBe('42');
+    });
+
+    /* Counts stay whole: zero is falsy, so the gate stays shut and the
+       point is swallowed — which is the wanted behaviour here. */
+    it('refuses the point on a field that states zero places', async () => {
+      expect(await typeOut('42.5', { maxFractionDigits: 0 })).toBe('425');
+    });
+  });
+
+  /**
+   * Counts must not be loosened by the default. Two and a half boxes is
+   * not a thing, and nor is half a unit of batch stock.
+   */
+  describe('a field that states zero decimal places', () => {
+    const whole = { maxFractionDigits: 0 };
+
+    it('rounds a decimal away', async () => {
+      expect(await displayFor(2.5, whole)).toBe('3');
+    });
+
+    it('leaves a whole number alone', async () => {
+      expect(await displayFor(2, whole)).toBe('2');
+    });
+  });
+
+  /* The default must not change what any field already shows: three is
+     what this locale resolved on its own before it was ever stated. */
+  it('shows a decimal exactly as it did before the default existed', async () => {
+    expect(await displayFor(40.125)).toBe('40.125');
+  });
 });
