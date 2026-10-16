@@ -18,6 +18,20 @@ export interface ArrivalStatus {
 
 const MS_PER_DAY = 86_400_000;
 
+/**
+ * Whole calendar days between two dates, ignoring the time of day.
+ *
+ * Arrival dates are stored as UTC midnight, so subtracting instants made a
+ * shipment due *today* read as a fraction of a day and round up to "1 day
+ * late" — telling an admin to chase something that is not yet overdue.
+ */
+const calendarDaysBetween = (from: Date, to: Date): number => {
+  const day = (date: Date): number =>
+    Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate());
+
+  return Math.round((day(to) - day(from)) / MS_PER_DAY);
+};
+
 const asDate = (value: Date | string | null | undefined): Date | null => {
   if (!value) {
     return null;
@@ -43,17 +57,18 @@ export function arrivalStatus(
     return null;
   }
 
-  if (expected.getTime() >= now.getTime()) {
-    return {
-      text: `Due ${formatDay(expected)}`,
-      isLate: false,
-      daysLate: 0,
-    };
+  const daysLate = calendarDaysBetween(expected, now);
+
+  if (daysLate < 0) {
+    return { text: `Due ${formatDay(expected)}`, isLate: false, daysLate: 0 };
   }
 
-  /* Rounded up: promised this morning and still missing this evening is one
-     day late, not zero. The whole point is that it should already be here. */
-  const daysLate = Math.max(1, Math.ceil((now.getTime() - expected.getTime()) / MS_PER_DAY));
+  /* The day it was promised for is the day to go and check, so it earns
+     the warning styling — but calling it late would be wrong, and an admin
+     reading "1 day late" chases an agent for no reason. */
+  if (daysLate === 0) {
+    return { text: 'Due today', isLate: true, daysLate: 0 };
+  }
 
   return {
     text: `${daysLate} day${daysLate === 1 ? '' : 's'} late`,
