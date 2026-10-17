@@ -37,6 +37,7 @@ import {
   PaymentAccount,
   paymentAccountLabel,
 } from '@features/payment-accounts/models/payment-account.model';
+import { InvoiceDisplayOptions } from '../../utils/invoice-display-options';
 import { CurrencyRateState } from '../../services/currency-rate.state';
 import { InvoiceCurrency } from '../../models/sale.model';
 
@@ -88,17 +89,14 @@ export class InvoicePreviewModalComponent {
   );
 
   /**
-   * Whether the invoice lists what has already been received against it.
+   * The tick boxes that change how the PDF reads — payments received,
+   * pounds beside the metric weights, container sizes.
    *
-   * Off by default: most invoices are a plain bill, and an unpaid one has
-   * nothing to show. Turning it on adds the confirmed payments, an amount
-   * paid and a balance due.
+   * Held together so a new one is added in one place. Each used to be
+   * spelled out in six, and a flag that reaches five of them works in the
+   * preview and is missing from the emailed copy.
    */
-  public readonly includePayments = signal(false);
-  /* Off by default: the business works in SI, and this is for the one
-     client who asked. Regenerates on toggle like the payments option,
-     so the preview is always what would be sent. */
-  public readonly showImperialWeights = signal(false);
+  public readonly display = new InvoiceDisplayOptions();
 
   public readonly sending = signal(false);
   public readonly previewUrl = signal<SafeResourceUrl | null>(null);
@@ -145,6 +143,7 @@ export class InvoicePreviewModalComponent {
 
   constructor() {
     this.currencyState.onSettled = (): void => this.regenerate();
+    this.display.onChange = (): void => this.regenerate();
     this.destroyRef.onDestroy(() => this.releasePreview());
   }
 
@@ -161,8 +160,7 @@ export class InvoicePreviewModalComponent {
     this.saleId.set(saleId);
     this.customerEmail.set(customerEmail?.trim() || null);
     this.currencyState.reset(invoiceCurrency, invoiceExchangeRate);
-    this.includePayments.set(false);
-    this.showImperialWeights.set(false);
+    this.display.reset();
     this.form.reset({
       recipient: customerEmail?.trim() ? 'customer' : 'other',
       email: '',
@@ -181,16 +179,6 @@ export class InvoicePreviewModalComponent {
     this.selectedAccountIds.update((ids) =>
       ids.includes(id) ? ids.filter((existing) => existing !== id) : [...ids, id],
     );
-    this.regenerate();
-  }
-
-  public toggleIncludePayments(): void {
-    this.includePayments.update((shown) => !shown);
-    this.regenerate();
-  }
-
-  public toggleImperialWeights(): void {
-    this.showImperialWeights.update((shown) => !shown);
     this.regenerate();
   }
 
@@ -251,8 +239,7 @@ export class InvoicePreviewModalComponent {
     this.paymentAccounts.set([]);
     this.selectedAccountIds.set([]);
     this.currencyState.reset();
-    this.includePayments.set(false);
-    this.showImperialWeights.set(false);
+    this.display.reset();
     this.form.reset({ recipient: 'customer', email: '' });
   }
 
@@ -303,8 +290,7 @@ export class InvoicePreviewModalComponent {
         // Send what was previewed, not the defaults.
         paymentAccountIds: this.selectedAccountIds(),
         ...this.currencyState.payload(),
-        includePayments: this.includePayments(),
-        showImperialWeights: this.showImperialWeights(),
+        ...this.display.payload(),
       })
       .pipe(take(1))
       .subscribe({
@@ -341,8 +327,7 @@ export class InvoicePreviewModalComponent {
         transportation: 0,
         paymentAccountIds: this.selectedAccountIds(),
         ...this.currencyState.payload(),
-        includePayments: this.includePayments(),
-        showImperialWeights: this.showImperialWeights(),
+        ...this.display.payload(),
       })
       .pipe(take(1))
       .subscribe({
