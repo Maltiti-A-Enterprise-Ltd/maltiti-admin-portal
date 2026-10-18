@@ -34,6 +34,28 @@
         [minFractionDigits]="2"
         [prefix]="symbol() + ' '"
       />
+
+      <!-- Settling the sale outright is the common case, so the figure the
+           page already knows is one click away rather than something to
+           re-type. -->
+      @if (canFillBalance()) {
+        <button
+          class="fill-balance"
+          type="button"
+          [class.is-filled]="isFullBalance()"
+          (click)="fillFullBalance()"
+        >
+          <i class="pi" [class.pi-check-circle]="isFullBalance()" [class.pi-wallet]="!isFullBalance()"></i>
+          @if (isFullBalance()) {
+            <span>Settling the full balance</span>
+          } @else {
+            <span>
+              Pay full balance — {{ symbol() }} {{ balanceRemaining() | number: '1.2-2' }}
+            </span>
+          }
+        </button>
+      }
+
       <!-- Paid in something else. Left on the sale's own currency this does
            nothing; pick another and the amount above is derived from what
            actually arrived, so the bank statement figure is what gets typed. -->

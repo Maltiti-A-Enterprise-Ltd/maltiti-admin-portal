@@ -1,0 +1,125 @@
+@if (applies()) {
+  <section class="settlement-panel" [class.is-armed]="willRecord()">
+    <header class="settlement-header">
+      <i class="pi pi-exclamation-triangle"></i>
+      <div>
+        <h4>
+          {{ symbol() }} {{ balanceRemaining() | number: '1.2-2' }} of this sale
+          has no payment against it
+        </h4>
+        <p>
+          @if (isMarkingPaid()) {
+            Marking it <strong>Paid</strong> changes the label, not the ledger —
+            the balance and the payment progress are worked out from recorded
+            payments.
+          } @else {
+            <strong>Part Payment</strong> is a label; the balance and the payment
+            progress are worked out from recorded payments.
+          }
+          Record the money here and the sale, its payments page and its receipt
+          will all agree.
+          @if (totalPaid() > 0) {
+            {{ symbol() }} {{ totalPaid() | number: '1.2-2' }} has already been
+            recorded.
+          }
+        </p>
+      </div>
+    </header>
+
+    <!-- A div rather than a <form>: this panel is hosted inside the sale
+         form, and nesting one form in another is invalid HTML that browsers
+         resolve by silently dropping the inner one. -->
+    <div class="settlement-form" [formGroup]="form">
+      <div class="settlement-toggle">
+        <p-checkbox
+          inputId="recordSettlement"
+          [binary]="true"
+          [formControl]="form.controls.record"
+        />
+        <label for="recordSettlement">Record this payment when I save</label>
+      </div>
+
+      @if (willRecord()) {
+        <div class="settlement-fields">
+          <div class="settlement-field">
+            <label for="settlementAmount">Amount <span class="required">*</span></label>
+            <p-inputNumber
+              inputId="settlementAmount"
+              locale="en-GH"
+              mode="decimal"
+              [formControl]="form.controls.amount"
+              [maxFractionDigits]="2"
+              [min]="0.01"
+              [minFractionDigits]="2"
+              [prefix]="symbol() + ' '"
+            />
+          </div>
+
+          <div class="settlement-field">
+            <label for="settlementMethod">How it was paid <span class="required">*</span></label>
+            <p-select
+              appendTo="body"
+              inputId="settlementMethod"
+              optionLabel="label"
+              optionValue="value"
+              [formControl]="form.controls.paymentMethod"
+              [options]="methodOptions"
+            />
+          </div>
+
+          @if (accountOptions().length) {
+            <div class="settlement-field">
+              <label for="settlementAccount">Received into</label>
+              <p-select
+                appendTo="body"
+                inputId="settlementAccount"
+                optionLabel="label"
+                optionValue="value"
+                placeholder="Leave blank for cash"
+                [formControl]="form.controls.paymentAccountId"
+                [options]="accountOptions()"
+                [showClear]="true"
+              />
+            </div>
+          }
+
+          <div class="settlement-field">
+            <label for="settlementReference">Reference</label>
+            <input
+              id="settlementReference"
+              pInputText
+              placeholder="e.g. TRF-202603130001"
+              [formControl]="form.controls.reference"
+            />
+          </div>
+        </div>
+
+        @if (form.controls.amount.invalid && form.controls.amount.touched) {
+          <small class="settlement-error">An amount above zero is needed.</small>
+        }
+
+        <!-- Said out loud only where it would otherwise be a surprise: under
+             Part Payment, an amount that clears the balance comes back as
+             Paid, because the status follows the money. -->
+        @if (!isMarkingPaid() && clearsBalance()) {
+          <small class="settlement-note">
+            <i class="pi pi-info-circle"></i>
+            This clears the balance, so the sale will be saved as
+            <strong>Paid</strong>.
+          </small>
+        }
+      } @else {
+        <small class="settlement-note settlement-note-muted">
+          <i class="pi pi-info-circle"></i>
+          Leave this unticked and the status changes on its own — the sale will
+          keep showing {{ symbol() }} {{ balanceRemaining() | number: '1.2-2' }}
+          outstanding on its payments page.
+        </small>
+      }
+
+      @if (errorMessage()) {
+        <small class="settlement-error" role="alert">{{ errorMessage() }}</small>
+      }
+    </div>
+  </section>
+}

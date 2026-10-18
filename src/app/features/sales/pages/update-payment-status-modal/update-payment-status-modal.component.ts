@@ -23,6 +23,7 @@ import { MessageService } from 'primeng/api';
 
 // Local
 import { SalesPaymentsApiService } from '../../services/sales-payments-api.service';
+import { paymentErrorMessage } from '../../utils/payment-error-message';
 import {
   PaymentRecordStatus,
   SalePaymentRecord,
@@ -120,23 +121,8 @@ export class UpdatePaymentStatusModalComponent {
         },
         error: (err: { status?: number }) => {
           this.loading.set(false);
-          this.errorMessage.set(this.mapHttpError(err.status));
+          this.errorMessage.set(paymentErrorMessage(err.status));
         },
       });
-  }
-
-  private mapHttpError(status?: number): string {
-    switch (status) {
-      case 400:
-        return 'Invalid payment details. Please check the amount and try again.';
-      case 401:
-        return 'Session expired. Please log in again.';
-      case 403:
-        return "You don't have permission to perform this action.";
-      case 404:
-        return 'Sale or payment record not found.';
-      default:
-        return 'Something went wrong. Please try again later.';
-    }
   }
 }

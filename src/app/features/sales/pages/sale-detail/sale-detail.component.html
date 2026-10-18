@@ -142,7 +142,11 @@
 
   <!-- ─── Payments Section ─────────────────────────────────────────────────── -->
   <p-card header="Payments" styleClass="info-card">
-    <app-payments-section [currency]="s.currency" [saleId]="s.id" />
+    <app-payments-section
+      [currency]="s.currency"
+      [paymentStatus]="s.paymentStatus"
+      [saleId]="s.id"
+    />
   </p-card>
 }
 
