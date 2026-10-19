@@ -290,6 +290,16 @@
         }
       </div>
     </div>
+
+    <!-- Marking a sale paid is a label; the balance and the payment progress
+         are worked out from recorded payments. This offers to record the one
+         that would make the label true, so the two never disagree. It shows
+         itself only when there is a gap to close. -->
+    <app-sale-settlement-panel
+      [currency]="deal.currency()"
+      [paymentStatus]="paymentStatusValue()"
+      [saleId]="saleId"
+    />
   </p-card>
 
   <!-- Line Items Section -->

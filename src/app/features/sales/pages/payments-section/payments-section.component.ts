@@ -34,6 +34,7 @@ import {
   PAYMENT_RECORD_STATUS_CONFIG,
   PaymentMethod,
   PaymentRecordStatus,
+  PaymentStatus,
   SalePaymentRecord,
   SalePaymentSummary,
 } from '../../models/sale.model';
@@ -70,6 +71,13 @@ export class PaymentsSectionComponent implements OnInit {
    * than with an assumed cedi.
    */
   public readonly currency = input<InvoiceCurrency | undefined>(undefined);
+  /**
+   * The sale's own payment status.
+   *
+   * Only needed to spot the one case where it contradicts the ledger below
+   * it — a sale labelled Paid whose payments do not add up to the total.
+   */
+  public readonly paymentStatus = input<PaymentStatus | undefined>(undefined);
 
   // ─── Child modals ────────────────────────────────────────────────────────────
   private readonly paymentFormModal = viewChild.required(PaymentFormModalComponent);
@@ -94,6 +102,22 @@ export class PaymentsSectionComponent implements OnInit {
     }
     return Math.min(100, Math.round((this.totalPaid() / total) * 100));
   });
+
+  /**
+   * The sale says Paid; its payments say otherwise.
+   *
+   * The status is a label an admin sets by hand, the records are the ledger
+   * the balance comes from, and nothing used to reconcile the two. A sale
+   * could sit at "Paid" above a progress bar reading 0%, which is the sort
+   * of contradiction that costs an afternoon when someone chases the money
+   * six weeks later.
+   */
+  public readonly unreconciled = computed(
+    () =>
+      this.paymentStatus() === PaymentStatus.PAID &&
+      !!this.summary() &&
+      this.balanceRemaining() > 0,
+  );
 
   public ngOnInit(): void {
     this.loadSummary();
@@ -143,6 +167,19 @@ export class PaymentsSectionComponent implements OnInit {
 
   public onAddPayment(): void {
     this.paymentFormModal().open(this.saleId(), this.summary(), this.currency());
+  }
+
+  /**
+   * Record the payment that accounts for a sale already marked Paid.
+   *
+   * Opens on the outstanding balance, because that is the figure that makes
+   * the label true — anything else and the sale would still be lying, just
+   * by less.
+   */
+  public onSettleBalance(): void {
+    this.paymentFormModal().open(this.saleId(), this.summary(), this.currency(), {
+      prefillBalance: true,
+    });
   }
 
   /** Correct a payment that was entered wrongly — amount, method and all. */

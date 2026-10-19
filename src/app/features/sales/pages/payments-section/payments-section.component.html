@@ -33,6 +33,28 @@
   </div>
 }
 
+<!-- ─── Status / ledger mismatch ────────────────────────────────────────────── -->
+<!-- The sale is labelled Paid but the records below do not add up to the
+     total. Says which figure is missing, and offers the one action that
+     closes the gap rather than leaving the admin to work it out. -->
+@if (unreconciled()) {
+  <div class="unreconciled-banner" role="alert">
+    <i class="pi pi-exclamation-triangle"></i>
+    <div class="unreconciled-text">
+      <strong>This sale is marked Paid, but {{ money(balanceRemaining()) }} has no
+      payment recorded against it.</strong>
+      <span>
+        The balance and the progress below are worked out from payment records,
+        so they will keep showing money outstanding until the payment is
+        recorded.
+      </span>
+    </div>
+    <button class="unreconciled-action" type="button" (click)="onSettleBalance()">
+      <i class="pi pi-plus"></i> Record {{ money(balanceRemaining()) }}
+    </button>
+  </div>
+}
+
 <!-- ─── Summary Card ────────────────────────────────────────────────────────── -->
 @if (!loading() && !loadError() && summary()) {
   <div class="summary-card">

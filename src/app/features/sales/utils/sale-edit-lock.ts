@@ -34,10 +34,18 @@ export const LOCKED_ORDER_STATUSES: readonly OrderStatus[] = [
 export const isSaleLocked = (sale: Pick<Sale, 'orderStatus'> | null | undefined): boolean =>
   !!sale && LOCKED_ORDER_STATUSES.includes(sale.orderStatus);
 
-interface UpdatePayloadInput {
+export interface UpdatePayloadInput {
   readonly customerId: string;
   readonly orderStatus: OrderStatus;
-  readonly paymentStatus: PaymentStatus;
+  /**
+   * Left out when the edit also records a payment.
+   *
+   * Confirming a payment makes the API re-derive the sale's status from its
+   * ledger, and that answer beats the dropdown's — it knows whether the
+   * money just recorded actually covers the bill. Sending one anyway would
+   * be a second opinion about the same facts, and it would win.
+   */
+  readonly paymentStatus?: PaymentStatus;
   readonly deliveryFee: number;
   readonly lineItems: readonly SaleLineItemDto[];
   readonly notifyCustomer: boolean;
@@ -83,7 +91,10 @@ function premiumOf(
 export function buildSaleUpdatePayload(input: UpdatePayloadInput): UpdateSaleDto {
   const payload: UpdateSaleDto = {
     orderStatus: input.orderStatus,
-    paymentStatus: input.paymentStatus,
+    /* Absent rather than undefined. The API treats a missing payment status
+       as "leave it as the ledger decided", which is exactly what an edit
+       that recorded a payment wants. */
+    ...(input.paymentStatus ? { paymentStatus: input.paymentStatus } : {}),
     // Omitted when off, like the create path: the API rejects unknown
     // properties, so an older deployment must not see the key at all.
     notifyCustomer: input.notifyCustomer || undefined,
