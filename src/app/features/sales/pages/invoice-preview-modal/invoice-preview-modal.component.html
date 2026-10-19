@@ -93,9 +93,9 @@
           inputId="includePayments"
           [binary]="true"
           [disabled]="generating()"
-          [ngModel]="includePayments()"
+          [ngModel]="display.is('includePayments')"
           [ngModelOptions]="{ standalone: true }"
-          (onChange)="toggleIncludePayments()"
+          (onChange)="display.toggle('includePayments')"
         />
         <label for="includePayments">Show payments received</label>
       </div>
@@ -112,9 +112,9 @@
           inputId="showImperialWeights"
           [binary]="true"
           [disabled]="generating()"
-          [ngModel]="showImperialWeights()"
+          [ngModel]="display.is('showImperialWeights')"
           [ngModelOptions]="{ standalone: true }"
-          (onChange)="toggleImperialWeights()"
+          (onChange)="display.toggle('showImperialWeights')"
         />
         <label for="showImperialWeights">Also show weights in pounds</label>
       </div>
@@ -122,6 +122,25 @@
         Prints "55.12 lb / 25 kg" instead of "25 kg". Both units, so the
         figure the goods were weighed against is still on the invoice.
         Anything sold by volume stays in litres.
+      </p>
+
+      <!-- For a buyer or forwarder working out what fits in the container. -->
+      <div class="payments-option">
+        <p-checkbox
+          ariaLabel="Show box dimensions"
+          inputId="showBoxDimensions"
+          [binary]="true"
+          [disabled]="generating()"
+          [ngModel]="display.is('showBoxDimensions')"
+          [ngModelOptions]="{ standalone: true }"
+          (onChange)="display.toggle('showBoxDimensions')"
+        />
+        <label for="showBoxDimensions">Show box dimensions</label>
+      </div>
+      <p class="payments-hint">
+        Prints "L 40 × W 30 × H 25 cm" under each product. Lines whose
+        product has no recorded dimensions show nothing. The unit is the one
+        the product was recorded in — it is not converted.
       </p>
     </div>
 

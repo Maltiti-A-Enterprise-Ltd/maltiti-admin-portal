@@ -43,6 +43,15 @@ export interface InvoiceCurrencyOptions {
    * ambiguous between imperial and US.
    */
   showImperialWeights?: boolean;
+  /**
+   * Print the size of the container each product is sold in under its
+   * description — "L 40 × W 30 × H 25 cm". For a buyer or forwarder
+   * planning the load. Every measurement is labelled, so a product with
+   * only some recorded is still unambiguous, and a product with none shows
+   * nothing. The unit is the one the product was recorded in; unlike
+   * weights, it is never converted.
+   */
+  showBoxDimensions?: boolean;
 }
 
 /** Body for POST /sales/:id/invoice/email */
