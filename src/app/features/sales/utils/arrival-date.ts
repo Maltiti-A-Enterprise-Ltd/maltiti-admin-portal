@@ -6,6 +6,8 @@
  * detail page cannot describe the same date two different ways.
  */
 
+import { OrderStatus } from '../models/sale.model';
+
 /** What the list shows against an in-transit sale. */
 export interface ArrivalStatus {
   /** "Due 3 Nov" or "3 days late". */
@@ -43,9 +45,11 @@ const asDate = (value: Date | string | null | undefined): Date | null => {
 };
 
 /**
- * Null when there is nothing to say — no date given, or a sale that is not
- * on its way anywhere. Rendering "Due —" against a parcel still being packed
- * would be noise on every row that has no shipment at all.
+ * How a date on its own reads. Null when there is no date to read.
+ *
+ * Phrasing only — it says nothing about whether the sale it belongs to
+ * should be showing it. That is {@link saleArrivalStatus}, and anything
+ * rendering against a whole sale wants that one.
  */
 export function arrivalStatus(
   estimatedArrivalDate: Date | string | null | undefined,
@@ -75,6 +79,40 @@ export function arrivalStatus(
     isLate: true,
     daysLate,
   };
+}
+
+/** The shape of a sale this needs, so a test need not build a whole one. */
+export interface ArrivalSale {
+  readonly estimatedArrivalDate?: Date | string | null;
+  readonly orderStatus: OrderStatus;
+}
+
+/**
+ * What a *sale* should show about its arrival, which is usually nothing.
+ *
+ * An arrival date survives the sale being marked delivered — it is a record
+ * of what was promised, and clearing it would lose that. But the note it
+ * drives is an instruction: amber, an exclamation icon, "1 day late", go and
+ * chase the shipping agent. On a consignment that has already landed there is
+ * nothing to chase, and the row kept saying so for ever.
+ *
+ * It also contradicted the server. `assessSaleAttention` only reaches
+ * `arrival_overdue` while the order is in transit, so a delivered sale is
+ * SETTLED and drops out of the "needs attention" count — while the row beside
+ * that count still showed a warning. Gating on the same condition is what
+ * makes the two agree.
+ *
+ * In transit and nothing else. Cancelled orders were showing it too.
+ */
+export function saleArrivalStatus(
+  sale: ArrivalSale | null | undefined,
+  now: Date = new Date(),
+): ArrivalStatus | null {
+  if (sale?.orderStatus !== OrderStatus.IN_TRANSIT) {
+    return null;
+  }
+
+  return arrivalStatus(sale.estimatedArrivalDate, now);
 }
 
 /** "3 Nov 2026" — short enough for a table cell, unambiguous about the month. */

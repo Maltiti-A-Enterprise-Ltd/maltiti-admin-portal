@@ -76,7 +76,7 @@ import { SalesMetricsPanelComponent } from '../sales-metrics-panel/sales-metrics
 import { formatSaleAmount } from '@shared/utils/sale-money';
 import { buildSaleActionMenu } from '../../utils/sale-action-menu';
 import { ArrivalDateModalComponent } from '../arrival-date-modal/arrival-date-modal.component';
-import { arrivalStatus } from '../../utils/arrival-date';
+import { saleArrivalStatus } from '../../utils/arrival-date';
 @Component({
   selector: 'app-sales-list',
   standalone: true,
@@ -291,9 +291,14 @@ export class SalesListComponent implements OnInit {
     return Math.min(100, Math.round((totalPaid / sale.total) * 100));
   }
 
-  /** "Due 3 Nov" / "3 days late", or null when there is nothing to say. */
-  public arrival(sale: Sale): ReturnType<typeof arrivalStatus> {
-    return arrivalStatus(sale.estimatedArrivalDate);
+  /**
+   * "Due 3 Nov" / "3 days late", or null when there is nothing to say.
+   *
+   * Null once the sale is no longer in transit: a delivered consignment has
+   * nowhere left to be late to.
+   */
+  public arrival(sale: Sale): ReturnType<typeof saleArrivalStatus> {
+    return saleArrivalStatus(sale);
   }
 
   public getActionMenuItems(sale: Sale): void {
