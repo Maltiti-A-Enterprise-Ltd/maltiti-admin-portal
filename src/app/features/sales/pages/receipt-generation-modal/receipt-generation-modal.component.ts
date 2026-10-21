@@ -20,6 +20,7 @@ import { ButtonModule } from 'primeng/button';
 // Local imports
 import { SalesApiService } from '../../services/sales-api.service';
 import { GenerateReceiptDto } from '../../models/sale.model';
+import { downloadBlob } from '../../utils/generated-document';
 import { take } from 'rxjs';
 
 import { currencySymbol } from '@shared/utils/sale-money';
@@ -105,14 +106,9 @@ export class ReceiptGenerationModalComponent {
         .generateReceipt(saleId, receiptData)
         .pipe(take(1))
         .subscribe({
-          next: (blob: Blob) => {
-            // Create a download link for the PDF
-            const url = globalThis.URL.createObjectURL(blob);
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = `receipt-${saleId}-${Date.now()}.pdf`;
-            link.click();
-            globalThis.URL.revokeObjectURL(url);
+          next: ({ blob, fileName }) => {
+            // Named by the server, from the receipt's own number and date.
+            downloadBlob(blob, fileName);
 
             this.messageService.add({
               severity: 'success',
