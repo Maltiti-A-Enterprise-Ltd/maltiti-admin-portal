@@ -104,6 +104,11 @@ export class SidebarComponent {
         icon: 'pi pi-credit-card',
         route: APP_ROUTES.paymentAccounts.fullPath,
       },
+      {
+        label: 'Documents',
+        icon: 'pi pi-folder',
+        route: APP_ROUTES.documents.fullPath,
+      },
       // {
       //   label: 'Orders',
       //   icon: 'pi pi-shopping-cart',

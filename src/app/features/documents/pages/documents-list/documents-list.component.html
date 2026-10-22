@@ -1,0 +1,193 @@
+<div class="page-container">
+  <div class="page-header">
+    <div>
+      <h1>Documents</h1>
+      <p>
+        The company's certificates, licences, permits and contracts — and where
+        the current copy of each one lives
+      </p>
+    </div>
+    <div class="page-actions">
+      <p-button icon="pi pi-plus" label="Add document" (onClick)="onAdd()" />
+    </div>
+  </div>
+
+  <!-- The one thing this page exists to surface. Shown only when there is
+       something to act on, so a tidy register is not nagged at. -->
+  @if (needingAttention()) {
+    <button
+      class="attention-chip"
+      type="button"
+      [class.is-on]="expiringOnly()"
+      (click)="toggleExpiringOnly()"
+    >
+      <i class="pi pi-exclamation-triangle"></i>
+      {{ needingAttention() }}
+      {{ needingAttention() === 1 ? 'document needs' : 'documents need' }} renewing
+      @if (expiringOnly()) {
+        <span class="chip-clear">— showing only these</span>
+      }
+    </button>
+  }
+
+  <div class="filters">
+    <span class="search-field">
+      <i class="pi pi-search"></i>
+      <input
+        pInputText
+        placeholder="Search by title, issuer or reference"
+        type="search"
+        [formControl]="searchControl"
+      />
+    </span>
+
+    <p-select
+      optionLabel="label"
+      optionValue="value"
+      placeholder="All categories"
+      [formControl]="categoryControl"
+      [options]="categoryOptions"
+      [showClear]="true"
+    />
+
+    @if (isFiltered()) {
+      <p-button
+        icon="pi pi-filter-slash"
+        label="Clear"
+        severity="secondary"
+        [text]="true"
+        (onClick)="clearFilters()"
+      />
+    }
+  </div>
+
+  <div class="table-card">
+    <p-table dataKey="id" styleClass="table-cards" [loading]="loading()" [value]="documents()">
+      <ng-template pTemplate="header">
+        <tr>
+          <th scope="col">Document</th>
+          <th scope="col">Category</th>
+          <th scope="col">Reference</th>
+          <th scope="col">Expiry</th>
+          <th scope="col">Version</th>
+          <th scope="col">Actions</th>
+        </tr>
+      </ng-template>
+
+      <ng-template let-document pTemplate="body">
+        <tr>
+          <td data-label="Document">
+            <div class="document-title">
+              <span class="title-text">{{ document.title }}</span>
+              @if (!document.isActive) {
+                <p-tag severity="secondary" value="Retired" />
+              }
+            </div>
+            @if (document.issuer) {
+              <div class="document-issuer">{{ document.issuer }}</div>
+            }
+          </td>
+
+          <td data-label="Category">{{ categoryLabel(document.category) }}</td>
+
+          <td data-label="Reference">{{ document.referenceNumber || '—' }}</td>
+
+          <td data-label="Expiry">
+            @if (expiryDisplay(document); as expiry) {
+              <div class="expiry-cell">
+                <p-tag [severity]="expiry.severity" [value]="expiry.text" />
+                @if (document.expiresAt) {
+                  <span class="expiry-date">{{ formatDay(document.expiresAt) }}</span>
+                }
+              </div>
+              <!-- Says plainly that a dated document is not being chased,
+                   rather than leaving the admin to infer it from silence. -->
+              @if (isUnchased(document)) {
+                <span class="no-reminder" pTooltip="Set a reminder when editing">
+                  <i class="pi pi-bell-slash"></i> not chased
+                </span>
+              }
+            }
+          </td>
+
+          <td data-label="Version">
+            @if (document.currentVersion) {
+              <a
+                class="version-link"
+                rel="noopener noreferrer"
+                target="_blank"
+                [href]="document.currentVersion.url"
+              >
+                v{{ document.currentVersion.versionNumber }}
+                <i class="pi pi-external-link"></i>
+              </a>
+              @if (document.versionCount > 1) {
+                <span class="version-count">of {{ document.versionCount }}</span>
+              }
+            } @else {
+              <span class="muted">—</span>
+            }
+          </td>
+
+          <td class="cell-actions" data-label="">
+            <div class="row-actions">
+              <p-button
+                icon="pi pi-history"
+                pTooltip="Versions — and replace the file"
+                severity="secondary"
+                [rounded]="true"
+                [text]="true"
+                (onClick)="onVersions(document)"
+              />
+              <p-button
+                icon="pi pi-pencil"
+                pTooltip="Edit details"
+                severity="secondary"
+                [rounded]="true"
+                [text]="true"
+                (onClick)="onEdit(document)"
+              />
+              <p-button
+                icon="pi pi-trash"
+                pTooltip="Remove from register"
+                severity="danger"
+                [rounded]="true"
+                [text]="true"
+                (onClick)="onDelete(document)"
+              />
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td class="empty-state" colspan="6">
+            @if (isFiltered()) {
+              Nothing matches those filters.
+            } @else {
+              Nothing on the register yet. Upload a document to Microsoft 365,
+              then add it here with its link.
+            }
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+</div>
+
+<app-document-dialog
+  [document]="selected()"
+  [visible]="dialogVisible()"
+  (saved)="load()"
+  (visibleChange)="dialogVisible.set($event)"
+/>
+
+<app-document-versions-dialog
+  [document]="selected()"
+  [visible]="versionsVisible()"
+  (saved)="load()"
+  (visibleChange)="versionsVisible.set($event)"
+/>
+
+<p-confirmDialog />

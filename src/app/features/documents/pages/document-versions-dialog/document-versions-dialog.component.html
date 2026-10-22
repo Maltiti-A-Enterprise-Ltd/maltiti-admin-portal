@@ -1,0 +1,128 @@
+<p-dialog
+  styleClass="versions-dialog"
+  [draggable]="false"
+  [header]="title()"
+  [modal]="true"
+  [style]="{ width: '42rem' }"
+  [visible]="visible()"
+  (visibleChange)="!$event && onHide()"
+>
+  @if (errorMessage()) {
+    <div class="form-error">{{ errorMessage() }}</div>
+  }
+
+  <!-- Renewing is why this is usually opened, so the action is at the top. -->
+  @if (adding()) {
+    <form class="version-form" [formGroup]="form">
+      <h3 class="section-title">Replace the file</h3>
+      <p class="section-hint">
+        Upload the new copy to Microsoft 365, then paste its link. The copy it
+        replaces is kept.
+      </p>
+
+      <app-field-renderer
+        id="versionUrl"
+        [control]="form.controls.url"
+        [label]="'Link *'"
+        [mode]="'edit'"
+        [placeholder]="'https://maltiti.sharepoint.com/...'"
+        [type]="'input'"
+        [value]="form.value.url"
+      />
+
+      <div class="version-form-row">
+        <app-field-renderer
+          id="versionSource"
+          [control]="form.controls.source"
+          [label]="'Hosted on'"
+          [mode]="'edit'"
+          [options]="sourceOptions"
+          [type]="'select'"
+          [value]="form.value.source"
+        />
+
+        <app-field-renderer
+          id="versionNote"
+          [control]="form.controls.note"
+          [label]="'Why'"
+          [mode]="'edit'"
+          [placeholder]="'Renewed for 2026/27'"
+          [type]="'input'"
+          [value]="form.value.note"
+        />
+      </div>
+
+      <div class="version-form-actions">
+        <p-button
+          label="Cancel"
+          severity="secondary"
+          [text]="true"
+          (onClick)="cancelAdding()"
+        />
+        <p-button
+          icon="pi pi-check"
+          label="Add version"
+          [loading]="saving()"
+          (onClick)="onSave()"
+        />
+      </div>
+    </form>
+  } @else {
+    <div class="versions-actions">
+      <p-button
+        icon="pi pi-upload"
+        label="New version"
+        [outlined]="true"
+        (onClick)="startAdding()"
+      />
+    </div>
+  }
+
+  <h3 class="section-title">History</h3>
+
+  @if (loading()) {
+    <p-skeleton height="4rem" />
+  } @else if (!versions().length) {
+    <p class="empty-state">No copies recorded yet.</p>
+  } @else {
+    <ul class="version-list">
+      @for (version of versions(); track version.id) {
+        <li class="version-row" [class.is-current]="isCurrent(version)">
+          <div class="version-meta">
+            <div class="version-heading">
+              <span class="version-number">v{{ version.versionNumber }}</span>
+              @if (isCurrent(version)) {
+                <p-tag severity="success" value="Current" />
+              }
+              <span class="version-date">{{ formatDate(version.createdAt) }}</span>
+            </div>
+
+            <div class="version-detail">
+              {{ sourceLabels[version.source] }}
+              @if (version.uploadedByName) {
+                &middot; added by {{ version.uploadedByName }}
+              }
+              @if (version.note) {
+                <span class="version-note">&middot; {{ version.note }}</span>
+              }
+            </div>
+          </div>
+
+          <!-- rel="noopener" because the link leaves for SharePoint. -->
+          <a
+            class="version-open"
+            rel="noopener noreferrer"
+            target="_blank"
+            [href]="version.url"
+          >
+            Open <i class="pi pi-external-link"></i>
+          </a>
+        </li>
+      }
+    </ul>
+  }
+
+  <ng-template pTemplate="footer">
+    <p-button label="Close" severity="secondary" [text]="true" (onClick)="onHide()" />
+  </ng-template>
+</p-dialog>
