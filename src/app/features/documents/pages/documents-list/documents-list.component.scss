@@ -1,0 +1,125 @@
+/* A chip rather than a banner: it is a filter as much as a warning, and it
+   only appears when there is something to act on. */
+.attention-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin-bottom: 1rem;
+  padding: 0.55rem 0.9rem;
+  border: 1px solid var(--orange-300, #fdba74);
+  border-radius: 999px;
+  background: var(--orange-50, #fff7ed);
+  color: var(--orange-800, #9a3412);
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+
+  &:hover {
+    background: var(--orange-100, #ffedd5);
+  }
+
+  &.is-on {
+    border-color: var(--orange-500, #f97316);
+    background: var(--orange-100, #ffedd5);
+  }
+
+  .chip-clear {
+    font-weight: 400;
+    opacity: 0.85;
+  }
+}
+
+.filters {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+
+  p-select {
+    min-width: 13rem;
+  }
+}
+
+.search-field {
+  position: relative;
+  flex: 1 1 18rem;
+  max-width: 26rem;
+
+  i {
+    position: absolute;
+    top: 50%;
+    left: 0.75rem;
+    transform: translateY(-50%);
+    color: var(--text-color-secondary);
+    font-size: 0.85rem;
+  }
+
+  input {
+    width: 100%;
+    padding-left: 2.1rem;
+  }
+}
+
+.document-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+
+  .title-text {
+    font-weight: 500;
+  }
+}
+
+.document-issuer {
+  margin-top: 0.15rem;
+  font-size: 0.78rem;
+  color: var(--text-color-secondary);
+}
+
+.expiry-cell {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.expiry-date {
+  font-size: 0.78rem;
+  color: var(--text-color-secondary);
+}
+
+/* Said out loud rather than left to be inferred from silence. */
+.no-reminder {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  margin-top: 0.25rem;
+  font-size: 0.72rem;
+  color: var(--text-color-secondary);
+  cursor: help;
+}
+
+.version-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-weight: 500;
+  text-decoration: none;
+  color: var(--primary-color);
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+.version-count {
+  margin-left: 0.35rem;
+  font-size: 0.75rem;
+  color: var(--text-color-secondary);
+}
+
+.muted {
+  color: var(--text-color-secondary);
+}

@@ -1,0 +1,161 @@
+<p-dialog
+  styleClass="document-dialog"
+  [draggable]="false"
+  [header]="dialogTitle()"
+  [modal]="true"
+  [style]="{ width: '46rem' }"
+  [visible]="visible()"
+  (visibleChange)="!$event && onHide()"
+>
+  <form class="document-form" [formGroup]="form">
+    @if (errorMessage()) {
+      <div class="form-error">{{ errorMessage() }}</div>
+    }
+
+    <div class="form-section">
+      <h3 class="section-title">What it is</h3>
+      <div class="form-grid">
+        <app-field-renderer
+          id="title"
+          [control]="form.controls.title"
+          [label]="'Title *'"
+          [mode]="'edit'"
+          [placeholder]="'Organic Certificate'"
+          [type]="'input'"
+          [value]="form.value.title"
+        />
+
+        <app-field-renderer
+          id="category"
+          [control]="form.controls.category"
+          [label]="'Category *'"
+          [mode]="'edit'"
+          [options]="categoryOptions"
+          [placeholder]="'Pick a category'"
+          [type]="'select'"
+          [value]="form.value.category"
+        />
+
+        <app-field-renderer
+          id="issuer"
+          [control]="form.controls.issuer"
+          [label]="'Issued by'"
+          [mode]="'edit'"
+          [placeholder]="'Ghana Standards Authority'"
+          [type]="'input'"
+          [value]="form.value.issuer"
+        />
+
+        <app-field-renderer
+          hint="The number printed on the document itself"
+          id="referenceNumber"
+          [control]="form.controls.referenceNumber"
+          [label]="'Reference number'"
+          [mode]="'edit'"
+          [placeholder]="'GSA/ORG/2026/0184'"
+          [type]="'input'"
+          [value]="form.value.referenceNumber"
+        />
+
+        <app-field-renderer
+          id="description"
+          styleClass="field-full"
+          [control]="form.controls.description"
+          [label]="'Notes'"
+          [mode]="'edit'"
+          [placeholder]="'Anything the title does not say'"
+          [type]="'textarea'"
+          [value]="form.value.description"
+        />
+      </div>
+    </div>
+
+    <div class="form-section">
+      <h3 class="section-title">When it runs out</h3>
+      <p class="section-hint">
+        Leave the date empty for anything that does not expire — most policies
+        and blank forms.
+      </p>
+
+      <div class="form-grid">
+        <app-field-renderer
+          id="expiresAt"
+          [control]="form.controls.expiresAt"
+          [label]="'Expiry date'"
+          [minDate]="minExpiry"
+          [mode]="'edit'"
+          [showIcon]="true"
+          [type]="'date'"
+          [value]="form.value.expiresAt"
+        />
+
+        <!-- Only where there is a date to count back from. A lead time with
+             nothing to measure against is a setting that quietly does
+             nothing. -->
+        @if (canRemind()) {
+          <app-field-renderer
+            hint="Appears in the daily report from then until it is renewed"
+            id="reminderLeadDays"
+            [control]="form.controls.reminderLeadDays"
+            [label]="'Remind me'"
+            [mode]="'edit'"
+            [options]="reminderOptions"
+            [placeholder]="'Don\'t remind me'"
+            [type]="'select'"
+            [value]="form.value.reminderLeadDays"
+          />
+        }
+      </div>
+    </div>
+
+    <!-- Only when adding. Replacing the file afterwards is its own action, so
+         a renewal always keeps the copy it replaces. -->
+    @if (!isEdit()) {
+      <div class="form-section">
+        <h3 class="section-title">Where the file is</h3>
+        <p class="section-hint">
+          Upload it to Microsoft 365 first, then paste the share link here.
+        </p>
+
+        <div class="form-grid">
+          <app-field-renderer
+            id="url"
+            styleClass="field-full"
+            [control]="form.controls.url"
+            [label]="'Link *'"
+            [mode]="'edit'"
+            [placeholder]="'https://maltiti.sharepoint.com/...'"
+            [type]="'input'"
+            [value]="form.value.url"
+          />
+
+          <app-field-renderer
+            id="source"
+            [control]="form.controls.source"
+            [label]="'Hosted on'"
+            [mode]="'edit'"
+            [options]="sourceOptions"
+            [type]="'select'"
+            [value]="form.value.source"
+          />
+        </div>
+      </div>
+    } @else {
+      <p class="edit-note">
+        <i class="pi pi-info-circle"></i>
+        To replace the file itself, use <strong>New version</strong> on the
+        register — the copy it replaces is kept.
+      </p>
+    }
+  </form>
+
+  <ng-template pTemplate="footer">
+    <p-button label="Cancel" severity="secondary" [text]="true" (onClick)="onHide()" />
+    <p-button
+      icon="pi pi-check"
+      label="Save"
+      [loading]="saving()"
+      (onClick)="onSave()"
+    />
+  </ng-template>
+</p-dialog>
