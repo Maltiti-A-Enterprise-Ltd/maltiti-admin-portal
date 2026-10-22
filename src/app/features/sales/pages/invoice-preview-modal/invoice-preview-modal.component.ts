@@ -17,7 +17,7 @@ import {
 import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { take } from 'rxjs';
-import { downloadBlob } from '../../utils/generated-document';
+import { downloadBlob } from '@shared/utils/download-blob';
 
 // PrimeNG
 import { DialogModule } from 'primeng/dialog';

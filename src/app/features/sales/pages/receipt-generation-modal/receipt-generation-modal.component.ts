@@ -20,7 +20,7 @@ import { ButtonModule } from 'primeng/button';
 // Local imports
 import { SalesApiService } from '../../services/sales-api.service';
 import { GenerateReceiptDto } from '../../models/sale.model';
-import { downloadBlob } from '../../utils/generated-document';
+import { downloadBlob } from '@shared/utils/download-blob';
 import { take } from 'rxjs';
 
 import { currencySymbol } from '@shared/utils/sale-money';

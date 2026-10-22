@@ -8,7 +8,7 @@ import { ChangeDetectionStrategy, Component, inject, output, signal } from '@ang
 
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { take } from 'rxjs';
-import { downloadBlob } from '../../utils/generated-document';
+import { downloadBlob } from '@shared/utils/download-blob';
 
 // PrimeNG Imports
 import { DialogModule } from 'primeng/dialog';
