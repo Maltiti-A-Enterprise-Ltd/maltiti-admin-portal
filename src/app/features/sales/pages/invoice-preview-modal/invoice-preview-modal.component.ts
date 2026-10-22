@@ -17,6 +17,7 @@ import {
 import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { take } from 'rxjs';
+import { downloadBlob } from '@shared/utils/download-blob';
 
 // PrimeNG
 import { DialogModule } from 'primeng/dialog';
@@ -113,6 +114,8 @@ export class InvoicePreviewModalComponent {
   /** Held so it can be revoked — object URLs leak until they are. */
   private objectUrl: string | null = null;
   private pdfBlob: Blob | null = null;
+  /** What the server called it, for the Download button. */
+  private pdfFileName = 'Invoice.pdf';
 
 
   public readonly form = this.fb.group({
@@ -245,20 +248,14 @@ export class InvoicePreviewModalComponent {
 
   public download(): void {
     const blob = this.pdfBlob;
-    const saleId = this.saleId();
 
-    if (!blob || !saleId) {
+    if (!blob) {
       return;
     }
 
-    // A fresh URL for the download, so revoking it cannot break the preview
-    // that is still on screen.
-    const url = globalThis.URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `invoice-${saleId}.pdf`;
-    link.click();
-    globalThis.URL.revokeObjectURL(url);
+    /* `downloadBlob` makes a fresh object URL of its own, so revoking it
+       cannot break the preview still on screen. */
+    downloadBlob(blob, this.pdfFileName);
   }
 
   public send(): void {
@@ -331,8 +328,11 @@ export class InvoicePreviewModalComponent {
       })
       .pipe(take(1))
       .subscribe({
-        next: (blob: Blob) => {
+        next: ({ blob, fileName }) => {
           this.pdfBlob = blob;
+          /* Kept from the response so Download saves it under the name the
+             invoice actually carries, rather than one invented here. */
+          this.pdfFileName = fileName;
           this.objectUrl = globalThis.URL.createObjectURL(blob);
           this.previewUrl.set(
             this.sanitizer.bypassSecurityTrustResourceUrl(this.objectUrl),
