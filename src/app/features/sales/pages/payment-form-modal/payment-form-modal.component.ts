@@ -16,7 +16,7 @@ import {
   signal,
 } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 
 // PrimeNG
 import { DialogModule } from 'primeng/dialog';
@@ -29,10 +29,13 @@ import { MessageService } from 'primeng/api';
 import { MessageModule } from 'primeng/message';
 
 // Local
-import { take } from 'rxjs';
 import { SalesPaymentsApiService } from '../../services/sales-payments-api.service';
 import { PaymentAccountApiService } from '@features/payment-accounts/services/payment-account-api.service';
-import { paymentAccountLabel } from '@features/payment-accounts/models/payment-account.model';
+import {
+  PaymentAccountOption,
+  paymentAccountOptions,
+} from '../../utils/payment-account-options';
+import { paymentErrorMessage } from '../../utils/payment-error-message';
 import {
   InvoiceCurrency,
   PAYMENT_METHOD_LABELS,
@@ -116,16 +119,6 @@ export class PaymentFormModalComponent {
 
   public readonly balanceRemaining = computed(() => this.summary()?.balanceRemaining ?? 0);
   public readonly isFullyPaid = computed(() => this.summary()?.isFullyPaid ?? false);
-  public readonly showOverpayWarning = computed(() => {
-    // Suppressed while editing: the balance already counts this payment, so
-    // comparing against it would warn about money the sale is not owed.
-    if (this.isEditing()) {
-      return false;
-    }
-
-    const amount = this.form.controls.amount.value ?? 0;
-    return amount > 0 && amount > this.balanceRemaining() && this.balanceRemaining() > 0;
-  });
 
   // ─── Form ────────────────────────────────────────────────────────────────────
   public readonly form = this.fb.group({
@@ -153,13 +146,59 @@ export class PaymentFormModalComponent {
     this.form.controls.amount,
   );
 
+  /**
+   * The amount typed so far, as a signal.
+   *
+   * A `computed` reading `form.controls.amount.value` directly never
+   * re-evaluates — a reactive form control is not a signal, so nothing tells
+   * the graph it changed. Everything below that reacts to what has been typed
+   * reads this instead.
+   */
+  private readonly amountTyped = toSignal(this.form.controls.amount.valueChanges, {
+    initialValue: this.form.controls.amount.value,
+  });
+
+  public readonly showOverpayWarning = computed(() => {
+    // Suppressed while editing: the balance already counts this payment, so
+    // comparing against it would warn about money the sale is not owed.
+    if (this.isEditing()) {
+      return false;
+    }
+
+    const amount = this.amountTyped() ?? 0;
+    return amount > 0 && amount > this.balanceRemaining() && this.balanceRemaining() > 0;
+  });
+
+  /**
+   * Whether to offer "the whole balance" as a one-click amount.
+   *
+   * Paying a sale off in full is the common case, and re-typing a figure the
+   * page is already showing is both a chore and a chance to fat-finger a digit.
+   *
+   * Hidden while editing (the balance already counts the payment being
+   * corrected, so filling it in would double it) and while the money arrived
+   * in another currency, where the amount is derived from what was received
+   * rather than entered.
+   */
+  public readonly canFillBalance = computed(
+    () =>
+      !this.isEditing() &&
+      !this.received.isCrossCurrency() &&
+      this.balanceRemaining() > 0,
+  );
+
+  /** True once the amount box holds exactly the outstanding balance. */
+  public readonly isFullBalance = computed(
+    () => this.canFillBalance() && (this.amountTyped() ?? 0) === this.balanceRemaining(),
+  );
+
   // ─── Select options ──────────────────────────────────────────────────────────
   public readonly methodOptions: PaymentMethodOption[] = (
     Object.keys(PAYMENT_METHOD_LABELS) as PaymentMethod[]
   ).map((key) => ({ label: PAYMENT_METHOD_LABELS[key], value: key }));
 
   /** Accounts still in use, as "Bank — number (currency)". */
-  public readonly accountOptions = signal<{ label: string; value: string }[]>([]);
+  public readonly accountOptions = signal<PaymentAccountOption[]>([]);
 
   public readonly statusOptions: PaymentStatusOption[] = [
     { label: 'Confirmed', value: PaymentRecordStatus.CONFIRMED },
@@ -170,11 +209,18 @@ export class PaymentFormModalComponent {
   /**
    * Open the modal for the given sale and pre-load the payment summary
    * (used to display balance remaining and overpay warnings).
+   *
+   * @param options.prefillBalance Opens with the outstanding balance already
+   * in the amount box. For the callers that are settling a sale outright —
+   * the "record the settling payment" prompt on a sale marked paid — where
+   * the figure is not in question and asking for it again is only a chance to
+   * get it wrong.
    */
   public open(
     saleId: string,
     summary: SalePaymentSummary | null = null,
     currency?: InvoiceCurrency,
+    options: { prefillBalance?: boolean } = {},
   ): void {
     this.currency.set(currency);
     this.editing.set(null);
@@ -182,7 +228,7 @@ export class PaymentFormModalComponent {
     this.summary.set(summary);
     this.errorMessage.set(null);
     this.form.reset({
-      amount: 0,
+      amount: options.prefillBalance ? (summary?.balanceRemaining ?? 0) : 0,
       paymentMethod: PaymentMethod.BANK_TRANSFER,
       status: PaymentRecordStatus.CONFIRMED,
       reference: '',
@@ -191,6 +237,18 @@ export class PaymentFormModalComponent {
     });
     this.loadPaymentAccounts();
     this.visible.set(true);
+  }
+
+  /**
+   * Put the whole outstanding balance in the amount box.
+   *
+   * `emitEvent` is left on so the overpay warning and the "full balance"
+   * highlight follow the click; the control's own valueChanges is what drives
+   * both.
+   */
+  public fillFullBalance(): void {
+    this.form.controls.amount.setValue(this.balanceRemaining());
+    this.form.controls.amount.markAsDirty();
   }
 
   /** Open the same form over an existing payment, to correct it. */
@@ -219,55 +277,16 @@ export class PaymentFormModalComponent {
     this.visible.set(true);
   }
 
-  /**
-   * Retired accounts are left out: money cannot arrive in an account that is
-   * no longer in use, and the API refuses one anyway.
-   */
+  /** Active accounts, plus the retired one this payment already points at. */
   private loadPaymentAccounts(): void {
-    this.paymentAccountApi
-      .getAll(true)
-      .pipe(take(1))
-      .subscribe({
-        next: (accounts) =>
-          this.accountOptions.set(
-            this.withCurrentAccount(
-              accounts.map((account) => ({
-                label: paymentAccountLabel(account),
-                value: account.id,
-              })),
-            ),
-          ),
-        // Not being able to list accounts should not block recording the
-        // payment — the link is optional.
-        error: () => this.accountOptions.set(this.withCurrentAccount([])),
-      });
-  }
-
-  /**
-   * Keeps the account a payment is already linked to in the list, even once
-   * it has been retired.
-   *
-   * Without this the select would open blank on a retired account and saving
-   * would quietly detach it — erasing the record of where the money actually
-   * went, which is the one thing this link exists to preserve.
-   */
-  private withCurrentAccount(
-    options: { label: string; value: string }[],
-  ): { label: string; value: string }[] {
     const payment = this.editing();
-    const id = payment?.paymentAccountId;
 
-    if (!id || options.some((option) => option.value === id)) {
-      return options;
-    }
-
-    return [
-      {
-        label: `${payment?.paymentAccountLabel ?? 'Account'} — no longer in use`,
-        value: id,
-      },
-      ...options,
-    ];
+    paymentAccountOptions(this.paymentAccountApi, {
+      id: payment?.paymentAccountId,
+      label: payment?.paymentAccountLabel,
+    })
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((options) => this.accountOptions.set(options));
   }
 
   public close(): void {
@@ -309,7 +328,7 @@ export class PaymentFormModalComponent {
         },
         error: (err: { status?: number }) => {
           this.loading.set(false);
-          this.errorMessage.set(this.mapHttpError(err.status));
+          this.errorMessage.set(paymentErrorMessage(err.status));
         },
       });
   }
@@ -374,20 +393,5 @@ export class PaymentFormModalComponent {
       note: note?.trim() || null,
       paymentAccountId: paymentAccountId || null,
     };
-  }
-
-  private mapHttpError(status?: number): string {
-    switch (status) {
-      case 400:
-        return 'Invalid payment details. Please check the amount and try again.';
-      case 401:
-        return 'Session expired. Please log in again.';
-      case 403:
-        return "You don't have permission to perform this action.";
-      case 404:
-        return 'Sale or payment record not found.';
-      default:
-        return 'Something went wrong. Please try again later.';
-    }
   }
 }

@@ -1,5 +1,4 @@
 import {
-  DERIVED_PAYMENT_STATUS_OPTIONS,
   PAYMENT_STATUS_FILTER_OPTIONS,
   PAYMENT_STATUS_OPTIONS,
 } from './sale-status-options';
@@ -13,16 +12,28 @@ describe('payment status options', () => {
     PAYMENT_STATUS_FILTER_OPTIONS.map((option) => option.value);
 
   /*
-   * Part payment is derived from the confirmed payments against the total.
-   * Offering it in the form would invite someone to set a status the next
-   * payment edit silently overwrites.
+   * A deposit paid in cash leaves no payment record for the server to
+   * derive anything from, so the sale sits on "pending payment" — which is
+   * the exact thing this status was asked for. It has to be settable.
    */
-  it('does not offer part payment as something to set by hand', () => {
-    expect(settable()).not.toContain(PaymentStatus.PART_PAYMENT);
+  it('offers part payment as something to set by hand', () => {
+    expect(settable()).toContain(PaymentStatus.PART_PAYMENT);
   });
 
-  /* Telling part-paid sales apart is the whole point, so it has to be
-     filterable even though it is not settable. */
+  /* Between the two statuses it sits between, so the list still reads in
+     the order a sale moves through it. */
+  it('puts it after pending payment and before paid', () => {
+    const order = settable();
+
+    expect(order.indexOf(PaymentStatus.PART_PAYMENT)).toBeGreaterThan(
+      order.indexOf(PaymentStatus.PENDING_PAYMENT),
+    );
+    expect(order.indexOf(PaymentStatus.PART_PAYMENT)).toBeLessThan(
+      order.indexOf(PaymentStatus.PAID),
+    );
+  });
+
+  /* Telling part-paid sales apart in the list is the other half of it. */
   it('offers part payment as something to filter by', () => {
     expect(filterable()).toContain(PaymentStatus.PART_PAYMENT);
   });
@@ -37,12 +48,21 @@ describe('payment status options', () => {
     expect(PAYMENT_STATUS_FILTER_OPTIONS[0].value).toBeNull();
   });
 
-  /* The two lists drifted apart before they were composed from one another;
-     the derived list is the one deliberate exception. */
-  it('composes the filter from the settable and derived lists', () => {
+  /* The two lists drifted apart before they were composed from one another.
+     There is no longer any exception: the filter is the form's list plus
+     "all", so a status cannot be filtered for and not set, or the reverse. */
+  it('composes the filter from the settable list alone', () => {
     expect(PAYMENT_STATUS_FILTER_OPTIONS.length).toBe(
-      PAYMENT_STATUS_OPTIONS.length + DERIVED_PAYMENT_STATUS_OPTIONS.length + 1,
+      PAYMENT_STATUS_OPTIONS.length + 1,
     );
+  });
+
+  /* Every status the API knows is offered. This is what would have caught
+     part payment missing from the form in the first place. */
+  it('offers every status the API declares', () => {
+    for (const status of Object.values(PaymentStatus)) {
+      expect(settable()).toContain(status);
+    }
   });
 });
 

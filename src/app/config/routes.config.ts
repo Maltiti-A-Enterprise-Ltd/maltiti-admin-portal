@@ -38,6 +38,7 @@ export interface IAppRoutes {
   users: IRouteConfig;
   customers: IRouteConfig;
   paymentAccounts: IRouteConfig;
+  documents: IRouteConfig;
   sales: IRouteConfig & {
     list: IRouteConfig;
     create: IRouteConfig;
@@ -104,6 +105,10 @@ export const APP_ROUTES: IAppRoutes = {
   paymentAccounts: {
     path: 'payment-accounts',
     fullPath: '/payment-accounts',
+  },
+  documents: {
+    path: 'documents',
+    fullPath: '/documents',
   },
   sales: {
     path: 'sales',

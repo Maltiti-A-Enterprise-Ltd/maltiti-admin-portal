@@ -145,4 +145,19 @@ describe('sale payloads carry what the form collected', () => {
       expect(sent.lineItems).toBeUndefined();
     });
   });
+
+  /* An edit that also records a payment leaves the status to the API, which
+     re-derives it from the ledger. The key has to be absent rather than
+     undefined — present-and-undefined would still read as an instruction. */
+  describe('payment status on an edit that settles the sale', () => {
+    it('omits the key entirely when no status is given', () => {
+      const sent = update({ paymentStatus: undefined });
+
+      expect('paymentStatus' in sent).toBe(false);
+    });
+
+    it('still sends it on an ordinary edit', () => {
+      expect(update().paymentStatus).toBe(PaymentStatus.PENDING_PAYMENT);
+    });
+  });
 });

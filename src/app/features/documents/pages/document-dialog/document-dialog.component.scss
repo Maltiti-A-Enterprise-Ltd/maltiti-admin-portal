@@ -1,0 +1,62 @@
+.document-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  padding-top: 0.5rem;
+}
+
+.form-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.section-title {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-color);
+}
+
+.section-hint {
+  margin: 0;
+  font-size: 0.8rem;
+  line-height: 1.45;
+  color: var(--text-color-secondary);
+}
+
+/* Two to a row where there is space, one on a phone. The notes box and the
+   link both want the full width whatever the screen. */
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+  gap: 1rem;
+  margin-top: 0.25rem;
+
+  ::ng-deep .field-full {
+    grid-column: 1 / -1;
+  }
+}
+
+.form-error {
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--red-300, #fca5a5);
+  border-radius: 6px;
+  background: var(--red-50, #fef2f2);
+  color: var(--red-700, #b91c1c);
+  font-size: 0.85rem;
+}
+
+/* Says where the file actually gets replaced, since this dialog cannot. */
+.edit-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0.7rem 0.9rem;
+  border-radius: 6px;
+  background: var(--p-content-hover-background, #f8fafc);
+  font-size: 0.8rem;
+  line-height: 1.45;
+  color: var(--text-color-secondary);
+}

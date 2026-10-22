@@ -7,7 +7,12 @@
 import { inject, Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { environment } from '@environments/environment';
+import {
+  GeneratedDocument,
+  generatedDocument,
+} from '../utils/generated-document';
 import {
   AssignBatchesDto,
   CancelSaleByAdminDto,
@@ -172,10 +177,11 @@ export class SalesApiService {
    * Generate invoice PDF for a sale
    * POST /sales/{id}/invoice
    */
-  public generateInvoice(id: string, dto: GenerateInvoiceDto): Observable<Blob> {
-    return this.http.post(`${this.baseUrl}/${id}/invoice`, dto, {
-      responseType: 'blob',
-    });
+  public generateInvoice(
+    id: string,
+    dto: GenerateInvoiceDto,
+  ): Observable<GeneratedDocument> {
+    return this.generateDocument(`${this.baseUrl}/${id}/invoice`, dto, 'Invoice.pdf');
   }
 
   /**
@@ -198,20 +204,39 @@ export class SalesApiService {
    * Generate receipt PDF for a sale
    * POST /sales/{id}/receipt
    */
-  public generateReceipt(id: string, dto: GenerateReceiptDto): Observable<Blob> {
-    return this.http.post(`${this.baseUrl}/${id}/receipt`, dto, {
-      responseType: 'blob',
-    });
+  public generateReceipt(
+    id: string,
+    dto: GenerateReceiptDto,
+  ): Observable<GeneratedDocument> {
+    return this.generateDocument(`${this.baseUrl}/${id}/receipt`, dto, 'Receipt.pdf');
   }
 
   /**
    * Generate waybill PDF for a sale
    * POST /sales/{id}/waybill
    */
-  public generateWaybill(id: string, dto: GenerateWaybillDto): Observable<Blob> {
-    return this.http.post(`${this.baseUrl}/${id}/waybill`, dto, {
-      responseType: 'blob',
-    });
+  public generateWaybill(
+    id: string,
+    dto: GenerateWaybillDto,
+  ): Observable<GeneratedDocument> {
+    return this.generateDocument(`${this.baseUrl}/${id}/waybill`, dto, 'Waybill.pdf');
+  }
+
+  /**
+   * A generated PDF, with the name the server gave it.
+   *
+   * `observe: 'response'` is what makes the headers reachable — a plain blob
+   * response hides them, and the filename is built from the document's own
+   * number and issue date, which only the server knows.
+   */
+  private generateDocument(
+    url: string,
+    dto: unknown,
+    fallbackName: string,
+  ): Observable<GeneratedDocument> {
+    return this.http
+      .post(url, dto, { responseType: 'blob', observe: 'response' })
+      .pipe(map((response) => generatedDocument(response, fallbackName)));
   }
 
   /**

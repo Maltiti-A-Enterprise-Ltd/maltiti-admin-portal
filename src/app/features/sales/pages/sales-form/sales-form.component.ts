@@ -53,8 +53,8 @@ import { Customer } from '@models/customer.model';
 import { ProductApiService } from '@features/products/services/product-api.service';
 import { LightProduct } from '@features/products/models/product.model';
 import { APP_ROUTES } from '@config/routes.config';
-import { combineLatest } from 'rxjs';
-import { map, startWith } from 'rxjs/operators';
+import { of } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { saleFormTotals } from '../../utils/sale-form-totals';
 import { DatePickerModule } from 'primeng/datepicker';
 import { saleFormCatalogue } from '../../utils/sale-form-catalogue';
@@ -69,15 +69,16 @@ import { deliveryAddressSignal } from '../../utils/delivery-address';
 import {
   buildSaleCreatePayload,
   buildSaleUpdatePayload,
-  isSaleLocked,
   saleEditLock,
+  UpdatePayloadInput,
 } from '../../utils/sale-edit-lock';
+import { seedSaleForm } from '../../utils/sale-form-seed';
 import { selectUserRole } from '@auth/store/auth.selectors';
 import { selectCustomers } from '../../store/customers.selectors';
 import { ORDER_STATUS_OPTIONS, PAYMENT_STATUS_OPTIONS } from '../../constants/sale-status-options';
-import { BatchApiService } from '../../../batches/services/batch-api.service';
-import { Batch } from '../../../batches/models/batch.model';
 import { CurrencyRateState } from '../../services/currency-rate.state';
+import { reindexControlMap } from '../../utils/reindex-control-map';
+import { SaleSettlementPanelComponent } from '../sale-settlement-panel/sale-settlement-panel.component';
 @Component({
   selector: 'app-sales-form',
   standalone: true,
@@ -103,6 +104,7 @@ import { CurrencyRateState } from '../../services/currency-rate.state';
     CustomerCreationModalComponent,
     SelectComponent,
     CustomerSelectComponent,
+    SaleSettlementPanelComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   providers: [ConfirmationService, CurrencyRateState],
@@ -115,7 +117,6 @@ export class SalesFormComponent implements OnInit {
   private readonly confirmationService = inject(ConfirmationService);
   private readonly messageService = inject(MessageService);
   private readonly productApiService = inject(ProductApiService);
-  private readonly batchApiService = inject(BatchApiService);
   private readonly destroyRef = inject(DestroyRef);
   private readonly customerModal =
     viewChild.required<CustomerCreationModalComponent>('customerModal');
@@ -164,7 +165,17 @@ export class SalesFormComponent implements OnInit {
     PaymentStatus.INVOICE_REQUESTED,
     Validators.required,
   );
-  public readonly isPaid = computed(() => this.paymentStatusControl.value === PaymentStatus.PAID);
+  /* Mirrors the control, the same way `orderStatusValue` does. A computed
+     reading `paymentStatusControl.value` straight off never re-evaluates —
+     a form control is not a signal — so the paid-sale lock, and the
+     settlement panel below it, would both be stuck on whatever the status
+     was when the page opened. */
+  public readonly paymentStatusValue = toSignal(this.paymentStatusControl.valueChanges, {
+    initialValue: this.paymentStatusControl.value,
+  });
+  public readonly isPaid = computed(() => this.paymentStatusValue() === PaymentStatus.PAID);
+  /** Offers to record the money behind a status that claims it has arrived. */
+  private readonly settlementPanel = viewChild(SaleSettlementPanelComponent);
   /**
    * Opt-in notification. Describes the save rather than the sale, so it lives
    * outside the form group and is never seeded from a loaded sale.
@@ -204,54 +215,29 @@ export class SalesFormComponent implements OnInit {
     this.saleId = this.route.snapshot.paramMap.get('id');
     this.isEditMode = !!this.saleId;
 
-    if (this.isEditMode && this.saleId) {
-      // Sale data is already loaded by the resolver
-      // Access it from route data if needed
-      const resolvedSale = this.route.snapshot.data['sale'];
-      if (resolvedSale) {
-        this.populateForm(resolvedSale);
-      }
+    // Already loaded by the resolver, so there is nothing to fetch here.
+    const resolved = this.route.snapshot.data['sale'] as Sale | undefined;
+
+    if (this.isEditMode && resolved) {
+      this.populateForm(resolved);
     }
   }
 
+  /** Every control the form opens with is written in `seedSaleForm`. */
   private populateForm(sale: Sale): void {
-    // Pinned, not editable — but every price on the page is labelled with it.
-    this.deal.reset(sale.currency, sale.exchangeRate);
-    this.lock.isLocked.set(isSaleLocked(sale));
-    this.customerControl.setValue(sale.customer?.id || sale.customerId);
-
-    this.statusControl.setValue(sale.orderStatus);
-    this.paymentStatusControl.setValue(sale.paymentStatus);
-
-    this.salesForm.controls.deliveryFee.setValue(sale.deliveryFee);
-
-    this.confirmDeliveryDate.set(sale.confirmedDeliveryDate || null);
-
-    this.arrivalDateControl.setValue(
-      sale.estimatedArrivalDate ? new Date(sale.estimatedArrivalDate) : null,
-    );
-
-    this.termsEditor()?.seed({
-      instructions: sale.paymentInstructions ?? [],
-      remarks: sale.invoiceRemarks ?? null,
+    seedSaleForm(sale, {
+      deal: this.deal,
+      isLocked: this.lock.isLocked,
+      customer: this.customerControl,
+      orderStatus: this.statusControl,
+      paymentStatus: this.paymentStatusControl,
+      deliveryFee: this.salesForm.controls.deliveryFee,
+      confirmedDelivery: this.confirmDeliveryDate,
+      arrivalDate: this.arrivalDateControl,
+      terms: this.termsEditor(),
+      lineItems: this.lineItems,
+      control: (value) => this.fb.control(value),
     });
-
-    this.lineItems.clear();
-    this.lineItems.push(
-      sale.lineItems.map((item) =>
-        this.fb.control<SaleLineItemDto>({
-          productId: item.productId,
-          requestedQuantity: item.requestedQuantity,
-          batchAllocations: item.batchAllocations || [],
-          customPrice: item.customPrice,
-          finalPrice: Number(item.finalPrice),
-          /* Carried through, or opening a sale to change anything at all
-             would strip the premium off every line on the next save. */
-          premiumType: item.premiumType ?? null,
-          premiumValue: item.premiumValue ?? null,
-        }),
-      ),
-    );
   }
 
   public get lineItems(): FormArray<FormControl<SaleLineItemDto>> {
@@ -270,25 +256,9 @@ export class SalesFormComponent implements OnInit {
   public removeLineItem(index: number): void {
     this.lineItems.removeAt(index);
 
-    // Clear validation error for removed line item
-    const errors = this.lineItemValidationErrors();
-    errors.delete(index);
-
-    // Re-index remaining errors
-    const reIndexedErrors = new Map<number, boolean>();
-    errors.forEach((value, key) => {
-      if (key > index) {
-        reIndexedErrors.set(key - 1, value);
-      } else {
-        reIndexedErrors.set(key, value);
-      }
-    });
-
-    this.lineItemValidationErrors.set(reIndexedErrors);
-
-    // Check if any line item has errors
-    const hasAnyError = Array.from(reIndexedErrors.values()).some(Boolean);
-    this.hasLineItemErrors.set(hasAnyError);
+    /* Keyed by row position, so dropping a row from the middle has to shift
+       the errors after it down with the rows they describe. */
+    this.setLineItemErrors(reindexControlMap(this.lineItemValidationErrors(), index));
   }
 
   public onLineItemChange(index: number, lineItem: SaleLineItemDto): void {
@@ -298,13 +268,12 @@ export class SalesFormComponent implements OnInit {
   }
 
   public onLineItemValidationError(index: number, hasError: boolean): void {
-    const errors = this.lineItemValidationErrors();
-    errors.set(index, hasError);
-    this.lineItemValidationErrors.set(new Map(errors));
+    this.setLineItemErrors(new Map(this.lineItemValidationErrors()).set(index, hasError));
+  }
 
-    // Check if any line item has errors
-    const hasAnyError = Array.from(errors.values()).some(Boolean);
-    this.hasLineItemErrors.set(hasAnyError);
+  private setLineItemErrors(errors: Map<number, boolean>): void {
+    this.lineItemValidationErrors.set(errors);
+    this.hasLineItemErrors.set([...errors.values()].some(Boolean));
   }
 
   public onSubmit(): void {
@@ -346,13 +315,7 @@ export class SalesFormComponent implements OnInit {
       };
 
       if (this.isEditMode && this.saleId) {
-        const updateData = buildSaleUpdatePayload({
-          ...common,
-          canEditContents: this.lock.canEditContents(),
-          overriding: this.lock.isOverriding(),
-        });
-
-        this.store.dispatch(updateSale({ id: this.saleId, saleData: updateData }));
+        this.saveEdit(common);
       } else {
         /* The deal currency is only settable at creation — it is pinned with
            its rate and every amount on the sale is denominated in it. */
@@ -375,6 +338,47 @@ export class SalesFormComponent implements OnInit {
         detail: 'Please fill in all required fields',
       });
     }
+  }
+
+  /**
+   * Save an edit, recording the settling payment first where one is armed.
+   *
+   * Payment before sale, and the sale is not saved at all if the payment
+   * fails — the alternative leaves a sale labelled Paid with nothing behind
+   * it, which is the bug this whole panel exists to stop.
+   *
+   * `paymentStatus` is then dropped from the payload. Recording a confirmed
+   * payment makes the server re-derive the status from the ledger, and that
+   * answer is better than the dropdown's: it knows whether the money just
+   * recorded actually covers the bill.
+   */
+  private saveEdit(common: Omit<UpdatePayloadInput, 'canEditContents' | 'overriding'>): void {
+    const panel = this.settlementPanel();
+
+    (panel ? panel.settle() : of(false))
+      .pipe(
+        map((recorded) =>
+          buildSaleUpdatePayload({
+            ...common,
+            paymentStatus: recorded ? undefined : common.paymentStatus,
+            canEditContents: this.lock.canEditContents(),
+            overriding: this.lock.isOverriding(),
+          }),
+        ),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe({
+        next: (saleData) =>
+          this.store.dispatch(updateSale({ id: this.saleId as string, saleData })),
+        /* The panel states the failure inline and the sale stays unsaved, so
+           the admin can retry or untick without losing the form. */
+        error: () =>
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Payment not recorded',
+            detail: 'The sale was not saved. Check the payment details and try again.',
+          }),
+      });
   }
 
   public onCancel(): void {

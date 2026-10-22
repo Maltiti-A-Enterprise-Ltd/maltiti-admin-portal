@@ -17,6 +17,7 @@ import {
 import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { take } from 'rxjs';
+import { downloadBlob } from '@shared/utils/download-blob';
 
 // PrimeNG
 import { DialogModule } from 'primeng/dialog';
@@ -37,6 +38,7 @@ import {
   PaymentAccount,
   paymentAccountLabel,
 } from '@features/payment-accounts/models/payment-account.model';
+import { InvoiceDisplayOptions } from '../../utils/invoice-display-options';
 import { CurrencyRateState } from '../../services/currency-rate.state';
 import { InvoiceCurrency } from '../../models/sale.model';
 
@@ -88,17 +90,14 @@ export class InvoicePreviewModalComponent {
   );
 
   /**
-   * Whether the invoice lists what has already been received against it.
+   * The tick boxes that change how the PDF reads — payments received,
+   * pounds beside the metric weights, container sizes.
    *
-   * Off by default: most invoices are a plain bill, and an unpaid one has
-   * nothing to show. Turning it on adds the confirmed payments, an amount
-   * paid and a balance due.
+   * Held together so a new one is added in one place. Each used to be
+   * spelled out in six, and a flag that reaches five of them works in the
+   * preview and is missing from the emailed copy.
    */
-  public readonly includePayments = signal(false);
-  /* Off by default: the business works in SI, and this is for the one
-     client who asked. Regenerates on toggle like the payments option,
-     so the preview is always what would be sent. */
-  public readonly showImperialWeights = signal(false);
+  public readonly display = new InvoiceDisplayOptions();
 
   public readonly sending = signal(false);
   public readonly previewUrl = signal<SafeResourceUrl | null>(null);
@@ -115,6 +114,8 @@ export class InvoicePreviewModalComponent {
   /** Held so it can be revoked — object URLs leak until they are. */
   private objectUrl: string | null = null;
   private pdfBlob: Blob | null = null;
+  /** What the server called it, for the Download button. */
+  private pdfFileName = 'Invoice.pdf';
 
 
   public readonly form = this.fb.group({
@@ -145,6 +146,7 @@ export class InvoicePreviewModalComponent {
 
   constructor() {
     this.currencyState.onSettled = (): void => this.regenerate();
+    this.display.onChange = (): void => this.regenerate();
     this.destroyRef.onDestroy(() => this.releasePreview());
   }
 
@@ -161,8 +163,7 @@ export class InvoicePreviewModalComponent {
     this.saleId.set(saleId);
     this.customerEmail.set(customerEmail?.trim() || null);
     this.currencyState.reset(invoiceCurrency, invoiceExchangeRate);
-    this.includePayments.set(false);
-    this.showImperialWeights.set(false);
+    this.display.reset();
     this.form.reset({
       recipient: customerEmail?.trim() ? 'customer' : 'other',
       email: '',
@@ -181,16 +182,6 @@ export class InvoicePreviewModalComponent {
     this.selectedAccountIds.update((ids) =>
       ids.includes(id) ? ids.filter((existing) => existing !== id) : [...ids, id],
     );
-    this.regenerate();
-  }
-
-  public toggleIncludePayments(): void {
-    this.includePayments.update((shown) => !shown);
-    this.regenerate();
-  }
-
-  public toggleImperialWeights(): void {
-    this.showImperialWeights.update((shown) => !shown);
     this.regenerate();
   }
 
@@ -251,27 +242,20 @@ export class InvoicePreviewModalComponent {
     this.paymentAccounts.set([]);
     this.selectedAccountIds.set([]);
     this.currencyState.reset();
-    this.includePayments.set(false);
-    this.showImperialWeights.set(false);
+    this.display.reset();
     this.form.reset({ recipient: 'customer', email: '' });
   }
 
   public download(): void {
     const blob = this.pdfBlob;
-    const saleId = this.saleId();
 
-    if (!blob || !saleId) {
+    if (!blob) {
       return;
     }
 
-    // A fresh URL for the download, so revoking it cannot break the preview
-    // that is still on screen.
-    const url = globalThis.URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `invoice-${saleId}.pdf`;
-    link.click();
-    globalThis.URL.revokeObjectURL(url);
+    /* `downloadBlob` makes a fresh object URL of its own, so revoking it
+       cannot break the preview still on screen. */
+    downloadBlob(blob, this.pdfFileName);
   }
 
   public send(): void {
@@ -303,8 +287,7 @@ export class InvoicePreviewModalComponent {
         // Send what was previewed, not the defaults.
         paymentAccountIds: this.selectedAccountIds(),
         ...this.currencyState.payload(),
-        includePayments: this.includePayments(),
-        showImperialWeights: this.showImperialWeights(),
+        ...this.display.payload(),
       })
       .pipe(take(1))
       .subscribe({
@@ -341,13 +324,15 @@ export class InvoicePreviewModalComponent {
         transportation: 0,
         paymentAccountIds: this.selectedAccountIds(),
         ...this.currencyState.payload(),
-        includePayments: this.includePayments(),
-        showImperialWeights: this.showImperialWeights(),
+        ...this.display.payload(),
       })
       .pipe(take(1))
       .subscribe({
-        next: (blob: Blob) => {
+        next: ({ blob, fileName }) => {
           this.pdfBlob = blob;
+          /* Kept from the response so Download saves it under the name the
+             invoice actually carries, rather than one invented here. */
+          this.pdfFileName = fileName;
           this.objectUrl = globalThis.URL.createObjectURL(blob);
           this.previewUrl.set(
             this.sanitizer.bypassSecurityTrustResourceUrl(this.objectUrl),

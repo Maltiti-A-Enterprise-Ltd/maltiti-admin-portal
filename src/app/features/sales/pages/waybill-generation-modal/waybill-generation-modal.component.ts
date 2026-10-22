@@ -8,6 +8,7 @@ import { ChangeDetectionStrategy, Component, inject, output, signal } from '@ang
 
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { take } from 'rxjs';
+import { downloadBlob } from '@shared/utils/download-blob';
 
 // PrimeNG Imports
 import { DialogModule } from 'primeng/dialog';
@@ -130,14 +131,9 @@ export class WaybillGenerationModalComponent {
         .generateWaybill(saleId, waybillData)
         .pipe(take(1))
         .subscribe({
-          next: (blob: Blob) => {
-            // Create a download link for the PDF
-            const url = globalThis.URL.createObjectURL(blob);
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = `waybill-${saleId}-${Date.now()}.pdf`;
-            link.click();
-            globalThis.URL.revokeObjectURL(url);
+          next: ({ blob, fileName }) => {
+            // Named by the server, from the waybill's own number and date.
+            downloadBlob(blob, fileName);
 
             this.messageService.add({
               severity: 'success',
