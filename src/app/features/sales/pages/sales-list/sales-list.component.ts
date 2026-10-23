@@ -244,12 +244,16 @@ export class SalesListComponent implements OnInit {
   public onGenerateInvoice(sale: Sale): void {
     // Preview first: downloading or emailing is the admin's call, not a side
     // effect of asking to see the invoice.
-    this.invoicePreviewModal().open(
-      sale.id,
-      sale.customer?.email,
-      sale.invoiceCurrency,
-      sale.invoiceExchangeRate,
-    );
+    this.invoicePreviewModal().open(sale.id, {
+      customerEmail: sale.customer?.email,
+      /* The deal currency, so a dollar sale opens as a dollar invoice. The
+         dialog can still be switched to cedis — that is now a real choice
+         rather than one the API ignored. */
+      currency: sale.currency,
+      exchangeRate: sale.exchangeRate,
+      invoiceCurrency: sale.invoiceCurrency,
+      invoiceExchangeRate: sale.invoiceExchangeRate,
+    });
   }
 
   public onGenerateReceipt(sale: Sale): void {

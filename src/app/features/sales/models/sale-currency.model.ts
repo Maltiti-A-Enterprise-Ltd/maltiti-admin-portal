@@ -52,6 +52,17 @@ export interface InvoiceCurrencyOptions {
    * weights, it is never converted.
    */
   showBoxDimensions?: boolean;
+  /**
+   * Print the rate the figures were struck at under the totals — "Invoiced
+   * in USD. Agreed at 1 USD = 11.8126 GHS", or "Converted from USD at ..."
+   * where the invoice restates a sale in another currency.
+   *
+   * Off by default. It explains the figures to anyone reconciling against a
+   * cedi statement, but a dollar invoice going to a dollar customer has no
+   * reason to carry a cedi rate. Nothing to show on an ordinary cedi
+   * invoice, which has no rate in the first place.
+   */
+  showExchangeRate?: boolean;
 }
 
 /** Body for POST /sales/:id/invoice/email */

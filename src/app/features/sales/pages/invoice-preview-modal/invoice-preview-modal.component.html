@@ -142,6 +142,29 @@
         product has no recorded dimensions show nothing. The unit is the one
         the product was recorded in — it is not converted.
       </p>
+
+      <!-- Only where there is a rate to show. On a cedi invoice for a cedi
+           sale there is nothing to explain, and the tick box would be one
+           that visibly does nothing. -->
+      @if (showsRate()) {
+        <div class="payments-option">
+          <p-checkbox
+            ariaLabel="Show the exchange rate"
+            inputId="showExchangeRate"
+            [binary]="true"
+            [disabled]="generating()"
+            [ngModel]="display.is('showExchangeRate')"
+            [ngModelOptions]="{ standalone: true }"
+            (onChange)="display.toggle('showExchangeRate')"
+          />
+          <label for="showExchangeRate">Show the exchange rate</label>
+        </div>
+        <p class="payments-hint">
+          Prints the rate the figures were struck at under the totals. Useful
+          for a customer reconciling against a cedi statement; leave it off
+          for a buyer who only deals in their own currency.
+        </p>
+      }
     </div>
 
     <!-- Which accounts to print. Ticking regenerates the preview, so what is

@@ -21,12 +21,14 @@ import { InvoiceCurrencyOptions } from '../models/sale-currency.model';
 export type InvoiceDisplayOption =
   | 'includePayments'
   | 'showImperialWeights'
-  | 'showBoxDimensions';
+  | 'showBoxDimensions'
+  | 'showExchangeRate';
 
 const OPTIONS: readonly InvoiceDisplayOption[] = [
   'includePayments',
   'showImperialWeights',
   'showBoxDimensions',
+  'showExchangeRate',
 ];
 
 export class InvoiceDisplayOptions {
@@ -40,6 +42,11 @@ export class InvoiceDisplayOptions {
     includePayments: signal(false),
     showImperialWeights: signal(false),
     showBoxDimensions: signal(false),
+    /* The rate line was the one of these that was on by default. It explains
+       the figures to anyone reconciling against a cedi statement, but it was
+       also on every dollar invoice going to a dollar customer, who has no use
+       for a cedi rate. */
+    showExchangeRate: signal(false),
   };
 
   /** Called after a toggle, so the preview is always what would be sent. */
@@ -72,6 +79,7 @@ export class InvoiceDisplayOptions {
       includePayments: this.is('includePayments'),
       showImperialWeights: this.is('showImperialWeights'),
       showBoxDimensions: this.is('showBoxDimensions'),
+      showExchangeRate: this.is('showExchangeRate'),
     };
   }
 }
