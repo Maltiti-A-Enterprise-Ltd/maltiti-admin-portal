@@ -41,6 +41,7 @@ import {
 import { InvoiceDisplayOptions } from '../../utils/invoice-display-options';
 import { CurrencyRateState } from '../../services/currency-rate.state';
 import { InvoiceCurrency } from '../../models/sale.model';
+import { InvoicePreviewContext } from '../../models/invoice-preview.model';
 
 /** Where the invoice should go. */
 type Recipient = 'customer' | 'other';
@@ -110,6 +111,22 @@ export class InvoicePreviewModalComponent {
   /** The address on the customer record; absent when they have none. */
   public readonly customerEmail = signal<string | null>(null);
 
+  /** What the sale was struck in, which the invoice may restate. */
+  private readonly saleCurrency = signal<InvoiceCurrency>(InvoiceCurrency.GHS);
+
+  /**
+   * Whether there is a rate on this invoice worth offering to print.
+   *
+   * A cedi sale on a cedi invoice has none, and a tick box that visibly does
+   * nothing is worse than no tick box. Anything else — a converted invoice,
+   * or a foreign sale however it is issued — has a rate behind its figures.
+   */
+  public readonly showsRate = computed(
+    () =>
+      this.saleCurrency() !== InvoiceCurrency.GHS ||
+      this.currencyState.isForeign(),
+  );
+
   private readonly saleId = signal<string | null>(null);
   /** Held so it can be revoked — object URLs leak until they are. */
   private objectUrl: string | null = null;
@@ -151,21 +168,28 @@ export class InvoicePreviewModalComponent {
   }
 
   /**
-   * @param invoiceCurrency What this sale was last invoiced in, so reissuing
-   * it opens where it left off instead of silently reverting to cedis.
+   * Opens on what this sale was last invoiced in, falling back to the
+   * currency it was **struck** in.
+   *
+   * That fallback matters now that a foreign sale can actually be invoiced in
+   * cedis. It used to fall back to cedis, which was harmless only because the
+   * API ignored the choice for a foreign sale and issued in its own currency
+   * regardless. With the API honouring it, the same fallback would quietly
+   * turn every dollar invoice into a cedi one.
    */
-  public open(
-    saleId: string,
-    customerEmail?: string | null,
-    invoiceCurrency?: InvoiceCurrency | null,
-    invoiceExchangeRate?: number | null,
-  ): void {
+  public open(saleId: string, context: InvoicePreviewContext = {}): void {
+    const saleCurrency = context.currency ?? InvoiceCurrency.GHS;
+
+    this.saleCurrency.set(saleCurrency);
     this.saleId.set(saleId);
-    this.customerEmail.set(customerEmail?.trim() || null);
-    this.currencyState.reset(invoiceCurrency, invoiceExchangeRate);
+    this.customerEmail.set(context.customerEmail?.trim() || null);
+    this.currencyState.reset(
+      context.invoiceCurrency ?? saleCurrency,
+      context.invoiceExchangeRate ?? context.exchangeRate,
+    );
     this.display.reset();
     this.form.reset({
-      recipient: customerEmail?.trim() ? 'customer' : 'other',
+      recipient: context.customerEmail?.trim() ? 'customer' : 'other',
       email: '',
     });
     this.sendError.set(null);

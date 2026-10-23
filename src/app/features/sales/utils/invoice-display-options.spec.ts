@@ -17,6 +17,7 @@ describe('InvoiceDisplayOptions', () => {
     expect(options.is('includePayments')).toBeFalse();
     expect(options.is('showImperialWeights')).toBeFalse();
     expect(options.is('showBoxDimensions')).toBeFalse();
+    expect(options.is('showExchangeRate')).toBeFalse();
   });
 
   it('turns one on and back off', () => {
@@ -75,6 +76,7 @@ describe('InvoiceDisplayOptions', () => {
       expect(keys).toEqual([
         'includePayments',
         'showBoxDimensions',
+        'showExchangeRate',
         'showImperialWeights',
       ]);
     });
@@ -84,6 +86,9 @@ describe('InvoiceDisplayOptions', () => {
         includePayments: false,
         showImperialWeights: false,
         showBoxDimensions: false,
+        /* The one that used to be on by default — it was not a tick box at
+           all, it was always printed. */
+        showExchangeRate: false,
       });
     });
 
