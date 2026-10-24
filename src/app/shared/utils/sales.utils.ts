@@ -1,9 +1,16 @@
 import { OrderStatus, PaymentStatus } from '@app/features/sales/models/sale.model';
 
-export function getStatusSeverity(status: OrderStatus): 'success' | 'info' | 'warn' | 'danger' {
+export function getStatusSeverity(
+  status: OrderStatus,
+): 'success' | 'info' | 'warn' | 'danger' | 'secondary' {
   switch (status) {
     case OrderStatus.DELIVERED:
       return 'success';
+    /* Grey, and deliberately not green. A pre-system sale is a debt carried
+       in from before this system; dressing it as a completed delivery would
+       claim something the lost records cannot support. */
+    case OrderStatus.PRE_SYSTEM:
+      return 'secondary';
     case OrderStatus.IN_TRANSIT:
     case OrderStatus.PACKAGING:
       return 'info';
@@ -47,6 +54,9 @@ export function getNextStatuses(currentStatus: OrderStatus): OrderStatus[] {
     [OrderStatus.IN_TRANSIT]: [OrderStatus.DELIVERED],
     [OrderStatus.DELIVERED]: [],
     [OrderStatus.CANCELLED]: [],
+    /* Terminal. A debt carried in from before this system has nowhere to
+       progress to — the goods, whatever became of them, are long gone. */
+    [OrderStatus.PRE_SYSTEM]: [],
   };
   return transitions[currentStatus] || [];
 }
