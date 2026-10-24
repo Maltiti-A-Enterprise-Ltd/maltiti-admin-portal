@@ -1,4 +1,5 @@
 import { InvoiceCurrency } from './sale-currency.model';
+import { SaleLineItem } from './sale.model';
 
 /**
  * What the invoice dialog needs to know about the sale it is invoicing.
@@ -20,4 +21,6 @@ export interface InvoicePreviewContext {
   /** What it was last invoiced in, where that differs. */
   readonly invoiceCurrency?: InvoiceCurrency | null;
   readonly invoiceExchangeRate?: number | null;
+  /** The sale's lines, so their prices can be restated for this invoice. */
+  readonly lineItems?: readonly SaleLineItem[];
 }

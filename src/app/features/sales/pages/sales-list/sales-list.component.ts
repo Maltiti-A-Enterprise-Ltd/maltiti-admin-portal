@@ -278,6 +278,9 @@ export class SalesListComponent implements OnInit {
       exchangeRate: sale.exchangeRate,
       invoiceCurrency: sale.invoiceCurrency,
       invoiceExchangeRate: sale.invoiceExchangeRate,
+      /* So the dialog can offer to restate their prices. Nothing it does
+         with them is written back to the sale. */
+      lineItems: sale.lineItems,
     });
   }
 

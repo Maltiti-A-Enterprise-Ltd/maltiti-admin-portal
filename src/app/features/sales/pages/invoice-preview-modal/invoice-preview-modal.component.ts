@@ -15,6 +15,7 @@ import {
   signal,
 } from '@angular/core';
 import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { DecimalPipe } from '@angular/common';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { take } from 'rxjs';
 import { downloadBlob } from '@shared/utils/download-blob';
@@ -39,6 +40,7 @@ import {
   paymentAccountLabel,
 } from '@features/payment-accounts/models/payment-account.model';
 import { InvoiceDisplayOptions } from '../../utils/invoice-display-options';
+import { InvoicePriceAdjustments } from '../../utils/invoice-price-adjustments';
 import { CurrencyRateState } from '../../services/currency-rate.state';
 import { InvoiceCurrency } from '../../models/sale.model';
 import { InvoicePreviewContext } from '../../models/invoice-preview.model';
@@ -65,6 +67,7 @@ type Recipient = 'customer' | 'other';
     SelectModule,
     InputNumberModule,
     TooltipModule,
+    DecimalPipe,
   ],
 })
 export class InvoicePreviewModalComponent {
@@ -99,6 +102,12 @@ export class InvoicePreviewModalComponent {
    * preview and is missing from the emailed copy.
    */
   public readonly display = new InvoiceDisplayOptions();
+
+  /**
+   * Unit prices this invoice is to print, where they are not the sale's.
+   * Beside the tick boxes for the same reason — see the class.
+   */
+  public readonly prices = new InvoicePriceAdjustments();
 
   public readonly sending = signal(false);
   public readonly previewUrl = signal<SafeResourceUrl | null>(null);
@@ -164,6 +173,7 @@ export class InvoicePreviewModalComponent {
   constructor() {
     this.currencyState.onSettled = (): void => this.regenerate();
     this.display.onChange = (): void => this.regenerate();
+    this.prices.onChange = (): void => this.regenerate();
     this.destroyRef.onDestroy(() => this.releasePreview());
   }
 
@@ -188,6 +198,7 @@ export class InvoicePreviewModalComponent {
       context.invoiceExchangeRate ?? context.exchangeRate,
     );
     this.display.reset();
+    this.prices.reset(context.lineItems);
     this.form.reset({
       recipient: context.customerEmail?.trim() ? 'customer' : 'other',
       email: '',
@@ -267,6 +278,7 @@ export class InvoicePreviewModalComponent {
     this.selectedAccountIds.set([]);
     this.currencyState.reset();
     this.display.reset();
+    this.prices.reset();
     this.form.reset({ recipient: 'customer', email: '' });
   }
 
@@ -312,6 +324,7 @@ export class InvoicePreviewModalComponent {
         paymentAccountIds: this.selectedAccountIds(),
         ...this.currencyState.payload(),
         ...this.display.payload(),
+        ...this.prices.payload(),
       })
       .pipe(take(1))
       .subscribe({
@@ -349,6 +362,7 @@ export class InvoicePreviewModalComponent {
         paymentAccountIds: this.selectedAccountIds(),
         ...this.currencyState.payload(),
         ...this.display.payload(),
+        ...this.prices.payload(),
       })
       .pipe(take(1))
       .subscribe({
