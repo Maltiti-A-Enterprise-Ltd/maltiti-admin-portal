@@ -23,6 +23,9 @@ export * from './sale-invoice-terms.model';
 /* Also split out at the 400-line ceiling. Re-exported, so the many
    existing `from './sale.model'` imports keep working. */
 export * from './sale-premium.model';
+/* Likewise. Imported too, because `Sale` below refers to `SaleKind`. */
+export * from './opening-balance.model';
+import { SaleKind } from './opening-balance.model';
 import { PremiumType } from './sale-premium.model';
 import { PaymentInstructionDto } from './sale-invoice-terms.model';
 import { SaleAttention } from './sale-attention.model';
@@ -49,6 +52,12 @@ export enum OrderStatus {
   IN_TRANSIT = 'in_transit',
   DELIVERED = 'delivered',
   CANCELLED = 'cancelled',
+  /**
+   * Before this system, and we do not know what became of the goods.
+   * Terminal, and never offered as a status an admin can pick — see
+   * `SaleKind.OPENING_BALANCE`.
+   */
+  PRE_SYSTEM = 'pre_system',
 }
 
 // ─── Payment Record Enums ──────────────────────────────────────────────────────
@@ -321,6 +330,11 @@ export interface Sale {
   /** The sale's customer as returned by the API (not the linked user account). */
   customer?: Customer;
   orderStatus: OrderStatus;
+  /** Absent on anything written before opening balances existed. */
+  kind?: SaleKind;
+  /** The day an opening balance is stated as at. Null on an order. */
+  openingBalanceAsOf?: string | null;
+  openingBalanceNote?: string | null;
   paymentStatus: PaymentStatus;
   lineItems: SaleLineItem[];
   total: number;
