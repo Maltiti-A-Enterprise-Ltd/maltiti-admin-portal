@@ -232,3 +232,97 @@
   font-size: 0.78rem;
   color: var(--text-color-secondary, #64748b);
 }
+
+/* Printing at prices other than the sale's.
+   Plain until something is actually changed, then amber — this is the one
+   control here that makes the document say something the sale does not. */
+.prices-pane {
+  border: 1px solid var(--p-content-border-color, #e2e8f0);
+  border-radius: 8px;
+  padding: 0.9rem 1rem;
+
+  &.is-adjusted {
+    border-color: var(--orange-300, #fdba74);
+    background: var(--orange-50, #fff7ed);
+  }
+}
+
+.prices-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.prices-hint {
+  margin: 0.3rem 0 0.75rem;
+  font-size: 0.75rem;
+  line-height: 1.45;
+  color: var(--text-color-secondary);
+}
+
+.prices-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8rem;
+
+  th {
+    padding-bottom: 0.35rem;
+    font-weight: 500;
+    text-align: left;
+    color: var(--text-color-secondary);
+  }
+
+  td {
+    padding: 0.2rem 0;
+    vertical-align: middle;
+  }
+
+  .num {
+    text-align: right;
+  }
+
+  .muted {
+    color: var(--text-color-secondary);
+  }
+
+  /* The line that is no longer the sale's price. */
+  tr.is-changed td {
+    font-weight: 500;
+  }
+
+  ::ng-deep .price-input input {
+    width: 7rem;
+    text-align: right;
+  }
+}
+
+.prices-totals {
+  display: flex;
+  align-items: baseline;
+  justify-content: flex-end;
+  gap: 1rem;
+  margin-top: 0.6rem;
+  font-size: 0.8rem;
+  color: var(--text-color-secondary);
+
+  .invoice-total {
+    font-weight: 600;
+    color: var(--text-color);
+  }
+
+  .prices-difference {
+    color: var(--orange-700, #c2410c);
+    font-weight: 500;
+  }
+}
+
+.prices-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.35rem;
+  margin: 0.6rem 0 0;
+  font-size: 0.75rem;
+  line-height: 1.45;
+  color: var(--text-color-secondary);
+}
