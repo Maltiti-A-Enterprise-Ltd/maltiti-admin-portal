@@ -5,6 +5,16 @@
     <p class="page-description">Manage sales, track orders, and handle customer transactions</p>
   </div>
   <div class="page-actions">
+    <!-- Quieter than Create Sale on purpose: recording what somebody owed
+         from before is a one-off tidying job, not the daily work. -->
+    <app-button
+      icon="pi pi-history"
+      label="Opening balance"
+      severity="contrast"
+      [outlined]="true"
+      (click)="onRecordOpeningBalance()"
+      (keyDown.enter)="onRecordOpeningBalance()"
+    />
     <app-button
       icon="pi pi-plus"
       label="Create Sale"
@@ -133,6 +143,21 @@
         <td data-label="Customer">
           <div class="customer-cell">
             <span class="customer-name">{{ getCustomerLabel(sale.customer) }}</span>
+            <!-- Said on the row rather than left to the status tag alone. A
+                 figure with no products behind it looks like a broken sale
+                 until you know what it is. -->
+            @if (isOpeningBalance(sale)) {
+              <span
+                class="brought-forward"
+                pTooltip="Owed from before this system. No products — the records are lost."
+              >
+                <i aria-hidden="true" class="pi pi-history"></i>
+                Brought forward
+                @if (sale.openingBalanceAsOf) {
+                  &middot; as at {{ sale.openingBalanceAsOf | date: 'd MMM y' }}
+                }
+              </span>
+            }
             <!-- Where the goods go. Sits under the name rather than in a column
                  of its own: it belongs to the customer, and a full postal
                  address would dominate an already wide table. -->
@@ -326,3 +351,7 @@
 <!-- Estimated arrival date: set on dispatch, revised whenever the agent
      quotes a new one. -->
 <app-arrival-date-modal (saved)="onArrivalDateSaved()" />
+
+<!-- Debt carried in from before this system. Its own dialog, because the
+     sale form is built around line items it will never have. -->
+<app-opening-balance-dialog (saved)="onOpeningBalanceSaved()" />

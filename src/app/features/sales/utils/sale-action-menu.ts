@@ -1,7 +1,7 @@
 import { MenuItem } from 'primeng/api';
 import { Role } from '@models/user.model';
 import { getNextStatuses, getStatusLabel } from '@shared/utils/sales.utils';
-import { OrderStatus, PaymentStatus, Sale } from '../models/sale.model';
+import { OrderStatus, PaymentStatus, Sale, SaleKind } from '../models/sale.model';
 
 /**
  * The row's "…" menu.
@@ -26,12 +26,27 @@ export interface SaleMenuActions {
   setArrivalDate: (sale: Sale) => void;
 }
 
+/**
+ * A debt carried in from before this system.
+ *
+ * It has no line items, so every document built from them — the invoice's
+ * items table, the receipt, the waybill — would render an empty grid. They
+ * are withheld rather than rendered badly; what to send a customer about an
+ * old debt is a separate question.
+ */
+const isOpeningBalance = (sale: Sale): boolean =>
+  sale.kind === SaleKind.OPENING_BALANCE;
+
 export function buildSaleActionMenu(
   sale: Sale,
   role: Role | null | undefined,
   actions: SaleMenuActions,
 ): MenuItem[] {
   const isAdmin = role === Role.Admin || role === Role.SuperAdmin;
+
+  if (isOpeningBalance(sale)) {
+    return openingBalanceMenu(sale, isAdmin, actions);
+  }
 
   const items: MenuItem[] = [
     {
@@ -122,4 +137,54 @@ export function buildSaleActionMenu(
         ]
       : []),
   ];
+}
+
+/**
+ * What can be done to a debt carried in from before this system.
+ *
+ * A short list, and short on purpose. There are no products to re-price, no
+ * shipment to track, no delivery cost to set and nowhere for the status to
+ * move — so offering any of those would be offering something that cannot
+ * work. "Correct" opens the opening-balance dialog rather than the sale
+ * form, which asks for line items this record will never have.
+ */
+function openingBalanceMenu(
+  sale: Sale,
+  isAdmin: boolean,
+  actions: SaleMenuActions,
+): MenuItem[] {
+  const items: MenuItem[] = [
+    {
+      label: 'Correct opening balance',
+      icon: 'pi pi-pencil',
+      command: (): void => actions.edit(sale),
+    },
+    {
+      label: sale.flaggedAt ? 'Remove flag' : 'Flag for attention',
+      icon: sale.flaggedAt ? 'pi pi-flag-fill' : 'pi pi-flag',
+      command: (): void => actions.toggleFlag(sale),
+    },
+    /* The whole point of storing it as a sale: money collected against an
+       old debt is recorded with the screens admins already know. */
+    {
+      label: 'View Payments',
+      icon: 'pi pi-credit-card',
+      command: (): void => actions.viewPayments(sale),
+    },
+  ];
+
+  /* Removing it is the only way to undo a mis-remembered debt, and it is
+     also the only way to correct one recorded against the wrong customer. */
+  if (isAdmin) {
+    items.push(
+      { separator: true },
+      {
+        label: 'Remove',
+        icon: 'pi pi-times',
+        command: (): void => actions.cancel(sale),
+      },
+    );
+  }
+
+  return [{ label: 'Actions', items }];
 }

@@ -167,6 +167,86 @@
       }
     </div>
 
+    <!-- Printing at prices other than the sale's. Changing one regenerates
+         the preview, so what is on screen is always the document that would
+         be sent. Nothing here is written back to the sale. -->
+    @if (prices.lines().length) {
+      <div class="prices-pane" [class.is-adjusted]="prices.isAdjusted()">
+        <div class="prices-header">
+          <h4 class="send-title">Invoice unit prices</h4>
+          @if (prices.isAdjusted()) {
+            <button class="select-all" type="button" (click)="prices.clear()">
+              Back to sale prices
+            </button>
+          }
+        </div>
+
+        <p class="prices-hint">
+          Leave these alone to invoice at the sale's own prices. Changing one
+          changes only this document — the sale keeps its prices, its total
+          and its balance.
+        </p>
+
+        <table class="prices-table">
+          <thead>
+            <tr>
+              <th scope="col">Product</th>
+              <th class="num" scope="col">Qty</th>
+              <th class="num" scope="col">Sale</th>
+              <th class="num" scope="col">Invoice</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (line of prices.lines(); track line.index) {
+              <tr [class.is-changed]="line.invoicePrice !== line.salePrice">
+                <td>{{ line.productName }}</td>
+                <td class="num">{{ line.quantity }}</td>
+                <td class="num muted">{{ line.salePrice | number: '1.2-2' }}</td>
+                <td class="num">
+                  <p-inputNumber
+                    locale="en-GH"
+                    mode="decimal"
+                    styleClass="price-input"
+                    [disabled]="generating()"
+                    [maxFractionDigits]="2"
+                    [min]="0"
+                    [minFractionDigits]="2"
+                    [ngModel]="line.invoicePrice"
+                    [ngModelOptions]="{ standalone: true }"
+                    (ngModelChange)="prices.setPending(line.index, $event)"
+                    (onBlur)="prices.commit()"
+                  />
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+
+        <div class="prices-totals">
+          <span>Sale {{ currencyState.symbol() }} {{ prices.saleTotal() | number: '1.2-2' }}</span>
+          <span class="invoice-total">
+            Invoice {{ currencyState.symbol() }}
+            {{ prices.invoiceTotal() | number: '1.2-2' }}
+          </span>
+          @if (prices.isAdjusted()) {
+            <span class="prices-difference">
+              {{ prices.difference() > 0 ? '+' : '' }}{{ prices.difference() | number: '1.2-2' }}
+            </span>
+          }
+        </div>
+
+        <!-- Said plainly, because losing the payments section without being
+             told would look like a bug. -->
+        @if (prices.isAdjusted()) {
+          <p class="prices-note">
+            <i class="pi pi-info-circle"></i>
+            Payments received are left off an adjusted invoice — against a
+            restated total they would show a balance that does not exist.
+          </p>
+        }
+      </div>
+    }
+
     <!-- Which accounts to print. Ticking regenerates the preview, so what is
          on screen is always the document that would be sent. -->
     @if (paymentAccounts().length) {

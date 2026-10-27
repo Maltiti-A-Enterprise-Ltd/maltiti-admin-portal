@@ -1,0 +1,157 @@
+<p-dialog
+  [closable]="true"
+  [header]="heading()"
+  [modal]="true"
+  [style]="{ width: '34rem', maxWidth: '95vw' }"
+  [visible]="visible()"
+  (onHide)="close()"
+>
+  <form class="balance-form" [formGroup]="form">
+    @if (errorMessage()) {
+      <div class="form-error" role="alert">
+        <i class="pi pi-exclamation-circle"></i>
+        {{ errorMessage() }}
+      </div>
+    }
+
+    <p class="form-intro">
+      What this customer already owed before you started recording sales here.
+      It is chased and paid like any sale, and is never counted as revenue —
+      that money was earned before this system.
+    </p>
+
+    <div class="form-field">
+      <label for="obCustomer">Customer <span class="required">*</span></label>
+      <!-- Fixed once recorded: moving a debt to another customer is not a
+           correction, it is a different debt. -->
+      <app-customer-select
+        inputId="obCustomer"
+        [control]="form.controls.customerId"
+      />
+      @if (isEditing()) {
+        <small class="form-help">
+          The customer cannot be changed. Remove this balance and record a new
+          one if it belongs to somebody else.
+        </small>
+      }
+    </div>
+
+    <div class="form-row">
+      <div class="form-field">
+        <label for="obAmount">Amount owed <span class="required">*</span></label>
+        <p-inputNumber
+          inputId="obAmount"
+          locale="en-GH"
+          mode="decimal"
+          [formControl]="form.controls.amount"
+          [maxFractionDigits]="2"
+          [min]="0.01"
+          [minFractionDigits]="2"
+          [prefix]="deal.symbol() + ' '"
+        />
+      </div>
+
+      <!-- Only while recording. Restating a debt in another money is not a
+           correction either, and the rate is pinned the way a sale's is. -->
+      @if (!isEditing()) {
+        <div class="form-field">
+          <label for="obCurrency">Currency</label>
+          <p-select
+            inputId="obCurrency"
+            optionLabel="label"
+            optionValue="value"
+            [disabled]="deal.fetching()"
+            [ngModel]="deal.currency()"
+            [ngModelOptions]="{ standalone: true }"
+            [options]="deal.options"
+            (onChange)="deal.selectCurrency($event.value)"
+          />
+        </div>
+      }
+    </div>
+
+    @if (!isEditing() && deal.isForeign()) {
+      <div class="form-field rate-field">
+        <label for="obRate">1 {{ deal.currency() }} =</label>
+        <div class="rate-row">
+          <p-inputNumber
+            inputId="obRate"
+            suffix=" GHS"
+            [maxFractionDigits]="4"
+            [min]="0"
+            [minFractionDigits]="2"
+            [ngModel]="deal.exchangeRate()"
+            [ngModelOptions]="{ standalone: true }"
+            (ngModelChange)="deal.exchangeRate.set($event)"
+            (onBlur)="deal.setRate(deal.exchangeRate())"
+          />
+          <p-button
+            icon="pi pi-refresh"
+            label="Today's rate"
+            severity="secondary"
+            [loading]="deal.fetching()"
+            [text]="true"
+            (onClick)="deal.fetchTodaysRate()"
+          />
+        </div>
+        @if (deal.error()) {
+          <small class="form-help is-error">{{ deal.error() }}</small>
+        } @else {
+          <small class="form-help">
+            Pinned to this debt, like a sale's. A debt agreed in dollars stays
+            five hundred dollars rather than becoming five hundred cedis.
+          </small>
+        }
+      </div>
+    }
+
+    <div class="form-field">
+      <label for="obAsOf">Owed as at <span class="required">*</span></label>
+      <p-datepicker
+        appendTo="body"
+        inputId="obAsOf"
+        placeholder="Pick a date"
+        [formControl]="form.controls.asOf"
+        [maxDate]="maxAsOf"
+        [showButtonBar]="true"
+        [showIcon]="true"
+        [style]="{ width: '100%' }"
+      />
+      <small class="form-help">
+        Payment terms run from here, not from today — so a debt from January
+        reads as overdue now rather than a week from now.
+      </small>
+    </div>
+
+    <div class="form-field">
+      <label for="obNote">Where this figure came from</label>
+      <textarea
+        id="obNote"
+        pTextarea
+        placeholder="e.g. 3 orders Oct–Dec 2025, agreed over WhatsApp"
+        rows="3"
+        [formControl]="form.controls.note"
+      ></textarea>
+      <small class="form-help">
+        The records behind it are gone, so this is the only account of why the
+        number is what it is. Worth a sentence — it will be asked about.
+      </small>
+    </div>
+  </form>
+
+  <ng-template pTemplate="footer">
+    <p-button
+      label="Cancel"
+      severity="secondary"
+      [text]="true"
+      (onClick)="close()"
+    />
+    <p-button
+      icon="pi pi-check"
+      label="Save"
+      [disabled]="saveDisabled()"
+      [loading]="saving()"
+      (onClick)="onSave()"
+    />
+  </ng-template>
+</p-dialog>

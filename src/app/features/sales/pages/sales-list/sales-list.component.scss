@@ -358,3 +358,19 @@
     font-weight: 600;
   }
 }
+
+/* Debt carried in from before this system. Quiet and grey — it is a label
+   explaining why the row has no products, not a warning. */
+.brought-forward {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  margin-top: 0.15rem;
+  font-size: 0.72rem;
+  color: var(--text-color-secondary);
+  cursor: help;
+
+  i {
+    font-size: 0.7rem;
+  }
+}

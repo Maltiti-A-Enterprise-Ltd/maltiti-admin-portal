@@ -31,9 +31,13 @@ import {
   UpdateSaleDto,
   UpdateSaleStatusDto,
 } from '../models/sale.model';
-import { IPaginationResponse } from '@models/response.model';
+import { IPaginationResponse, IResponse } from '@models/response.model';
 import { SaleAttention } from '../models/sale-attention.model';
 import { SalesMetrics } from '../models/sales-metrics.model';
+import {
+  CreateOpeningBalanceDto,
+  UpdateOpeningBalanceDto,
+} from '../models/opening-balance.model';
 
 @Injectable({
   providedIn: 'root',
@@ -98,6 +102,29 @@ export class SalesApiService {
     }
 
     return this.http.get<IPaginationResponse<Sale>>(this.baseUrl, { params });
+  }
+
+  /**
+   * Record what a customer owed before this system kept their books.
+   * POST /sales/opening-balances
+   */
+  public createOpeningBalance(dto: CreateOpeningBalanceDto): Observable<Sale> {
+    return this.http
+      .post<IResponse<Sale>>(`${this.baseUrl}/opening-balances`, dto)
+      .pipe(map((response) => response.data));
+  }
+
+  /**
+   * Correct one.
+   * PATCH /sales/opening-balances/{id}
+   */
+  public updateOpeningBalance(
+    id: string,
+    dto: UpdateOpeningBalanceDto,
+  ): Observable<Sale> {
+    return this.http
+      .patch<IResponse<Sale>>(`${this.baseUrl}/opening-balances/${id}`, dto)
+      .pipe(map((response) => response.data));
   }
 
   /**

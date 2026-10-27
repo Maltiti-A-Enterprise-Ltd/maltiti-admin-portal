@@ -34,7 +34,8 @@ import { ProgressBarModule } from 'primeng/progressbar';
 
 // Local imports
 import { Store } from '@ngrx/store';
-import { OrderStatus, PaymentStatus, Sale } from '../../models/sale.model';
+import { OrderStatus, PaymentStatus, Sale, SaleKind } from '../../models/sale.model';
+import { OpeningBalanceDialogComponent } from '../opening-balance-dialog/opening-balance-dialog.component';
 import { loadSales, updateSaleStatus } from '../../store/sales.actions';
 import {
   selectError,
@@ -106,6 +107,7 @@ import { saleArrivalStatus } from '../../utils/arrival-date';
     CancelSaleByAdminModalComponent,
     SalesMetricsPanelComponent,
     ArrivalDateModalComponent,
+    OpeningBalanceDialogComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   providers: [ConfirmationService],
@@ -140,6 +142,7 @@ export class SalesListComponent implements OnInit {
   public readonly waybillModal = viewChild.required(WaybillGenerationModalComponent);
   public readonly deliveryCostModal = viewChild.required(DeliveryCostUpdateModalComponent);
   public readonly cancelModal = viewChild.required(CancelSaleByAdminModalComponent);
+  private readonly openingBalanceDialog = viewChild.required(OpeningBalanceDialogComponent);
   public readonly arrivalDateModal = viewChild.required(ArrivalDateModalComponent);
 
   // Lists live beside the form's, so a new status is added once.
@@ -200,8 +203,30 @@ export class SalesListComponent implements OnInit {
     void this.router.navigate([APP_ROUTES.sales.create.fullPath]);
   }
 
+  /**
+   * An opening balance is corrected in its own dialog, not the sale form.
+   *
+   * The form is built around line items, batches and a delivery fee, none of
+   * which a debt carried in from before this system has — it would open on
+   * an empty product list and refuse to save.
+   */
   public onEditSale(sale: Sale): void {
+    if (sale.kind === SaleKind.OPENING_BALANCE) {
+      this.openingBalanceDialog().openForEdit(sale);
+      return;
+    }
+
     void this.router.navigate([APP_ROUTES.sales.edit(sale.id)]);
+  }
+
+  /** Record what a customer owed before this system kept their books. */
+  public onRecordOpeningBalance(): void {
+    this.openingBalanceDialog().open();
+  }
+
+  /** Marks the rows that are debt brought forward rather than an order. */
+  public isOpeningBalance(sale: Sale): boolean {
+    return sale.kind === SaleKind.OPENING_BALANCE;
   }
 
   public onViewPayments(sale: Sale): void {
@@ -253,6 +278,9 @@ export class SalesListComponent implements OnInit {
       exchangeRate: sale.exchangeRate,
       invoiceCurrency: sale.invoiceCurrency,
       invoiceExchangeRate: sale.invoiceExchangeRate,
+      /* So the dialog can offer to restate their prices. Nothing it does
+         with them is written back to the sale. */
+      lineItems: sale.lineItems,
     });
   }
 
@@ -284,6 +312,11 @@ export class SalesListComponent implements OnInit {
      the order, so the status, the attention bucket and the chip counts all
      move together. */
   public onArrivalDateSaved(): void {
+    this.loadSales();
+  }
+
+  /** The list and the receivables panel both move when a debt is recorded. */
+  public onOpeningBalanceSaved(): void {
     this.loadSales();
   }
 

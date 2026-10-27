@@ -42,6 +42,11 @@ export const PAYMENT_STATUS_OPTIONS = [
 export const ORDER_STATUS_FILTER_OPTIONS = [
   { label: 'All Statuses', value: null },
   ...ORDER_STATUS_OPTIONS,
+  /* Filterable but not settable, which is why it is added here rather than
+     to the list above. An admin needs to pull up the debts carried in from
+     before this system; nobody should be able to turn a real order into
+     one from a dropdown. */
+  { label: 'Brought Forward', value: OrderStatus.PRE_SYSTEM },
 ];
 
 export const PAYMENT_STATUS_FILTER_OPTIONS = [

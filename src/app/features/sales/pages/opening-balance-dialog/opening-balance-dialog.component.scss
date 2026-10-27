@@ -1,0 +1,82 @@
+.balance-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+  padding-top: 0.25rem;
+}
+
+/* Says what this is before asking for the figure. An opening balance is an
+   unfamiliar idea, and the dialog is the only place to explain it. */
+.form-intro {
+  margin: 0;
+  font-size: 0.82rem;
+  line-height: 1.5;
+  color: var(--text-color-secondary);
+}
+
+.form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+
+  label {
+    font-size: 0.86rem;
+    font-weight: 500;
+    color: var(--text-color);
+
+    .required {
+      color: var(--red-500);
+      margin-left: 2px;
+    }
+  }
+
+  p-inputnumber,
+  p-select,
+  p-datepicker,
+  textarea,
+  input {
+    width: 100%;
+  }
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 10rem;
+  gap: 0.9rem;
+
+  @media (max-width: 520px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.rate-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+
+  p-inputnumber {
+    flex: 1;
+  }
+}
+
+.form-help {
+  font-size: 0.75rem;
+  line-height: 1.45;
+  color: var(--text-color-secondary);
+
+  &.is-error {
+    color: var(--orange-600, #ea580c);
+  }
+}
+
+.form-error {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--red-300, #fca5a5);
+  border-radius: 6px;
+  background: var(--red-50, #fef2f2);
+  color: var(--red-700, #b91c1c);
+  font-size: 0.85rem;
+}
