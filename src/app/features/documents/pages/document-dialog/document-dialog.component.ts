@@ -70,8 +70,9 @@ export class DocumentDialogComponent {
     issuer: this.fb.control(''),
     referenceNumber: this.fb.control(''),
     description: this.fb.control(''),
-    /* A picker, not text: an expiry typed as a string is the one field in
-       here that silently stops the reminders working. */
+    /* Pickers, not text: a date typed as a string is the one field in here
+       that silently stops the reminders working. */
+    issuedAt: this.fb.control<Date | null>(null),
     expiresAt: this.fb.control<Date | null>(null),
     /* A string, matching the select's options. `''` is "don't remind me". */
     reminderLeadDays: this.fb.control(''),
@@ -90,12 +91,27 @@ export class DocumentDialogComponent {
     this.isEdit() ? 'Edit document' : 'Add document',
   );
 
-  /** Yesterday is almost always a typo on a document being filed today. */
-  public readonly minExpiry = new Date();
+  /** A document you are holding was not issued tomorrow. */
+  public readonly maxIssued = new Date();
 
   private readonly expiryPicked = toSignal(this.form.controls.expiresAt.valueChanges, {
     initialValue: this.form.controls.expiresAt.value,
   });
+
+  private readonly issuePicked = toSignal(this.form.controls.issuedAt.valueChanges, {
+    initialValue: this.form.controls.issuedAt.value,
+  });
+
+  /**
+   * The earliest the expiry can be.
+   *
+   * Today while no issue date is given — yesterday is almost always a typo on
+   * a document being filed today. Once an issue date is given the picker
+   * opens back to it, because filing a certificate from two years ago is then
+   * plainly what is being done, and the register is meant to show the ones
+   * that have already run out.
+   */
+  public readonly minExpiry = computed(() => this.issuePicked() ?? new Date());
 
   /**
    * The reminder choice only applies to something that expires.
@@ -191,6 +207,7 @@ export class DocumentDialogComponent {
       issuer: document.issuer ?? '',
       referenceNumber: document.referenceNumber ?? '',
       description: document.description ?? '',
+      issuedAt: document.issuedAt ? new Date(document.issuedAt) : null,
       expiresAt: document.expiresAt ? new Date(document.expiresAt) : null,
       /* `?? ''` not `|| ''`: zero is "tell me on the day", and losing it here
          would silently turn a reminder off on every edit. */
@@ -207,6 +224,7 @@ export class DocumentDialogComponent {
       issuer: '',
       referenceNumber: '',
       description: '',
+      issuedAt: null,
       expiresAt: null,
       reminderLeadDays: '',
       url: '',

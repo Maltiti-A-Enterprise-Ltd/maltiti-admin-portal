@@ -81,6 +81,25 @@ export function formatDay(day: string | null): string {
       });
 }
 
+/**
+ * Who issued a document and when, as one line under its title.
+ *
+ * Together rather than in a column of its own. They answer the same question
+ * — where this paperwork came from — and the register already carries six
+ * columns, which is as many as the row can hold before it stops being
+ * readable at a glance.
+ *
+ * Empty when neither is known, so the caller can drop the line entirely
+ * instead of printing a stray separator.
+ */
+export function provenance(document: CompanyDocument): string {
+  const issued = formatDay(document.issuedAt);
+
+  return [document.issuer, issued && `Issued ${issued}`]
+    .filter(Boolean)
+    .join(' · ');
+}
+
 /** How many documents are asking to be dealt with, for the header chip. */
 export function countNeedingAttention(documents: readonly CompanyDocument[]): number {
   return documents.filter((document) =>
