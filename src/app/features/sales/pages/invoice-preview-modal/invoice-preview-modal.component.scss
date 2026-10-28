@@ -326,3 +326,115 @@
   line-height: 1.45;
   color: var(--text-color-secondary);
 }
+
+/**
+ * The phone shell.
+ *
+ * The dialog itself already becomes a bottom sheet — that is global, in
+ * `_responsive.scss`. What follows is this dialog's own content, which was
+ * laid out for a 900px pane and had nothing to say about a 360px one.
+ *
+ * The breakpoint matches the global sheet so the two cannot disagree about
+ * where a phone starts.
+ */
+@media (max-width: 768px) {
+  .invoice-preview {
+    gap: 1rem;
+  }
+
+  /* Half a phone screen of PDF, in a viewer that cannot be read at that size
+     anyway, pushes every control below the fold. Enough to confirm the right
+     document is on screen; the reading happens after it is downloaded. */
+  .preview-frame,
+  .preview-placeholder {
+    height: 32vh;
+    min-height: 180px;
+  }
+
+  .rate-field {
+    flex-wrap: wrap;
+
+    ::ng-deep .p-inputnumber-input {
+      width: 7rem;
+    }
+  }
+
+  /* Four columns and a number input do not fit, so the row becomes a card and
+     each figure sits against its own label. */
+  .prices-table {
+    thead {
+      display: none;
+    }
+
+    tbody,
+    tr,
+    td {
+      display: block;
+      width: 100%;
+    }
+
+    tr {
+      padding: 0.5rem 0.7rem;
+      margin-bottom: 0.6rem;
+      border: 1px solid var(--p-content-border-color, #e2e8f0);
+      border-radius: 0.6rem;
+      background: var(--p-content-background, #fff);
+    }
+
+    td {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      padding: 0.3rem 0;
+      text-align: right;
+
+      &::before {
+        content: attr(data-label);
+        flex: 0 0 auto;
+        font-size: 0.7rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+        color: var(--text-color-secondary);
+        text-align: left;
+      }
+    }
+
+    /* The name is the card's heading, so it keeps the full width and drops
+       the label — "Product: Shea Butter 500g" says nothing twice over. */
+    td.product {
+      display: block;
+      font-weight: 600;
+      text-align: left;
+
+      &::before {
+        content: none;
+      }
+    }
+
+    ::ng-deep .price-input input {
+      width: 6.5rem;
+      min-height: 2.5rem;
+    }
+  }
+
+  .prices-totals {
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 0.5rem 1rem;
+  }
+
+  /* Three buttons sharing the width rather than squeezed against the right
+     edge. The global footer rule cannot reach them: it stretches its own
+     children, and this dialog's children are all inside this wrapper. */
+  .dialog-footer {
+    width: 100%;
+    justify-content: stretch;
+
+    > * {
+      flex: 1 1 0;
+      min-width: 0;
+    }
+  }
+}
