@@ -71,19 +71,34 @@
     </div>
 
     <div class="form-section">
-      <h3 class="section-title">When it runs out</h3>
+      <h3 class="section-title">What it covers</h3>
       <p class="section-hint">
-        Leave the date empty for anything that does not expire — most policies
-        and blank forms.
+        Leave both empty for anything that does not expire — most policies and
+        blank forms. The two together are what proves a consignment was
+        covered on the day it shipped.
       </p>
 
       <div class="form-grid">
         <app-field-renderer
+          hint="The date printed on it"
+          id="issuedAt"
+          [control]="form.controls.issuedAt"
+          [label]="'Issued on'"
+          [maxDate]="maxIssued"
+          [mode]="'edit'"
+          [showClear]="true"
+          [showIcon]="true"
+          [type]="'date'"
+          [value]="form.value.issuedAt"
+        />
+
+        <app-field-renderer
           id="expiresAt"
           [control]="form.controls.expiresAt"
           [label]="'Expiry date'"
-          [minDate]="minExpiry"
+          [minDate]="minExpiry()"
           [mode]="'edit'"
+          [showClear]="true"
           [showIcon]="true"
           [type]="'date'"
           [value]="form.value.expiresAt"

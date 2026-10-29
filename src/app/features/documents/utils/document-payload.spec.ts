@@ -59,6 +59,7 @@ describe('buildDocumentPayload', () => {
     issuer: 'Ghana Standards Authority',
     referenceNumber: '  GSA/ORG/2026/0184 ',
     description: '',
+    issuedAt: new Date(2026, 3, 1),
     expiresAt: new Date(2027, 2, 31),
     reminderLeadDays: '30',
     url: '  https://sharepoint.example/cert.pdf ',
@@ -76,6 +77,23 @@ describe('buildDocumentPayload', () => {
 
   it('sends the expiry as a plain day', () => {
     expect(buildDocumentPayload(form()).create.expiresAt).toBe('2027-03-31');
+  });
+
+  it('sends the issue date as a plain day', () => {
+    expect(buildDocumentPayload(form()).create.issuedAt).toBe('2026-04-01');
+  });
+
+  /* Unlike the reminder, the issue date stands on its own — a document can
+     have been issued and never expire, which is most of a policy shelf. */
+  it('keeps the issue date on something that does not expire', () => {
+    const { create } = buildDocumentPayload(form({ expiresAt: null }));
+
+    expect(create.issuedAt).toBe('2026-04-01');
+    expect(create.expiresAt).toBeNull();
+  });
+
+  it('sends no issue date when none was picked', () => {
+    expect(buildDocumentPayload(form({ issuedAt: null })).create.issuedAt).toBeNull();
   });
 
   /* A lead time with no date to count back from is a setting that silently
@@ -113,6 +131,7 @@ describe('buildDocumentPayload', () => {
     const { create, update } = buildDocumentPayload(form());
 
     expect(update.title).toBe(create.title);
+    expect(update.issuedAt).toBe(create.issuedAt);
     expect(update.expiresAt).toBe(create.expiresAt);
     expect(update.reminderLeadDays).toBe(create.reminderLeadDays);
   });

@@ -83,8 +83,11 @@
                 <p-tag severity="secondary" value="Retired" />
               }
             </div>
-            @if (document.issuer) {
-              <div class="document-issuer">{{ document.issuer }}</div>
+            <!-- Issuer and issue date on one line: both answer where the
+                 paperwork came from, and the row has no space for a column
+                 each. -->
+            @if (provenance(document); as provenance) {
+              <div class="document-issuer">{{ provenance }}</div>
             }
           </td>
 
