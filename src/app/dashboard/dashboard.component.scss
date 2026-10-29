@@ -77,6 +77,11 @@
   &.revenue .kpi-icon {
     background: linear-gradient(135deg, #10b981, #059669);
   }
+  /* A deeper green than revenue: the same family, because the two cards are
+     read together, but plainly the settled one of the pair. */
+  &.collected .kpi-icon {
+    background: linear-gradient(135deg, #059669, #047857);
+  }
   &.sales .kpi-icon {
     background: linear-gradient(135deg, #3b82f6, #2563eb);
   }

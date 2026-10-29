@@ -27,24 +27,55 @@
 
     } @else if (dashboardSummary) {
       <div class="kpi-grid">
-        <!-- Total Revenue KPI -->
+        <!-- What we sold. Paid for or not: this business delivers before
+             payment as a matter of course, so a figure that waited for
+             settlement would describe a different company. -->
         <p-card class="kpi-card revenue" (click)="navigateToReports('sales')">
           <div class="kpi-content">
             <div class="kpi-icon">
               <i class="pi pi-dollar"></i>
             </div>
             <div class="kpi-details">
-              <span class="kpi-label">Total Revenue</span>
+              <span class="kpi-label">Revenue booked</span>
               <span class="kpi-value">{{ dashboardSummary.kpis.revenue.total | currency: 'GHS ' }}</span>
-              @let growthPercentage = dashboardSummary.kpis.revenue.growthPercentage ?? 0;
-              @if (growthPercentage !== undefined) {
+              <span class="kpi-info">Sold, paid for or not</span>
+              @let revenueGrowth = dashboardSummary.kpis.revenue.growthPercentage;
+              @if (revenueGrowth !== undefined) {
                 <span
                   class="kpi-trend"
-                  [class.negative]="growthPercentage < 0"
-                  [class.positive]="growthPercentage > 0"
+                  [class.negative]="revenueGrowth < 0"
+                  [class.positive]="revenueGrowth > 0"
                 >
-                  <i [class]="growthPercentage > 0 ? 'pi pi-arrow-up' : 'pi pi-arrow-down'"></i>
-                  {{ growthPercentage | number: '1.1-1' }}%
+                  <i [class]="revenueGrowth > 0 ? 'pi pi-arrow-up' : 'pi pi-arrow-down'"></i>
+                  {{ revenueGrowth | number: '1.1-1' }}%
+                </span>
+              }
+            </div>
+          </div>
+        </p-card>
+
+        <!-- What actually reached us, and what is still out. The gap between
+             the two cards is the money this business lives on. -->
+        <p-card class="kpi-card collected" (click)="navigateToSales()">
+          <div class="kpi-content">
+            <div class="kpi-icon">
+              <i class="pi pi-wallet"></i>
+            </div>
+            <div class="kpi-details">
+              <span class="kpi-label">Cash collected</span>
+              <span class="kpi-value">{{ dashboardSummary.kpis.collected.total | currency: 'GHS ' }}</span>
+              <span class="kpi-info">
+                {{ outstanding(dashboardSummary.kpis) | currency: 'GHS ' }} still owed
+              </span>
+              @let collectedGrowth = dashboardSummary.kpis.collected.growthPercentage;
+              @if (collectedGrowth !== undefined) {
+                <span
+                  class="kpi-trend"
+                  [class.negative]="collectedGrowth < 0"
+                  [class.positive]="collectedGrowth > 0"
+                >
+                  <i [class]="collectedGrowth > 0 ? 'pi pi-arrow-up' : 'pi pi-arrow-down'"></i>
+                  {{ collectedGrowth | number: '1.1-1' }}%
                 </span>
               }
             </div>
@@ -60,15 +91,19 @@
             <div class="kpi-details">
               <span class="kpi-label">Total Sales</span>
 
-              <span class="kpi-value">{{ summary()!.kpis.sales.total | number }}</span>
-              @if (summary()!.kpis.sales.growthPercentage !== undefined) {
+              <span class="kpi-value">{{ dashboardSummary.kpis.sales.total | number }}</span>
+              <!-- Its own growth figure. This read the revenue card's `@let`,
+                   which is in scope for the whole block — so the sales card
+                   has been showing how revenue moved, not how sales did. -->
+              @let salesGrowth = dashboardSummary.kpis.sales.growthPercentage;
+              @if (salesGrowth !== undefined) {
                 <span
                   class="kpi-trend"
-                  [class.negative]="growthPercentage < 0"
-                  [class.positive]="growthPercentage > 0"
+                  [class.negative]="salesGrowth < 0"
+                  [class.positive]="salesGrowth > 0"
                 >
-                  <i [class]="growthPercentage > 0 ? 'pi pi-arrow-up' : 'pi pi-arrow-down'"></i>
-                  {{ growthPercentage | number: '1.1-1' }}%
+                  <i [class]="salesGrowth > 0 ? 'pi pi-arrow-up' : 'pi pi-arrow-down'"></i>
+                  {{ salesGrowth | number: '1.1-1' }}%
                 </span>
               }
             </div>
