@@ -332,13 +332,20 @@
 
     <div class="line-items-container">
       @for (lineItem of lineItems.controls; track lineItem; let i = $index) {
+        <!-- Tracked by the control, not the index: moving a row keeps the
+             same control, so Angular moves the editor with its half-filled
+             state rather than rebuilding it from the value. -->
         <app-line-item-editor
           [availableBatches]="batchesByProductId()"
           [currency]="deal.currency()"
           [isPaid]="isPaid()"
           [lineItem]="lineItem.value"
+          [position]="i + 1"
           [products]="products()"
+          [total]="lineItems.length"
           (lineItemChange)="onLineItemChange(i, $event)"
+          (moveDown)="moveLineItem(i, i + 1)"
+          (moveUp)="moveLineItem(i, i - 1)"
           (remove)="removeLineItem(i)"
           (validationError)="onLineItemValidationError(i, $event)"
         />
