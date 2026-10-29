@@ -217,7 +217,9 @@
             }
           </div>
         </td>
-        <td data-label="Total">{{ money(lineItemsTotalPrice(sale.lineItems), sale) }}</td>
+        <!-- saleValue, not the line-item sum: an opening balance has no lines
+             and the debt is the whole record. -->
+        <td data-label="Total">{{ money(saleValue(sale), sale) }}</td>
         <td data-label="Delivery">{{ sale.deliveryFee ? money(sale.deliveryFee, sale) : 'N/A' }}</td>
         <td data-label="Weight">
           <span class="weight-cell">

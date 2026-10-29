@@ -49,7 +49,7 @@ import {
 import { selectUserRole } from '@auth/store/auth.selectors';
 import { ButtonComponent } from '@shared/components/button/button.component';
 import { SelectComponent } from '@shared/components/select/select.component';
-import { lineItemsTotalPrice } from '@shared/utils/totalPriceCalculator';
+import { saleValue } from '../../utils/sale-value';
 import { APP_ROUTES } from '@config/routes.config';
 import { SalesApiService } from '../../services/sales-api.service';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -132,7 +132,7 @@ export class SalesListComponent implements OnInit {
   public readonly userRole = this.store.selectSignal(selectUserRole);
   public readonly menuItems = signal<MenuItem[]>([]);
 
-  protected readonly lineItemsTotalPrice = lineItemsTotalPrice;
+  protected readonly saleValue = saleValue;
   /** Money in each sale's own currency, not an assumed cedi. */
   protected readonly money = formatSaleAmount;
 
