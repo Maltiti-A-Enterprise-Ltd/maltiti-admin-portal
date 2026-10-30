@@ -77,7 +77,7 @@ import { selectUserRole } from '@auth/store/auth.selectors';
 import { selectCustomers } from '../../store/customers.selectors';
 import { ORDER_STATUS_OPTIONS, PAYMENT_STATUS_OPTIONS } from '../../constants/sale-status-options';
 import { CurrencyRateState } from '../../services/currency-rate.state';
-import { reindexControlMap } from '../../utils/reindex-control-map';
+import { SaleLineItemList } from '../../utils/sale-line-item-list';
 import { SaleSettlementPanelComponent } from '../sale-settlement-panel/sale-settlement-panel.component';
 @Component({
   selector: 'app-sales-form',
@@ -131,14 +131,18 @@ export class SalesFormComponent implements OnInit {
   public readonly products = this.catalogue.products;
   public readonly batchesByProductId = this.catalogue.batchesByProductId;
   public readonly confirmDeliveryDate = signal<string | null>(null);
-  public readonly lineItemValidationErrors = signal<Map<number, boolean>>(new Map());
-  public readonly hasLineItemErrors = signal<boolean>(false);
   // Form
   public salesForm = this.fb.group({
     line_items: this.fb.array<SaleLineItemDto>([], Validators.minLength(1)),
     deliveryFee: [0, [Validators.required, Validators.min(0)]],
   });
   private readonly fee = this.salesForm.controls.deliveryFee;
+  /* The products on the sale, and the per-row errors that have to stay
+     keyed to them as rows are added, removed and rearranged. */
+  private readonly rows = new SaleLineItemList(this.lineItems, value =>
+    this.fb.control(value),
+  );
+  public readonly hasLineItemErrors = this.rows.hasErrors;
   private readonly totals = saleFormTotals(this.lineItems, this.fee);
   public readonly totalPrice = this.totals.total;
   /** Just the premiums, so the total can say how much of it they are. */
@@ -245,35 +249,24 @@ export class SalesFormComponent implements OnInit {
   }
 
   public addLineItem(): void {
-    const newLineItem: SaleLineItemDto = {
-      productId: '',
-      requestedQuantity: 1,
-      batchAllocations: [],
-    };
-    this.lineItems.insert(0, this.fb.control(newLineItem));
+    this.rows.add();
   }
 
   public removeLineItem(index: number): void {
-    this.lineItems.removeAt(index);
+    this.rows.remove(index);
+  }
 
-    /* Keyed by row position, so dropping a row from the middle has to shift
-       the errors after it down with the rows they describe. */
-    this.setLineItemErrors(reindexControlMap(this.lineItemValidationErrors(), index));
+  /** Up or down the list — see `SaleLineItemList.move`. */
+  public moveLineItem(from: number, to: number): void {
+    this.rows.move(from, to);
   }
 
   public onLineItemChange(index: number, lineItem: SaleLineItemDto): void {
-    this.lineItems.at(index).setValue({
-      ...lineItem,
-    });
+    this.lineItems.at(index).setValue({ ...lineItem });
   }
 
   public onLineItemValidationError(index: number, hasError: boolean): void {
-    this.setLineItemErrors(new Map(this.lineItemValidationErrors()).set(index, hasError));
-  }
-
-  private setLineItemErrors(errors: Map<number, boolean>): void {
-    this.lineItemValidationErrors.set(errors);
-    this.hasLineItemErrors.set([...errors.values()].some(Boolean));
+    this.rows.setError(index, hasError);
   }
 
   public onSubmit(): void {
