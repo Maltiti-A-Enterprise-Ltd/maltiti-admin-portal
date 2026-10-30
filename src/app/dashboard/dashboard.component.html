@@ -444,11 +444,15 @@
           @let dashboardActivity = activity();
           @if (dashboardActivity && dashboardActivity.recentSales.length > 0) {
             <ul class="activity-list">
-              @for (sale of activity()!.recentSales; track sale.id) {
+              <!-- The customer leads. There is no sale number to show: this
+                   feed never carried one, and the field it used to read
+                   does not exist on the response — so every row's heading
+                   was blank and every row tracked `undefined`. -->
+              @for (sale of dashboardActivity.recentSales; track sale.saleId) {
                 <li class="activity-item">
                   <div class="activity-info">
-                    <span class="activity-main">{{ sale.saleNumber }}</span>
-                    <span class="activity-sub">{{ sale.customerName }}</span>
+                    <span class="activity-main">{{ sale.customerName }}</span>
+                    <span class="activity-sub">{{ saleSummary(sale) }}</span>
                   </div>
                   <div class="activity-meta">
                     <span class="activity-amount">{{ sale.totalAmount | currency: 'GHS ' }}</span>

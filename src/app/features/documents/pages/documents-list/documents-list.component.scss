@@ -1,3 +1,51 @@
+/**
+ * The page chrome.
+ *
+ * This file had none of it. `.page-header` is declared per page in this
+ * codebase — seventeen of the eighteen that use it carry their own copy — and
+ * this page was the one that did not, so the heading, the description and the
+ * Add button fell back to a plain block with no layout and the whole page sat
+ * flush against the window edge.
+ */
+.page-container {
+  padding: 1.5rem;
+}
+
+.page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 2rem;
+  margin-bottom: 1.75rem;
+
+  h1 {
+    margin: 0 0 0.35rem;
+    font-size: 1.5rem;
+  }
+
+  /* Held short of the button rather than left to run under it. A measure
+     this long is also easier to read broken early. */
+  p {
+    max-width: 46ch;
+    margin: 0;
+    color: var(--text-color-secondary, #64748b);
+    font-size: 0.875rem;
+    line-height: 1.5;
+  }
+}
+
+/* The button keeps its own width and stops the header collapsing it to fit
+   the sentence next to it. */
+.page-actions {
+  flex: 0 0 auto;
+}
+
+.table-card {
+  overflow: hidden;
+  border-radius: 8px;
+  background: var(--surface-card, #fff);
+}
+
 /* A chip rather than a banner: it is a filter as much as a warning, and it
    only appears when there is something to act on. */
 .attention-chip {
@@ -122,4 +170,45 @@
 
 .muted {
   color: var(--text-color-secondary);
+}
+
+/* Three round icon buttons, which run into each other without this. */
+.row-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.25rem;
+}
+
+.cell-actions {
+  width: 1%;
+  white-space: nowrap;
+}
+
+.empty-state {
+  padding: 2.5rem 1.5rem;
+  color: var(--text-color-secondary);
+  text-align: center;
+}
+
+/* The header stacks before the sentence and the button start fighting for
+   the same line. */
+@media (max-width: 768px) {
+  .page-container {
+    padding: 1rem;
+  }
+
+  .page-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1rem;
+
+    p {
+      max-width: none;
+    }
+  }
+
+  .row-actions {
+    justify-content: flex-start;
+  }
 }

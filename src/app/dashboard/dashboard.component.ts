@@ -22,7 +22,9 @@ import {
   DashboardKPIs,
   DashboardSummary,
   DashboardTrends,
+  RecentSale,
 } from './models/dashboard.model';
+import { SaleKind } from '@features/sales/models/opening-balance.model';
 
 @Component({
   selector: 'app-dashboard',
@@ -303,6 +305,21 @@ export class DashboardComponent implements OnInit {
    */
   public outstanding(kpis: DashboardKPIs): number {
     return Math.max(0, kpis.revenue.total - kpis.collected.total);
+  }
+
+  /**
+   * What an entry in the recent-sales feed is, under the customer's name.
+   *
+   * Debt brought forward is named rather than left to read as an order
+   * placed today — it has no products, and "0 items" against a figure in
+   * the thousands invites exactly the wrong conclusion.
+   */
+  public saleSummary(sale: RecentSale): string {
+    if (sale.kind === SaleKind.OPENING_BALANCE) {
+      return 'Opening balance';
+    }
+
+    return `${sale.itemCount} ${sale.itemCount === 1 ? 'item' : 'items'}`;
   }
 
   public navigateToBatches(): void {

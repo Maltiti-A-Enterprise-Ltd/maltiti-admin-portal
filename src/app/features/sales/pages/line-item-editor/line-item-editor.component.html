@@ -1,16 +1,50 @@
 @let product = selectedProduct();
 <div class="line-item-editor">
   <div class="editor-header">
-    <h4>Line Item</h4>
-    <app-button
-      icon="pi pi-trash"
-      pTooltip="Remove Line Item"
-      severity="danger"
-      size="small"
-      tooltipPosition="top"
-      [outlined]="true"
-      (click)="onRemove()"
-    />
+    <!-- Numbered, because the position is the point: this is the order the
+         invoice, the receipt and the waybill print in. -->
+    <h4>
+      <span class="item-position">{{ position() }}</span>
+      {{ product?.name || 'Line Item' }}
+    </h4>
+
+    <div class="editor-actions">
+      <!-- Hidden on a one-line sale: nothing to rearrange, and two
+           permanently disabled arrows explain nothing. -->
+      @if (total() > 1) {
+        <app-button
+          icon="pi pi-arrow-up"
+          pTooltip="Move up"
+          severity="secondary"
+          size="small"
+          tooltipPosition="top"
+          [attr.aria-label]="'Move ' + (product?.name || 'this product') + ' up'"
+          [disabled]="position() <= 1"
+          [outlined]="true"
+          (click)="moveUp.emit()"
+        />
+        <app-button
+          icon="pi pi-arrow-down"
+          pTooltip="Move down"
+          severity="secondary"
+          size="small"
+          tooltipPosition="top"
+          [attr.aria-label]="'Move ' + (product?.name || 'this product') + ' down'"
+          [disabled]="position() >= total()"
+          [outlined]="true"
+          (click)="moveDown.emit()"
+        />
+      }
+      <app-button
+        icon="pi pi-trash"
+        pTooltip="Remove Line Item"
+        severity="danger"
+        size="small"
+        tooltipPosition="top"
+        [outlined]="true"
+        (click)="onRemove()"
+      />
+    </div>
   </div>
 
   <form class="line-item-form" [formGroup]="lineItemForm">

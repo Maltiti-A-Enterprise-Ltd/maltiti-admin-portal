@@ -2,6 +2,7 @@ import {
   countNeedingAttention,
   expiryDisplay,
   formatDay,
+  provenance,
   relativeDays,
 } from './document-display';
 import { CompanyDocument, DocumentExpiryState } from '../models/document.model';
@@ -90,5 +91,36 @@ describe('countNeedingAttention', () => {
 
   it('is zero for a tidy register', () => {
     expect(countNeedingAttention([doc(DocumentExpiryState.NO_EXPIRY, null)])).toBe(0);
+  });
+});
+
+/**
+ * Issuer and issue date share one line under the title. Both answer where
+ * the paperwork came from, and the register has no room for a column each.
+ */
+describe('provenance', () => {
+  const from = (issuer: string | null, issuedAt: string | null): CompanyDocument =>
+    ({ issuer, issuedAt }) as CompanyDocument;
+
+  it('names who issued it and when', () => {
+    expect(provenance(from('Ghana Standards Authority', '2026-04-01'))).toBe(
+      'Ghana Standards Authority · Issued 1 Apr 2026',
+    );
+  });
+
+  it('names whichever of the two it has', () => {
+    expect(provenance(from('Ghana Standards Authority', null))).toBe(
+      'Ghana Standards Authority',
+    );
+    expect(provenance(from(null, '2026-04-01'))).toBe('Issued 1 Apr 2026');
+  });
+
+  /* Empty rather than a stray separator, so the caller drops the line. */
+  it('says nothing when neither is known', () => {
+    expect(provenance(from(null, null))).toBe('');
+  });
+
+  it('says nothing about a date it cannot read', () => {
+    expect(provenance(from(null, 'sometime'))).toBe('');
   });
 });

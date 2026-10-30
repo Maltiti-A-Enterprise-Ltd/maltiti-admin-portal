@@ -199,10 +199,15 @@
           <tbody>
             @for (line of prices.lines(); track line.index) {
               <tr [class.is-changed]="line.invoicePrice !== line.salePrice">
-                <td>{{ line.productName }}</td>
-                <td class="num">{{ line.quantity }}</td>
-                <td class="num muted">{{ line.salePrice | number: '1.2-2' }}</td>
-                <td class="num">
+                <!-- data-label carries the column heading into the cell, which
+                     is how this becomes readable once the row is restacked on
+                     a phone. Same idiom as the card tables elsewhere. -->
+                <td class="product" data-label="Product">{{ line.productName }}</td>
+                <td class="num" data-label="Qty">{{ line.quantity }}</td>
+                <td class="num muted" data-label="Sale">
+                  {{ line.salePrice | number: '1.2-2' }}
+                </td>
+                <td class="num" data-label="Invoice">
                   <p-inputNumber
                     locale="en-GH"
                     mode="decimal"
