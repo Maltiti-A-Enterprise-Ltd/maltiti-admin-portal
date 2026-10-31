@@ -76,6 +76,14 @@ export interface CompanyDocument {
   category: DocumentCategory;
   issuer: string | null;
   referenceNumber: string | null;
+  /**
+   * The day printed on it as the date of issue, e.g. `2026-04-01`.
+   *
+   * With the expiry it makes the window the document covers, which is the
+   * question actually asked of the register — not "when does this run out"
+   * but "was the consignment that shipped in March covered".
+   */
+  issuedAt: string | null;
   /** A plain day, e.g. `2027-03-31`. Null when it never expires. */
   expiresAt: string | null;
   /** Null means the daily report never mentions it. */
@@ -108,6 +116,7 @@ export interface CreateDocumentDto {
   category: DocumentCategory;
   issuer?: string;
   referenceNumber?: string;
+  issuedAt?: string | null;
   expiresAt?: string | null;
   reminderLeadDays?: number | null;
   version: DocumentVersionBody;
@@ -125,6 +134,7 @@ export interface UpdateDocumentDto {
   category?: DocumentCategory;
   issuer?: string;
   referenceNumber?: string;
+  issuedAt?: string | null;
   expiresAt?: string | null;
   reminderLeadDays?: number | null;
   isActive?: boolean;

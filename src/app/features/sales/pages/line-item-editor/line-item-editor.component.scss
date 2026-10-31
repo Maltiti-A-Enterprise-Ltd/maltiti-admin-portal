@@ -226,3 +226,25 @@
     font-variant-numeric: tabular-nums;
   }
 }
+
+/* The row's position, which is the order the invoice prints in. */
+.item-position {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.5rem;
+  height: 1.5rem;
+  margin-right: 0.5rem;
+  padding: 0 0.35rem;
+  border-radius: 999px;
+  background: var(--p-surface-200, #e7e5e4);
+  color: var(--p-text-muted-color, #78716c);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.editor-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}

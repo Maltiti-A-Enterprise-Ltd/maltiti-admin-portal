@@ -80,8 +80,14 @@ export class LineItemEditorComponent implements OnInit {
   /** The sale's currency. Line prices are denominated in it. */
   public readonly currency = input<InvoiceCurrency | undefined>(undefined);
   public readonly availableBatches = input<Map<string, Batch[]>>();
+  /** Where this row sits, 1-based — the order the documents print in. */
+  public readonly position = input<number>(1);
+  /** How many rows there are, so the ends know they are the ends. */
+  public readonly total = input<number>(1);
   public readonly lineItemChange = output<SaleLineItemDto>();
   public readonly remove = output<void>();
+  public readonly moveUp = output<void>();
+  public readonly moveDown = output<void>();
   public readonly validationError = output<boolean>();
   public lineItemForm = this.fb.group({
     productId: ['', Validators.required],
@@ -222,7 +228,8 @@ export class LineItemEditorComponent implements OnInit {
   }
 
   public addBatchAllocation(): void {
-    if (!this.selectedProduct) {
+    // A signal unread is a function, so this never fired. Hence `()`.
+    if (!this.selectedProduct()) {
       this.messageService.add({
         severity: 'warn',
         summary: 'Warning',

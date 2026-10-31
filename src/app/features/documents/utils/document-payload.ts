@@ -20,6 +20,7 @@ export interface DocumentFormValue {
   issuer: string | null;
   referenceNumber: string | null;
   description: string | null;
+  issuedAt: Date | null;
   expiresAt: Date | null;
   /**
    * The lead time as the select holds it: `''` for "don't remind me", and the
@@ -93,6 +94,7 @@ export function buildDocumentPayload(value: DocumentFormValue): {
     issuer: orNull(value.issuer) ?? undefined,
     referenceNumber: orNull(value.referenceNumber) ?? undefined,
     description: orNull(value.description) ?? undefined,
+    issuedAt: asPlainDay(value.issuedAt),
     expiresAt,
     /* A lead time with no date to count back from does nothing, so it is
        dropped rather than stored as a setting that silently never fires. */

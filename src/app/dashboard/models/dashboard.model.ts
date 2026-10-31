@@ -50,7 +50,18 @@ export interface DashboardActivityParams {
  * Dashboard KPIs - Key Performance Indicators
  */
 export interface DashboardKPIs {
+  /** What was sold in the period, paid for or not. */
   revenue: {
+    total: number;
+    period: number;
+    previousPeriod?: number;
+    growthPercentage?: number;
+  };
+  /**
+   * What actually arrived in the period, whenever the sale behind it was
+   * made. The gap between this and `revenue` is what customers owe.
+   */
+  collected: {
     total: number;
     period: number;
     previousPeriod?: number;
@@ -200,11 +211,18 @@ export interface DashboardAlerts {
  * Recent Sale Activity
  */
 export interface RecentSale {
-  id: string;
-  saleNumber: string;
+  saleId: string;
   customerName: string;
+  /**
+   * What the entry is worth, in cedis — not what it earned. Debt carried in
+   * from before this system earns nothing but is worth what is owed.
+   */
   totalAmount: number;
-  status: string;
+  itemCount: number;
+  orderStatus: string;
+  paymentStatus: string;
+  /** `order`, or `opening_balance` for debt brought forward. */
+  kind: string;
   createdAt: string;
 }
 

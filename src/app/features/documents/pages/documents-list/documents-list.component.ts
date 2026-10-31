@@ -39,6 +39,7 @@ import {
   countNeedingAttention,
   expiryDisplay,
   formatDay,
+  provenance,
 } from '../../utils/document-display';
 import { DocumentDialogComponent } from '../document-dialog/document-dialog.component';
 import { DocumentVersionsDialogComponent } from '../document-versions-dialog/document-versions-dialog.component';
@@ -104,6 +105,7 @@ export class DocumentsListComponent implements OnInit {
 
   protected readonly expiryDisplay = expiryDisplay;
   protected readonly formatDay = formatDay;
+  protected readonly provenance = provenance;
 
   /**
    * How many are asking to be dealt with.
