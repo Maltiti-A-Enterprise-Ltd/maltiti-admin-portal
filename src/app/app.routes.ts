@@ -70,6 +70,11 @@ export const routes: Routes = [
         loadChildren: () => import('./features/documents/routes').then((m) => m.DOCUMENTS_ROUTES),
       },
       {
+        path: APP_ROUTES.statements.path,
+        loadChildren: () =>
+          import('./features/statements/routes').then((m) => m.STATEMENTS_ROUTES),
+      },
+      {
         path: APP_ROUTES.reports.path,
         loadChildren: () => import('./features/reports/routes').then((m) => m.REPORTS_ROUTES),
       },
