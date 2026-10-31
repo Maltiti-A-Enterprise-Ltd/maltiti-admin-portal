@@ -19,6 +19,7 @@ import {
   DashboardActivity,
   DashboardAlerts,
   DashboardHighlights,
+  DashboardKPIs,
   DashboardSummary,
   DashboardTrends,
   RecentSale,
@@ -292,6 +293,18 @@ export class DashboardComponent implements OnInit {
 
   public navigateToSales(): void {
     void this.router.navigate(['/sales']);
+  }
+
+  /**
+   * What has been sold and not yet paid for.
+   *
+   * The gap between the two revenue cards, said out loud rather than left
+   * to be worked out by subtracting one from the other. Floored at zero:
+   * collecting more than was booked means money arrived against sales made
+   * before the window, which is a real thing and not a negative debt.
+   */
+  public outstanding(kpis: DashboardKPIs): number {
+    return Math.max(0, kpis.revenue.total - kpis.collected.total);
   }
 
   /**

@@ -50,7 +50,18 @@ export interface DashboardActivityParams {
  * Dashboard KPIs - Key Performance Indicators
  */
 export interface DashboardKPIs {
+  /** What was sold in the period, paid for or not. */
   revenue: {
+    total: number;
+    period: number;
+    previousPeriod?: number;
+    growthPercentage?: number;
+  };
+  /**
+   * What actually arrived in the period, whenever the sale behind it was
+   * made. The gap between this and `revenue` is what customers owe.
+   */
+  collected: {
     total: number;
     period: number;
     previousPeriod?: number;
