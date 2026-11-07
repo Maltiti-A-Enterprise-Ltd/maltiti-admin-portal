@@ -1,0 +1,196 @@
+<div class="page-container">
+  <div class="page-header">
+    <div>
+      <h1>Statement of account</h1>
+      <p>
+        What a customer was charged, what they have paid, and what is left —
+        in the order it happened. Leave the customer blank for every account
+        on one ledger.
+      </p>
+    </div>
+    <div class="page-actions">
+      <p-button
+        icon="pi pi-file-pdf"
+        label="PDF"
+        severity="secondary"
+        [disabled]="loading()"
+        [loading]="downloading() === 'pdf'"
+        [outlined]="true"
+        (onClick)="download('pdf')"
+      />
+      <p-button
+        icon="pi pi-file-excel"
+        label="Excel"
+        severity="secondary"
+        [disabled]="loading()"
+        [loading]="downloading() === 'excel'"
+        [outlined]="true"
+        (onClick)="download('excel')"
+      />
+    </div>
+  </div>
+
+  <div class="filters">
+    <div class="filter-field customer-field">
+      <label for="customer">Customer</label>
+      <app-customer-select
+        id="customer"
+        [control]="customerControl"
+        [placeholder]="'All customers'"
+      />
+    </div>
+
+    <div class="filter-field">
+      <label for="from">From</label>
+      <p-datepicker
+        inputId="from"
+        [formControl]="fromControl"
+        [maxDate]="today"
+        [showClear]="true"
+        [showIcon]="true"
+      />
+    </div>
+
+    <div class="filter-field">
+      <label for="to">To</label>
+      <p-datepicker
+        inputId="to"
+        [formControl]="toControl"
+        [maxDate]="today"
+        [minDate]="fromControl.value"
+        [showClear]="true"
+        [showIcon]="true"
+      />
+    </div>
+
+    <div class="filter-actions">
+      <p-button icon="pi pi-search" label="Show" (onClick)="load()" />
+      @if (isFiltered()) {
+        <p-button
+          icon="pi pi-filter-slash"
+          label="Clear"
+          severity="secondary"
+          [text]="true"
+          (onClick)="clearFilters()"
+        />
+      }
+    </div>
+  </div>
+
+  @if (loading()) {
+    <p-card>
+      <p-skeleton height="320px" />
+    </p-card>
+  } @else if (statement(); as account) {
+    <!-- The three figures the document exists to state, before the detail
+         that explains them. -->
+    <div class="summary-grid">
+      <div class="summary-card">
+        <span class="summary-label">Opening balance</span>
+        <span class="summary-value">
+          {{ account.openingBalance | currency: 'GHS ' }}
+        </span>
+        <span class="summary-note">Owed when the period began</span>
+      </div>
+
+      <div class="summary-card">
+        <span class="summary-label">Charged</span>
+        <span class="summary-value">
+          {{ account.totals.charged | currency: 'GHS ' }}
+        </span>
+        <span class="summary-note">Invoiced in this period</span>
+      </div>
+
+      <div class="summary-card">
+        <span class="summary-label">Paid</span>
+        <span class="summary-value is-paid">
+          {{ account.totals.paid | currency: 'GHS ' }}
+        </span>
+        <span class="summary-note">Received in this period</span>
+      </div>
+
+      <div class="summary-card is-closing" [class.is-owed]="isOwed()">
+        <span class="summary-label">Closing balance</span>
+        <span class="summary-value">
+          {{ account.totals.closingBalance | currency: 'GHS ' }}
+        </span>
+        <!-- A balance can run the other way: a customer in credit, or money
+             taken against an order later cancelled. -->
+        <span class="summary-note">
+          {{ isOwed() ? 'Owed to us' : 'In credit' }}
+        </span>
+      </div>
+    </div>
+
+    <div class="table-card">
+      <p-table dataKey="reference" styleClass="table-cards" [value]="account.rows">
+        <ng-template pTemplate="caption">
+          <div class="ledger-caption">
+            <span class="ledger-who">{{ account.customerName }}</span>
+            @if (!account.customerId) {
+              <span class="ledger-scope">
+                {{ account.customerCount }}
+                {{ account.customerCount === 1 ? 'account' : 'accounts' }}
+              </span>
+            }
+          </div>
+        </ng-template>
+
+        <ng-template pTemplate="header">
+          <tr>
+            <th scope="col">Date</th>
+            <th scope="col">Reference</th>
+            <th scope="col">Detail</th>
+            <th class="num" scope="col">Charge</th>
+            <th class="num" scope="col">Paid</th>
+            <th class="num" scope="col">Balance</th>
+          </tr>
+        </ng-template>
+
+        <ng-template let-row pTemplate="body">
+          <tr [class.is-payment]="row.type === entryType.PAYMENT">
+            <td data-label="Date">{{ row.date | date: 'd MMM y' }}</td>
+            <td data-label="Reference">
+              <span class="reference">{{ row.reference }}</span>
+            </td>
+            <td data-label="Detail">
+              @if (!account.customerId) {
+                <span class="row-customer">{{ row.customerName }}</span>
+              }
+              {{ row.detail }}
+            </td>
+            <td class="num" data-label="Charge">
+              {{ row.charge ? (row.charge | currency: 'GHS ') : '—' }}
+            </td>
+            <td class="num is-paid" data-label="Paid">
+              {{ row.paid ? (row.paid | currency: 'GHS ') : '—' }}
+            </td>
+            <td class="num balance" data-label="Balance">
+              {{ row.balance | currency: 'GHS ' }}
+            </td>
+          </tr>
+        </ng-template>
+
+        <ng-template pTemplate="emptymessage">
+          <tr>
+            <td class="empty-state" colspan="6">
+              @if (isFiltered()) {
+                Nothing happened on this account in that period. The opening
+                balance above is still what was owed going into it.
+              } @else {
+                Nothing on this account yet.
+              }
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </div>
+
+    <p class="ledger-note">
+      <i class="pi pi-info-circle"></i>
+      All figures in Ghana Cedis. A sale agreed in another currency is
+      restated at the rate it was agreed at, and a payment at the rate it
+      arrived at. Pending and failed payments are not shown.
+    </p>
+  }
+</div>

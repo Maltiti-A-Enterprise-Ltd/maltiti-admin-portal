@@ -1,0 +1,219 @@
+.page-container {
+  padding: 1.5rem;
+}
+
+.page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 2rem;
+  margin-bottom: 1.75rem;
+
+  h1 {
+    margin: 0 0 0.35rem;
+    font-size: 1.5rem;
+  }
+
+  p {
+    max-width: 52ch;
+    margin: 0;
+    color: var(--text-color-secondary, #64748b);
+    font-size: 0.875rem;
+    line-height: 1.5;
+  }
+}
+
+.page-actions {
+  display: flex;
+  flex: 0 0 auto;
+  gap: 0.5rem;
+}
+
+.filters {
+  display: flex;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  padding: 1rem;
+  border: 1px solid var(--p-content-border-color, #e2e8f0);
+  border-radius: 0.75rem;
+  background: var(--p-content-background, #fff);
+}
+
+.filter-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+
+  label {
+    font-size: 0.78rem;
+    font-weight: 500;
+    color: var(--text-color-secondary, #64748b);
+  }
+}
+
+.customer-field {
+  flex: 1 1 18rem;
+  max-width: 24rem;
+}
+
+.filter-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-left: auto;
+}
+
+/* The figures the document exists to state, before the detail. */
+.summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(190px, 100%), 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.summary-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  padding: 1rem 1.1rem;
+  border: 1px solid var(--p-content-border-color, #e2e8f0);
+  border-radius: 0.75rem;
+  background: var(--p-content-background, #fff);
+
+  &.is-closing {
+    border-color: var(--p-primary-color, #166534);
+    background: var(--p-primary-50, #f0fdf4);
+  }
+
+  /* Red only where the money is actually outstanding. A balance in credit
+     shown in red would be read exactly wrong. */
+  &.is-closing.is-owed {
+    border-color: var(--red-300, #fca5a5);
+    background: var(--red-50, #fef2f2);
+
+    .summary-value {
+      color: var(--red-700, #b91c1c);
+    }
+  }
+}
+
+.summary-label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--text-color-secondary, #64748b);
+}
+
+.summary-value {
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: var(--text-color);
+
+  &.is-paid {
+    color: var(--green-700, #15803d);
+  }
+}
+
+.summary-note {
+  font-size: 0.72rem;
+  color: var(--text-color-secondary, #64748b);
+}
+
+.table-card {
+  overflow: hidden;
+  border-radius: 8px;
+  background: var(--surface-card, #fff);
+}
+
+.ledger-caption {
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+}
+
+.ledger-who {
+  font-weight: 600;
+}
+
+.ledger-scope {
+  font-size: 0.78rem;
+  color: var(--text-color-secondary, #64748b);
+}
+
+.num {
+  text-align: right;
+}
+
+.reference {
+  font-family: ui-monospace, 'SFMono-Regular', Menlo, monospace;
+  font-size: 0.78rem;
+}
+
+/* On an all-customers ledger the detail alone does not say whose line it is. */
+.row-customer {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--text-color-secondary, #64748b);
+}
+
+.is-paid {
+  color: var(--green-700, #15803d);
+}
+
+.balance {
+  font-weight: 600;
+}
+
+.empty-state {
+  padding: 2.5rem 1.5rem;
+  color: var(--text-color-secondary);
+  text-align: center;
+}
+
+.ledger-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.4rem;
+  margin: 1rem 0 0;
+  font-size: 0.75rem;
+  line-height: 1.5;
+  color: var(--text-color-secondary, #64748b);
+}
+
+@media (max-width: 768px) {
+  .page-container {
+    padding: 1rem;
+  }
+
+  .page-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1rem;
+
+    p {
+      max-width: none;
+    }
+  }
+
+  .filters {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .customer-field {
+    max-width: none;
+  }
+
+  .filter-actions {
+    margin-left: 0;
+  }
+
+  /* Right-aligned figures read as centred nonsense once the row becomes a
+     card with its label on the left. */
+  .num {
+    text-align: right;
+  }
+}

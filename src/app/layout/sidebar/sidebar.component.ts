@@ -109,6 +109,11 @@ export class SidebarComponent {
         icon: 'pi pi-folder',
         route: APP_ROUTES.documents.fullPath,
       },
+      {
+        label: 'Statements',
+        icon: 'pi pi-book',
+        route: APP_ROUTES.statements.fullPath,
+      },
       // {
       //   label: 'Orders',
       //   icon: 'pi pi-shopping-cart',
