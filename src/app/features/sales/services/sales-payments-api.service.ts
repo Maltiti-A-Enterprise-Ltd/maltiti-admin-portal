@@ -11,6 +11,7 @@ import { map } from 'rxjs/operators';
 import { environment } from '@environments/environment';
 import { IResponse } from '@models/response.model';
 import {
+  DeletePaymentRequest,
   RecordPaymentRequest,
   SalePaymentRecord,
   SalePaymentSummary,
@@ -74,6 +75,25 @@ export class SalesPaymentsApiService {
       .patch<
         IResponse<SalePaymentRecord>
       >(`${this.baseUrl}/${saleId}/payments/${paymentId}`, body)
+      .pipe(map((r) => r.data));
+  }
+
+  /**
+   * Remove a payment that was recorded by mistake.
+   * DELETE /sales/:saleId/payments/:paymentId
+   *
+   * Super admins only. The API soft-deletes it, recalculates the sale's
+   * payment status and keeps a snapshot plus the reason in the audit log.
+   */
+  public deletePayment(
+    saleId: string,
+    paymentId: string,
+    body: DeletePaymentRequest = {},
+  ): Observable<SalePaymentRecord> {
+    return this.http
+      .delete<
+        IResponse<SalePaymentRecord>
+      >(`${this.baseUrl}/${saleId}/payments/${paymentId}`, { body })
       .pipe(map((r) => r.data));
   }
 

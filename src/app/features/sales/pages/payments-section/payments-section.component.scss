@@ -298,6 +298,16 @@
     background: var(--primary-color);
     color: #fff;
   }
+
+  &.danger {
+    border-color: var(--red-500);
+    color: var(--red-500);
+
+    &:hover {
+      background: var(--red-500);
+      color: #fff;
+    }
+  }
 }
 
 // ─── Empty State ──────────────────────────────────────────────────────────────
