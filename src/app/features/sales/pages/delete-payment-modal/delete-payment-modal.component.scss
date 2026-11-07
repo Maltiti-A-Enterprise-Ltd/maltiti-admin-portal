@@ -1,0 +1,89 @@
+.delete-payment {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.warning-banner {
+  display: flex;
+  gap: 0.75rem;
+  padding: 0.875rem 1rem;
+  background: var(--red-50);
+  border: 1px solid var(--red-300);
+  border-radius: 6px;
+  color: var(--red-800);
+  font-size: 0.875rem;
+  line-height: 1.45;
+
+  > .pi {
+    margin-top: 0.15rem;
+    color: var(--red-600);
+  }
+
+  ul {
+    margin: 0.5rem 0 0;
+    padding-left: 1.1rem;
+  }
+
+  li + li {
+    margin-top: 0.3rem;
+  }
+}
+
+.payment-snapshot {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+  gap: 0.75rem;
+  margin: 0;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--surface-border);
+  border-radius: 6px;
+
+  dt {
+    font-size: 0.75rem;
+    color: var(--text-color-secondary);
+  }
+
+  dd {
+    margin: 0.15rem 0 0;
+    font-weight: 500;
+    overflow-wrap: anywhere;
+  }
+
+  .amount {
+    font-weight: 700;
+  }
+}
+
+.form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.acknowledge {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  font-size: 0.875rem;
+
+  label {
+    cursor: pointer;
+  }
+}
+
+.field-error {
+  color: var(--red-500);
+  font-size: 0.75rem;
+}
+
+.error-banner {
+  background: var(--red-50);
+  border: 1px solid var(--red-300);
+  color: var(--red-700);
+  padding: 0.75rem 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+}

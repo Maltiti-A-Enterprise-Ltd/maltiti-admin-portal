@@ -107,6 +107,12 @@ export interface UpdatePaymentRequest {
 }
 
 /** Body for PATCH /sales/:saleId/payments/:paymentId/status */
+/** Body for removing a payment recorded by mistake. */
+export interface DeletePaymentRequest {
+  /** Kept in the audit log beside a snapshot of the payment. */
+  reason?: string;
+}
+
 export interface UpdatePaymentStatusRequest {
   status: PaymentRecordStatus;
   note?: string;

@@ -1,0 +1,120 @@
+<p-dialog
+  header="Delete payment"
+  [closable]="!loading()"
+  [modal]="true"
+  [style]="{ width: '500px', maxWidth: '95vw' }"
+  [visible]="visible()"
+  (onHide)="close()"
+>
+  @if (payment(); as p) {
+    <div class="delete-payment" [formGroup]="form">
+      @if (errorMessage()) {
+        <div class="error-banner" role="alert">
+          <i class="pi pi-exclamation-circle"></i>
+          {{ errorMessage() }}
+        </div>
+      }
+
+      <!-- The warning comes first and names the consequences for this sale,
+           not deletion in general. -->
+      <div class="warning-banner" role="alert">
+        <i class="pi pi-exclamation-triangle"></i>
+        <div>
+          <strong>Only delete a payment that was recorded by mistake.</strong>
+          <ul>
+            @if (affectsBalance()) {
+              <li>
+                It will stop counting towards this sale.
+                @if (balanceAfter() !== null) {
+                  The balance will be <strong>{{ money(balanceAfter()!) }}</strong
+                  >.
+                }
+              </li>
+              @if (reopensSale()) {
+                <li>
+                  The sale is fully paid now. It will go back to
+                  <strong>Part Payment</strong> or <strong>Pending Payment</strong>.
+                </li>
+              }
+            } @else {
+              <li>This payment is not confirmed, so the balance will not change.</li>
+            }
+            <li>
+              Invoices, the dashboard and reports will leave it out from now on. Receipts that were
+              already sent will not change.
+            </li>
+            <li>
+              It disappears from this sale. A copy of it and your reason are kept in the audit log.
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- What is about to go, so the right row is being deleted. -->
+      <dl class="payment-snapshot">
+        <div>
+          <dt>Amount</dt>
+          <dd class="amount">{{ money(p.amount) }}</dd>
+        </div>
+        <div>
+          <dt>Method</dt>
+          <dd>{{ methodLabel(p) }}</dd>
+        </div>
+        <div>
+          <dt>Reference</dt>
+          <dd>{{ p.reference || '—' }}</dd>
+        </div>
+        <div>
+          <dt>Recorded</dt>
+          <dd>{{ p.createdAt.slice(0, 10) }}</dd>
+        </div>
+      </dl>
+
+      <div class="form-field">
+        <label for="deleteReason">Reason (optional)</label>
+        <textarea
+          id="deleteReason"
+          pTextarea
+          placeholder="e.g. Recorded twice by mistake"
+          rows="3"
+          [attr.maxlength]="reasonMaxLength"
+          [formControl]="form.controls.reason"
+        ></textarea>
+        @if (form.controls.reason.hasError('maxlength')) {
+          <small class="field-error">
+            Keep the reason under {{ reasonMaxLength }} characters.
+          </small>
+        }
+      </div>
+
+      <div class="acknowledge">
+        <p-checkbox
+          inputId="deleteAcknowledge"
+          [binary]="true"
+          [formControl]="form.controls.acknowledged"
+        />
+        <label for="deleteAcknowledge">
+          I understand this payment will be removed from the sale's balance and records.
+        </label>
+      </div>
+    </div>
+  }
+
+  <ng-template pTemplate="footer">
+    <p-button
+      label="Cancel"
+      severity="secondary"
+      [disabled]="loading()"
+      [outlined]="true"
+      (onClick)="close()"
+    />
+    <p-button
+      icon="pi pi-trash"
+      label="Delete payment"
+      severity="danger"
+      [disabled]="!canDelete()"
+      [loading]="loading()"
+      (onClick)="onConfirm()"
+    />
+  </ng-template>
+</p-dialog>
