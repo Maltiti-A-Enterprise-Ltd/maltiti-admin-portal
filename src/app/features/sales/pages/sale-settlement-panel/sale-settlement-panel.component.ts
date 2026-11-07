@@ -14,6 +14,12 @@
  * payment with no provenance is worth little to whoever reconciles it
  * against a bank statement later.
  *
+ * Whether the offer starts ticked depends on the status. Marking a sale
+ * Paid says the whole balance is in, so recording it is the default. Part
+ * Payment says only that *some* money is in — the panel cannot know how
+ * much, so it waits for the admin to opt in rather than quietly recording a
+ * payment nobody asked for.
+ *
  * The resulting status is then left to the server, which derives Paid, Part
  * Payment and Pending Payment from the confirmed records every time one
  * lands. Recording the money is enough; sending a status alongside it would
@@ -24,10 +30,12 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
+  effect,
   inject,
   input,
   OnInit,
   signal,
+  untracked,
 } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -117,7 +125,8 @@ export class SaleSettlementPanelComponent implements OnInit {
 
   // ─── Form ────────────────────────────────────────────────────────────────────
   public readonly form = this.fb.group({
-    record: [true],
+    // Set from the chosen status by the effect in the constructor.
+    record: [false],
     amount: [0, [Validators.required, Validators.min(0.01)]],
     paymentMethod: [PaymentMethod.BANK_TRANSFER, Validators.required],
     paymentAccountId: [null as string | null],
@@ -152,6 +161,17 @@ export class SaleSettlementPanelComponent implements OnInit {
 
   /** Accounts still in use, as "Bank — number (currency)". */
   public readonly accountOptions = signal<PaymentAccountOption[]>([]);
+
+  public constructor() {
+    /* Re-derived each time the status in the form changes, so switching
+       from Part Payment to Paid arms the payment and switching back disarms
+       it. Only the status is tracked: ticking or unticking the box by hand
+       is left alone until the status moves again. */
+    effect(() => {
+      const ticked = this.paymentStatus() === PaymentStatus.PAID;
+      untracked(() => this.form.controls.record.setValue(ticked));
+    });
+  }
 
   public ngOnInit(): void {
     const saleId = this.saleId();
