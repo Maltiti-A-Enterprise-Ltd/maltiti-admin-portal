@@ -1,7 +1,8 @@
 /**
  * Payments Section Component
  * Displays the full payment summary and all payment records for a sale.
- * Hosts the Add Payment and Update Payment Status modals.
+ * Hosts the Add Payment, Update Payment Status and (super admin only)
+ * Delete Payment modals.
  */
 
 import {
@@ -16,6 +17,7 @@ import {
   viewChild,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { Store } from '@ngrx/store';
 
 // PrimeNG
 import { TableModule } from 'primeng/table';
@@ -40,6 +42,9 @@ import {
 } from '../../models/sale.model';
 import { PaymentFormModalComponent } from '../payment-form-modal/payment-form-modal.component';
 import { UpdatePaymentStatusModalComponent } from '../update-payment-status-modal/update-payment-status-modal.component';
+import { DeletePaymentModalComponent } from '../delete-payment-modal/delete-payment-modal.component';
+import { selectUserRole } from '@auth/store/auth.selectors';
+import { Role } from '@models/user.model';
 
 import { formatSaleAmount } from '@shared/utils/sale-money';
 @Component({
@@ -56,12 +61,14 @@ import { formatSaleAmount } from '@shared/utils/sale-money';
     TooltipModule,
     PaymentFormModalComponent,
     UpdatePaymentStatusModalComponent,
+    DeletePaymentModalComponent,
   ],
 })
 export class PaymentsSectionComponent implements OnInit {
   private readonly paymentsApi = inject(SalesPaymentsApiService);
   private readonly messageService = inject(MessageService);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly store = inject(Store);
 
   /** The ID of the sale whose payments to display. */
   public readonly saleId = input.required<string>();
@@ -82,12 +89,20 @@ export class PaymentsSectionComponent implements OnInit {
   // ─── Child modals ────────────────────────────────────────────────────────────
   private readonly paymentFormModal = viewChild.required(PaymentFormModalComponent);
   private readonly updateStatusModal = viewChild.required(UpdatePaymentStatusModalComponent);
+  private readonly deletePaymentModal = viewChild.required(DeletePaymentModalComponent);
 
   // ─── State ──────────────────────────────────────────────────────────────────
   public readonly loading = signal(false);
   public readonly loadError = signal<string | null>(null);
   public readonly summary = signal<SalePaymentSummary | null>(null);
   public readonly fullyPaidBanner = signal(false);
+
+  /**
+   * Deleting a payment is for super admins only — the API refuses anyone
+   * else, so the button is not offered to them either.
+   */
+  private readonly userRole = this.store.selectSignal(selectUserRole);
+  public readonly canDeletePayments = computed(() => this.userRole() === Role.SuperAdmin);
 
   // ─── Derived ────────────────────────────────────────────────────────────────
   public readonly payments = computed(() => this.summary()?.payments ?? []);
@@ -194,6 +209,17 @@ export class PaymentsSectionComponent implements OnInit {
 
   public onUpdateStatus(payment: SalePaymentRecord): void {
     this.updateStatusModal().open(this.saleId(), payment);
+  }
+
+  /** Remove a payment recorded by mistake, behind a warning dialog. */
+  public onDeletePayment(payment: SalePaymentRecord): void {
+    this.deletePaymentModal().open(this.saleId(), payment, this.summary(), this.currency());
+  }
+
+  /** The totals and the sale's status may both have moved, so reload. */
+  public onPaymentDeleted(): void {
+    this.fullyPaidBanner.set(false);
+    this.loadSummary(false);
   }
 
   public onPaymentAdded(): void {

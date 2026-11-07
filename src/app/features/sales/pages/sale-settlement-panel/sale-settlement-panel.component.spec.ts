@@ -94,6 +94,59 @@ describe('SaleSettlementPanelComponent', () => {
     });
   });
 
+  /* Part Payment only says some money is in, not how much, so recording a
+     payment is the admin's call. Paid says all of it is, so it is armed. */
+  describe('whether it starts ticked', () => {
+    it('starts ticked when the sale is being marked paid', () => {
+      const panel = build('s1', PaymentStatus.PAID);
+
+      expect(panel.form.controls.record.value).toBe(true);
+      expect(panel.willRecord()).toBe(true);
+    });
+
+    it('starts unticked on a part payment', () => {
+      const panel = build('s1', PaymentStatus.PART_PAYMENT);
+
+      expect(panel.form.controls.record.value).toBe(false);
+      expect(panel.willRecord()).toBe(false);
+    });
+
+    it('records nothing on a part payment unless the admin ticks it', async () => {
+      const panel = build('s1', PaymentStatus.PART_PAYMENT);
+
+      expect(await firstValueFrom(panel.settle())).toBe(false);
+      expect(payments.recordPayment).not.toHaveBeenCalled();
+    });
+
+    it('records a part payment once the admin ticks it', async () => {
+      const panel = build('s1', PaymentStatus.PART_PAYMENT);
+      panel.form.controls.record.setValue(true);
+      panel.form.controls.amount.setValue(400);
+
+      expect(await firstValueFrom(panel.settle())).toBe(true);
+      expect(payments.recordPayment).toHaveBeenCalledWith(
+        's1',
+        jasmine.objectContaining({ amount: 400 }),
+      );
+    });
+
+    it('follows the status when it changes in the form', () => {
+      const fixture = TestBed.createComponent(SaleSettlementPanelComponent);
+      fixture.componentRef.setInput('saleId', 's1');
+      fixture.componentRef.setInput('paymentStatus', PaymentStatus.PART_PAYMENT);
+      fixture.detectChanges();
+      const panel = fixture.componentInstance;
+
+      fixture.componentRef.setInput('paymentStatus', PaymentStatus.PAID);
+      fixture.detectChanges();
+      expect(panel.form.controls.record.value).toBe(true);
+
+      fixture.componentRef.setInput('paymentStatus', PaymentStatus.PART_PAYMENT);
+      fixture.detectChanges();
+      expect(panel.form.controls.record.value).toBe(false);
+    });
+  });
+
   describe('what it records', () => {
     it('opens on the outstanding balance', () => {
       expect(build('s1', PaymentStatus.PAID).form.controls.amount.value).toBe(1000);

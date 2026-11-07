@@ -196,6 +196,16 @@
                 >
                   <i class="pi pi-flag"></i> Status
                 </button>
+                @if (canDeletePayments()) {
+                  <button
+                    aria-label="Delete payment"
+                    class="row-action-btn danger"
+                    type="button"
+                    (click)="onDeletePayment(payment)"
+                  >
+                    <i class="pi pi-trash"></i> Delete
+                  </button>
+                }
               </div>
             </td>
           </tr>
@@ -208,4 +218,5 @@
 <!-- ─── Modals ──────────────────────────────────────────────────────────────── -->
 <app-payment-form-modal (paymentAdded)="onPaymentAdded()" />
 <app-update-payment-status-modal (statusUpdated)="onStatusUpdated($event)" />
+<app-delete-payment-modal (paymentDeleted)="onPaymentDeleted()" />
 
