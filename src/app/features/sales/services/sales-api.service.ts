@@ -9,10 +9,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { environment } from '@environments/environment';
-import {
-  GeneratedDocument,
-  generatedDocument,
-} from '../utils/generated-document';
+import { GeneratedDocument, generatedDocument } from '../utils/generated-document';
 import {
   AssignBatchesDto,
   CancelSaleByAdminDto,
@@ -31,13 +28,11 @@ import {
   UpdateSaleDto,
   UpdateSaleStatusDto,
 } from '../models/sale.model';
+import { GeneratePackingSlipDto } from '../models/packing-slip.model';
 import { IPaginationResponse, IResponse } from '@models/response.model';
 import { SaleAttention } from '../models/sale-attention.model';
 import { SalesMetrics } from '../models/sales-metrics.model';
-import {
-  CreateOpeningBalanceDto,
-  UpdateOpeningBalanceDto,
-} from '../models/opening-balance.model';
+import { CreateOpeningBalanceDto, UpdateOpeningBalanceDto } from '../models/opening-balance.model';
 
 @Injectable({
   providedIn: 'root',
@@ -118,10 +113,7 @@ export class SalesApiService {
    * Correct one.
    * PATCH /sales/opening-balances/{id}
    */
-  public updateOpeningBalance(
-    id: string,
-    dto: UpdateOpeningBalanceDto,
-  ): Observable<Sale> {
+  public updateOpeningBalance(id: string, dto: UpdateOpeningBalanceDto): Observable<Sale> {
     return this.http
       .patch<IResponse<Sale>>(`${this.baseUrl}/opening-balances/${id}`, dto)
       .pipe(map((response) => response.data));
@@ -204,10 +196,7 @@ export class SalesApiService {
    * Generate invoice PDF for a sale
    * POST /sales/{id}/invoice
    */
-  public generateInvoice(
-    id: string,
-    dto: GenerateInvoiceDto,
-  ): Observable<GeneratedDocument> {
+  public generateInvoice(id: string, dto: GenerateInvoiceDto): Observable<GeneratedDocument> {
     return this.generateDocument(`${this.baseUrl}/${id}/invoice`, dto, 'Invoice.pdf');
   }
 
@@ -231,10 +220,7 @@ export class SalesApiService {
    * Generate receipt PDF for a sale
    * POST /sales/{id}/receipt
    */
-  public generateReceipt(
-    id: string,
-    dto: GenerateReceiptDto,
-  ): Observable<GeneratedDocument> {
+  public generateReceipt(id: string, dto: GenerateReceiptDto): Observable<GeneratedDocument> {
     return this.generateDocument(`${this.baseUrl}/${id}/receipt`, dto, 'Receipt.pdf');
   }
 
@@ -242,11 +228,19 @@ export class SalesApiService {
    * Generate waybill PDF for a sale
    * POST /sales/{id}/waybill
    */
-  public generateWaybill(
-    id: string,
-    dto: GenerateWaybillDto,
-  ): Observable<GeneratedDocument> {
+  public generateWaybill(id: string, dto: GenerateWaybillDto): Observable<GeneratedDocument> {
     return this.generateDocument(`${this.baseUrl}/${id}/waybill`, dto, 'Waybill.pdf');
+  }
+
+  /**
+   * Generate packing slip PDF for a sale
+   * POST /sales/{id}/packing-slip
+   */
+  public generatePackingSlip(
+    id: string,
+    dto: GeneratePackingSlipDto,
+  ): Observable<GeneratedDocument> {
+    return this.generateDocument(`${this.baseUrl}/${id}/packing-slip`, dto, 'Packing Slip.pdf');
   }
 
   /**

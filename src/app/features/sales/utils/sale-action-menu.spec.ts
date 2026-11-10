@@ -11,6 +11,7 @@ const actions = (): SaleMenuActions => ({
   viewPayments: noop,
   generateInvoice: noop,
   generateWaybill: noop,
+  generatePackingSlip: noop,
   generateReceipt: noop,
   updateDeliveryCost: noop,
   cancel: noop,
@@ -88,5 +89,18 @@ describe('buildSaleActionMenu — the arrival date entry', () => {
     entry?.command?.({} as never);
 
     expect(setArrivalDate).toHaveBeenCalledWith(target);
+  });
+});
+
+describe('buildSaleActionMenu — the packing slip entry', () => {
+  it('is offered on an order that is going out', () => {
+    [OrderStatus.PENDING, OrderStatus.PACKAGING, OrderStatus.IN_TRANSIT].forEach((orderStatus) => {
+      expect(menuFor({ orderStatus })).toContain('Generate Packing Slip');
+    });
+  });
+
+  // Nothing is being packed for an order that is not going anywhere.
+  it('is not offered on a cancelled order', () => {
+    expect(menuFor({ orderStatus: OrderStatus.CANCELLED })).not.toContain('Generate Packing Slip');
   });
 });
