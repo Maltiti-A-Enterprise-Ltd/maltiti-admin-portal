@@ -28,7 +28,7 @@ import {
   UpdateSaleDto,
   UpdateSaleStatusDto,
 } from '../models/sale.model';
-import { GeneratePackingSlipDto } from '../models/packing-slip.model';
+import { GeneratePackingSlipDto, SendPackingSlipEmailDto } from '../models/packing-slip.model';
 import { IPaginationResponse, IResponse } from '@models/response.model';
 import { SaleAttention } from '../models/sale-attention.model';
 import { SalesMetrics } from '../models/sales-metrics.model';
@@ -241,6 +241,20 @@ export class SalesApiService {
     dto: GeneratePackingSlipDto,
   ): Observable<GeneratedDocument> {
     return this.generateDocument(`${this.baseUrl}/${id}/packing-slip`, dto, 'Packing Slip.pdf');
+  }
+
+  /**
+   * Email a sale's packing slip, built from the same options as the preview.
+   * POST /sales/{id}/packing-slip/email
+   */
+  public sendPackingSlipEmail(
+    id: string,
+    dto: SendPackingSlipEmailDto,
+  ): Observable<{ message: string; data: { sentTo: string } }> {
+    return this.http.post<{ message: string; data: { sentTo: string } }>(
+      `${this.baseUrl}/${id}/packing-slip/email`,
+      dto,
+    );
   }
 
   /**

@@ -75,4 +75,51 @@ describe('PackingSlipQuantities', () => {
     expect(quantities.payload()).toEqual({});
     expect(changes).toBe(2);
   });
+
+  describe('ticking lines as packed', () => {
+    it('sends only the ticked lines', () => {
+      quantities.setPacked(1, true);
+
+      expect(quantities.payload()).toEqual({
+        packedLines: [{ index: 1, productId: 'p2' }],
+      });
+      expect(quantities.packedCount()).toBe(1);
+    });
+
+    // A click is a finished decision, so the preview follows at once.
+    it('rebuilds the preview straight away', () => {
+      quantities.setPacked(0, true);
+
+      expect(changes).toBe(1);
+    });
+
+    // A tick on a line that is not in the parcel has nowhere to print.
+    it('drops the tick of a line set to 0', () => {
+      quantities.setPacked(1, true);
+      quantities.setPending(1, 0);
+      quantities.commit();
+
+      expect(quantities.payload().packedLines).toBeUndefined();
+    });
+
+    it('ticks every line on the slip, and knows when all are ticked', () => {
+      quantities.setPending(1, 0);
+      quantities.commit();
+      quantities.setAllPacked(true);
+
+      expect(quantities.allPacked()).toBeTrue();
+      expect(quantities.payload().packedLines).toEqual([{ index: 0, productId: 'p1' }]);
+    });
+
+    it('sends quantities and ticks together', () => {
+      quantities.setPending(0, 20);
+      quantities.commit();
+      quantities.setPacked(0, true);
+
+      expect(quantities.payload()).toEqual({
+        lineQuantities: [{ index: 0, productId: 'p1', quantity: 20 }],
+        packedLines: [{ index: 0, productId: 'p1' }],
+      });
+    });
+  });
 });

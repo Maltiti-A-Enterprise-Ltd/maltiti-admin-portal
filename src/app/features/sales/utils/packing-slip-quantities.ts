@@ -1,4 +1,7 @@
 /**
+ * The lines of a packing slip: how much of each goes in this shipment, and
+ * which are ticked as packed.
+ *
  * Printing a packing slip for part of an order.
  *
  * Some orders go out in more than one shipment. Nothing here touches the
@@ -10,7 +13,7 @@
 
 import { computed, signal, Signal, WritableSignal } from '@angular/core';
 import { SaleLineItem } from '../models/sale.model';
-import { PackingSlipLineQuantity } from '../models/packing-slip.model';
+import { PackingSlipLineQuantity, PackingSlipLineRef } from '../models/packing-slip.model';
 
 /** A line as the quantities panel shows it. */
 export interface ShippableLine {
@@ -21,6 +24,8 @@ export interface ShippableLine {
   readonly ordered: number;
   /** What this slip will list. Starts equal to the order. 0 leaves it off. */
   readonly shipping: number;
+  /** Printed with its PACKED box ticked. Nothing is saved. */
+  readonly packed: boolean;
 }
 
 const round = (value: number): number => Math.round(value * 100) / 100;
@@ -46,6 +51,15 @@ export class PackingSlipQuantities {
     () => this.state().filter((line) => line.shipping > 0).length,
   );
 
+  /** Lines on the slip that are ticked, and lines that could be. */
+  public readonly packedCount = computed(
+    () => this.state().filter((line) => line.shipping > 0 && line.packed).length,
+  );
+
+  public readonly allPacked = computed(
+    () => this.shippedLineCount() > 0 && this.packedCount() === this.shippedLineCount(),
+  );
+
   /** The API refuses a slip with nothing on it; so does the dialog. */
   public readonly isEmpty = computed(
     () => this.state().length > 0 && this.shippedLineCount() === 0,
@@ -63,6 +77,7 @@ export class PackingSlipQuantities {
           productName: item.productName?.trim() || 'Unknown product',
           ordered,
           shipping: ordered,
+          packed: false,
         };
       }),
     );
@@ -103,6 +118,25 @@ export class PackingSlipQuantities {
     }
   }
 
+  /**
+   * Ticks or unticks one line. A click is a finished decision, so unlike a
+   * typed quantity the preview is rebuilt straight away.
+   */
+  public setPacked(index: number, packed: boolean): void {
+    this.state.update((lines) =>
+      lines.map((line) => (line.index === index ? { ...line, packed } : line)),
+    );
+    this.commit();
+  }
+
+  /** Ticks every line on the slip, or clears them all. */
+  public setAllPacked(packed: boolean): void {
+    this.state.update((lines) =>
+      lines.map((line) => ({ ...line, packed: packed && line.shipping > 0 })),
+    );
+    this.commit();
+  }
+
   /** Back to the full order. */
   public clear(): void {
     this.state.update((lines) => lines.map((line) => ({ ...line, shipping: line.ordered })));
@@ -113,25 +147,38 @@ export class PackingSlipQuantities {
    * The quantities to send, or nothing at all. Only the lines that differ,
    * so an ordinary slip sends an ordinary request.
    */
-  public payload(): { lineQuantities?: PackingSlipLineQuantity[] } {
+  public payload(): {
+    lineQuantities?: PackingSlipLineQuantity[];
+    packedLines?: PackingSlipLineRef[];
+  } {
     const changed = this.state().filter((line) => line.shipping !== line.ordered);
-
-    if (!changed.length) {
-      return {};
-    }
+    // A tick on a line that is left off has nowhere to print.
+    const packed = this.state().filter((line) => line.packed && line.shipping > 0);
 
     return {
-      lineQuantities: changed.map((line) => ({
-        index: line.index,
-        productId: line.productId,
-        quantity: line.shipping,
-      })),
+      ...(changed.length
+        ? {
+            lineQuantities: changed.map((line) => ({
+              index: line.index,
+              productId: line.productId,
+              quantity: line.shipping,
+            })),
+          }
+        : {}),
+      ...(packed.length
+        ? {
+            packedLines: packed.map((line) => ({
+              index: line.index,
+              productId: line.productId,
+            })),
+          }
+        : {}),
     };
   }
 
   private signature(): string {
     return this.state()
-      .map((line) => line.shipping)
+      .map((line) => `${line.shipping}:${line.packed ? 1 : 0}`)
       .join('|');
   }
 }

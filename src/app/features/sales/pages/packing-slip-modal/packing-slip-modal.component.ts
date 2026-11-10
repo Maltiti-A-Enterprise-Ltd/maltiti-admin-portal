@@ -4,12 +4,20 @@
  * Shows the packing slip before it is downloaded, and lets the admin adjust
  * it on the fly the way the invoice preview does: how many packages, notes
  * for the receiver, pounds beside kilograms, and — for a shipment that
- * carries only part of the order — how much of each line goes in it. Every
- * change rebuilds the preview, so what is downloaded is what was on screen.
- * Nothing here is written back to the sale.
+ * carries only part of the order — how much of each line goes in it, and
+ * which lines are already packed. Every change rebuilds the preview, so what
+ * is downloaded or emailed is what was on screen. Nothing here is written
+ * back to the sale.
  */
 
-import { ChangeDetectionStrategy, Component, DestroyRef, inject, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  DestroyRef,
+  inject,
+  signal,
+} from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { Subscription, take } from 'rxjs';
@@ -20,18 +28,26 @@ import { DialogModule } from 'primeng/dialog';
 import { ButtonModule } from 'primeng/button';
 import { CheckboxModule } from 'primeng/checkbox';
 import { InputNumberModule } from 'primeng/inputnumber';
+import { InputTextModule } from 'primeng/inputtext';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
+import { RadioButtonModule } from 'primeng/radiobutton';
 import { TextareaModule } from 'primeng/textarea';
 import { MessageService } from 'primeng/api';
 
 // Local
 import { SalesApiService } from '../../services/sales-api.service';
-import { SaleLineItem } from '../../models/sale.model';
+import { Sale } from '../../models/sale.model';
 import { GeneratePackingSlipDto } from '../../models/packing-slip.model';
 import { PackingSlipQuantities } from '../../utils/packing-slip-quantities';
 
 /** Matches the API's limit. */
 export const PACKING_SLIP_NOTES_MAX_LENGTH = 500;
+
+/**
+ * Good enough to catch a typo before a round trip. The API validates the
+ * address properly; this only decides whether Send is worth trying.
+ */
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 @Component({
   selector: 'app-packing-slip-modal',
@@ -44,7 +60,9 @@ export const PACKING_SLIP_NOTES_MAX_LENGTH = 500;
     ButtonModule,
     CheckboxModule,
     InputNumberModule,
+    InputTextModule,
     ProgressSpinnerModule,
+    RadioButtonModule,
     TextareaModule,
   ],
 })
@@ -65,8 +83,38 @@ export class PackingSlipModalComponent {
   public readonly showImperialWeights = signal(false);
   public readonly notesMaxLength = PACKING_SLIP_NOTES_MAX_LENGTH;
 
-  /** Per-line quantities for a part shipment. */
+  /** Per-line quantities for a part shipment, and which lines are packed. */
   public readonly quantities = new PackingSlipQuantities();
+
+  // ─── Send by email ──────────────────────────────────────────────────────────
+  /** The address on the customer record; null when they have none. */
+  public readonly customerEmail = signal<string | null>(null);
+  public readonly recipient = signal<'customer' | 'other'>('customer');
+  public readonly otherEmail = signal('');
+  public readonly otherEmailTouched = signal(false);
+  public readonly sending = signal(false);
+  /** Shown in the dialog, so a failed send cannot go unnoticed. */
+  public readonly sendError = signal<string | null>(null);
+
+  /** Where a send would go, or null while there is no usable address. */
+  public readonly sendTo = computed(() => {
+    if (this.recipient() === 'customer') {
+      return this.customerEmail();
+    }
+
+    const typed = this.otherEmail().trim();
+
+    return EMAIL_PATTERN.test(typed) ? typed : null;
+  });
+
+  public readonly showEmailError = computed(
+    () => this.recipient() === 'other' && this.otherEmailTouched() && !this.sendTo(),
+  );
+
+  /** Download and Send act on the previewed slip, so both wait for it. */
+  public readonly actionsDisabled = computed(
+    () => this.generating() || this.sending() || !this.previewUrl() || this.quantities.isEmpty(),
+  );
 
   private readonly saleId = signal<string | null>(null);
   /** What the preview was last built with, so leaving a field unchanged is free. */
@@ -85,12 +133,20 @@ export class PackingSlipModalComponent {
     });
   }
 
-  public open(saleId: string, lineItems: readonly SaleLineItem[] = []): void {
+  public open(sale: Pick<Sale, 'id' | 'lineItems' | 'customer'>): void {
+    const saleId = sale.id;
+    const customerEmail = sale.customer?.email?.trim() || null;
+
     this.saleId.set(saleId);
+    this.customerEmail.set(customerEmail);
+    this.recipient.set(customerEmail ? 'customer' : 'other');
+    this.otherEmail.set('');
+    this.otherEmailTouched.set(false);
+    this.sendError.set(null);
     this.packageCount.set(null);
     this.notes.set('');
     this.showImperialWeights.set(false);
-    this.quantities.reset(lineItems);
+    this.quantities.reset(sale.lineItems ?? []);
     this.committedOptions = this.optionsSignature();
     this.previewError.set(null);
     this.visible.set(true);
@@ -137,6 +193,51 @@ export class PackingSlipModalComponent {
       summary: 'Packing slip downloaded',
       detail: this.pdfFileName,
     });
+  }
+
+  /**
+   * Emails the slip that is on screen — the same options as the preview —
+   * to the customer on record or to the address typed in.
+   */
+  public send(): void {
+    const saleId = this.saleId();
+    const to = this.sendTo();
+
+    if (!saleId) {
+      return;
+    }
+
+    if (!to) {
+      this.otherEmailTouched.set(true);
+      return;
+    }
+
+    this.sending.set(true);
+    this.sendError.set(null);
+
+    this.salesApi
+      .sendPackingSlipEmail(saleId, {
+        ...this.payload(),
+        ...(this.recipient() === 'other' ? { email: to } : {}),
+      })
+      .pipe(take(1))
+      .subscribe({
+        next: (response) => {
+          this.sending.set(false);
+          this.messageService.add({
+            severity: 'success',
+            summary: 'Packing slip sent',
+            detail: `Sent to ${response.data.sentTo}`,
+          });
+          this.close();
+        },
+        error: (error) => {
+          this.sending.set(false);
+          this.sendError.set(
+            error?.error?.message || 'The packing slip could not be emailed. Please try again.',
+          );
+        },
+      });
   }
 
   /** The request both the preview and the download come from. */
