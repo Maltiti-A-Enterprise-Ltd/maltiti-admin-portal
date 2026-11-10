@@ -12,6 +12,12 @@ export interface PackingSlipLineQuantity {
   quantity: number;
 }
 
+/** A line on the sale, by position, with the product expected there. */
+export interface PackingSlipLineRef {
+  index: number;
+  productId: string;
+}
+
 /** Body for POST /sales/:id/packing-slip. Everything is optional. */
 export interface GeneratePackingSlipDto {
   /** How many parcels it went out in. Omitted, the slip has a blank to fill in. */
@@ -22,4 +28,12 @@ export interface GeneratePackingSlipDto {
   showImperialWeights?: boolean;
   /** Quantities for a part shipment. Only lines that differ from the order. */
   lineQuantities?: PackingSlipLineQuantity[];
+  /** Lines to print with their PACKED box ticked. Nothing is saved. */
+  packedLines?: PackingSlipLineRef[];
+}
+
+/** Body for POST /sales/:id/packing-slip/email. */
+export interface SendPackingSlipEmailDto extends GeneratePackingSlipDto {
+  /** Defaults to the customer on record. Does not change that record. */
+  email?: string;
 }
