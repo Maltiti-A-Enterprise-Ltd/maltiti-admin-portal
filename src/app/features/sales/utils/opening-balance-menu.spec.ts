@@ -28,6 +28,7 @@ describe('the row menu for an opening balance', () => {
     viewPayments: noop,
     generateInvoice: noop,
     generateWaybill: noop,
+    generatePackingSlip: noop,
     generateReceipt: noop,
     updateDeliveryCost: noop,
     cancel: noop,
@@ -57,9 +58,7 @@ describe('the row menu for an opening balance', () => {
   /* Even once it is paid off — a receipt listing nothing bought is worse
      than no receipt. */
   it('offers no receipt even when it has been paid', () => {
-    expect(menu({ paymentStatus: PaymentStatus.PAID }).join(' ')).not.toContain(
-      'Receipt',
-    );
+    expect(menu({ paymentStatus: PaymentStatus.PAID }).join(' ')).not.toContain('Receipt');
   });
 
   /* There is nowhere for a pre-system sale to progress to, and nothing in
@@ -72,9 +71,9 @@ describe('the row menu for an opening balance', () => {
   });
 
   it('offers no delivery cost, there being no delivery', () => {
-    expect(
-      menu({ paymentStatus: PaymentStatus.AWAITING_DELIVERY }).join(' '),
-    ).not.toContain('Delivery Cost');
+    expect(menu({ paymentStatus: PaymentStatus.AWAITING_DELIVERY }).join(' ')).not.toContain(
+      'Delivery Cost',
+    );
   });
 
   /* The whole point of storing it as a sale: money collected against an old
