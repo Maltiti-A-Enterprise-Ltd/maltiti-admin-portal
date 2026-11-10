@@ -1,0 +1,154 @@
+<p-dialog
+  header="Packing Slip"
+  [closable]="true"
+  [draggable]="false"
+  [modal]="true"
+  [style]="{ width: '900px', 'max-width': '95vw' }"
+  [visible]="visible()"
+  (onHide)="close()"
+>
+  <div class="packing-slip">
+    <!-- Preview: rebuilt after every change, so it is what will download. -->
+    <div class="preview-pane">
+      @if (generating()) {
+        <div class="preview-placeholder">
+          <p-progressSpinner strokeWidth="4" [style]="{ width: '42px', height: '42px' }" />
+          <span>Generating packing slip…</span>
+        </div>
+      } @else if (previewUrl(); as url) {
+        <iframe class="preview-frame" title="Packing slip preview" [src]="url"></iframe>
+      } @else {
+        <div class="preview-placeholder">
+          <i class="pi pi-box"></i>
+          <span>{{ previewError() || 'No preview available' }}</span>
+        </div>
+      }
+    </div>
+
+    <!-- What the slip says beyond the order itself. -->
+    <div class="options-pane">
+      <h4 class="pane-title">On the slip</h4>
+
+      <div class="options-grid">
+        <div class="field">
+          <label for="packageCount">Packages</label>
+          <p-inputNumber
+            inputId="packageCount"
+            placeholder="Leave blank to fill in by hand"
+            [disabled]="generating()"
+            [max]="10000"
+            [min]="1"
+            [ngModel]="packageCount()"
+            [useGrouping]="false"
+            (ngModelChange)="packageCount.set($event)"
+            (onBlur)="commitOptions()"
+          />
+        </div>
+
+        <div class="field imperial">
+          <p-checkbox
+            inputId="showImperialWeights"
+            [binary]="true"
+            [disabled]="generating()"
+            [ngModel]="showImperialWeights()"
+            (ngModelChange)="toggleImperial($event)"
+          />
+          <label for="showImperialWeights">Show weights in pounds too</label>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="slipNotes">Notes for the receiver</label>
+        <textarea
+          id="slipNotes"
+          pTextarea
+          placeholder="e.g. Keep away from direct sunlight"
+          rows="2"
+          [attr.maxlength]="notesMaxLength"
+          [disabled]="generating()"
+          [ngModel]="notes()"
+          (blur)="commitOptions()"
+          (ngModelChange)="notes.set($event)"
+        ></textarea>
+      </div>
+    </div>
+
+    <!-- A part shipment. Nothing here touches the sale or its stock. -->
+    @if (quantities.lines().length) {
+      <div class="quantities-pane" [class.is-partial]="quantities.isPartial()">
+        <div class="quantities-header">
+          <h4 class="pane-title">Quantities in this shipment</h4>
+          @if (quantities.isPartial()) {
+            <button class="reset" type="button" (click)="quantities.clear()">
+              Back to the full order
+            </button>
+          }
+        </div>
+
+        <p class="hint">
+          Leave these alone to pack the whole order. Lower one to send part of a line, or set it to
+          0 to leave the line off. This changes only the slip — the order and its stock are not
+          touched.
+        </p>
+
+        <table class="quantities-table">
+          <thead>
+            <tr>
+              <th scope="col">Product</th>
+              <th class="num" scope="col">Ordered</th>
+              <th class="num" scope="col">This shipment</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (line of quantities.lines(); track line.index) {
+              <tr
+                [class.is-changed]="line.shipping !== line.ordered"
+                [class.is-omitted]="line.shipping === 0"
+              >
+                <td class="product" data-label="Product">{{ line.productName }}</td>
+                <td class="num muted" data-label="Ordered">{{ line.ordered }}</td>
+                <td class="num" data-label="This shipment">
+                  <p-inputNumber
+                    styleClass="quantity-input"
+                    [ariaLabel]="'Quantity of ' + line.productName + ' in this shipment'"
+                    [disabled]="generating()"
+                    [max]="line.ordered"
+                    [maxFractionDigits]="2"
+                    [min]="0"
+                    [ngModel]="line.shipping"
+                    [useGrouping]="false"
+                    (ngModelChange)="quantities.setPending(line.index, $event)"
+                    (onBlur)="quantities.commit()"
+                  />
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+
+        @if (quantities.isEmpty()) {
+          <p class="note warn" role="alert">
+            <i class="pi pi-exclamation-triangle"></i>
+            Every line is at 0, so there is nothing to pack. Put at least one back.
+          </p>
+        } @else if (quantities.isPartial()) {
+          <p class="note">
+            <i class="pi pi-info-circle"></i>
+            The slip will say it is part of the order, so the receiver does not report the rest as
+            missing.
+          </p>
+        }
+      </div>
+    }
+  </div>
+
+  <ng-template pTemplate="footer">
+    <p-button label="Close" severity="secondary" [outlined]="true" (onClick)="close()" />
+    <p-button
+      icon="pi pi-download"
+      label="Download"
+      [disabled]="generating() || !previewUrl() || quantities.isEmpty()"
+      (onClick)="download()"
+    />
+  </ng-template>
+</p-dialog>

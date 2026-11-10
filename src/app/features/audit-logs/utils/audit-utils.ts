@@ -24,6 +24,7 @@ export function getActionSeverity(actionType: AuditActionType): Severity {
     [AuditActionType.GENERATE_INVOICE]: 'success',
     [AuditActionType.GENERATE_RECEIPT]: 'success',
     [AuditActionType.GENERATE_WAYBILL]: 'success',
+    [AuditActionType.GENERATE_PACKING_SLIP]: 'success',
     [AuditActionType.SALE_CREATED]: 'success',
     [AuditActionType.SALE_UPDATED]: 'info',
     [AuditActionType.SALE_CANCELLED]: 'danger',

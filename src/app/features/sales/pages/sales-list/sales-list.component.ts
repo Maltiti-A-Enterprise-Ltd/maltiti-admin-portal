@@ -55,6 +55,7 @@ import { SalesApiService } from '../../services/sales-api.service';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ReceiptGenerationModalComponent } from '../receipt-generation-modal/receipt-generation-modal.component';
 import { WaybillGenerationModalComponent } from '../waybill-generation-modal/waybill-generation-modal.component';
+import { PackingSlipModalComponent } from '../packing-slip-modal/packing-slip-modal.component';
 import { DeliveryCostUpdateModalComponent } from '../delivery-cost-update-modal/delivery-cost-update-modal.component';
 import { CancelSaleByAdminModalComponent } from '../cancel-sale-by-admin-modal/cancel-sale-by-admin-modal.component';
 import { InvoicePreviewModalComponent } from '../invoice-preview-modal/invoice-preview-modal.component';
@@ -103,6 +104,7 @@ import { saleArrivalStatus } from '../../utils/arrival-date';
     InvoicePreviewModalComponent,
     ReceiptGenerationModalComponent,
     WaybillGenerationModalComponent,
+    PackingSlipModalComponent,
     DeliveryCostUpdateModalComponent,
     CancelSaleByAdminModalComponent,
     SalesMetricsPanelComponent,
@@ -140,6 +142,7 @@ export class SalesListComponent implements OnInit {
   public readonly invoicePreviewModal = viewChild.required(InvoicePreviewModalComponent);
   public readonly receiptModal = viewChild.required(ReceiptGenerationModalComponent);
   public readonly waybillModal = viewChild.required(WaybillGenerationModalComponent);
+  public readonly packingSlipModal = viewChild.required(PackingSlipModalComponent);
   public readonly deliveryCostModal = viewChild.required(DeliveryCostUpdateModalComponent);
   public readonly cancelModal = viewChild.required(CancelSaleByAdminModalComponent);
   private readonly openingBalanceDialog = viewChild.required(OpeningBalanceDialogComponent);
@@ -288,10 +291,6 @@ export class SalesListComponent implements OnInit {
     this.receiptModal().open(sale.id, sale.currency);
   }
 
-  public onGenerateWaybill(sale: Sale): void {
-    this.waybillModal().open(sale.id);
-  }
-
   public onUpdateDeliveryCost(sale: Sale): void {
     this.deliveryCostModal().open(sale.id, sale.currency);
   }
@@ -345,7 +344,8 @@ export class SalesListComponent implements OnInit {
         toggleFlag: (s) => this.onToggleFlag(s),
         viewPayments: (s) => this.onViewPayments(s),
         generateInvoice: (s) => this.onGenerateInvoice(s),
-        generateWaybill: (s) => this.onGenerateWaybill(s),
+        generateWaybill: (s) => this.waybillModal().open(s.id),
+        generatePackingSlip: (s) => this.packingSlipModal().open(s.id, s.lineItems),
         generateReceipt: (s) => this.onGenerateReceipt(s),
         updateDeliveryCost: (s) => this.onUpdateDeliveryCost(s),
         cancel: (s) => this.onCancelSale(s),

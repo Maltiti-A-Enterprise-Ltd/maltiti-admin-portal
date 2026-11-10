@@ -1,0 +1,202 @@
+.packing-slip {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+// ── Preview ────────────────────────────────────────────────
+.preview-pane {
+  border: 1px solid var(--surface-border, #dee2e6);
+  border-radius: 6px;
+  overflow: hidden;
+  background: var(--surface-ground, #f8f9fa);
+}
+
+.preview-frame {
+  display: block;
+  width: 100%;
+  height: 46vh;
+  min-height: 280px;
+  border: 0;
+}
+
+.preview-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  height: 46vh;
+  min-height: 280px;
+  padding: 0 1rem;
+  text-align: center;
+  color: var(--text-color-secondary, #6c757d);
+
+  i {
+    font-size: 2rem;
+  }
+}
+
+// ── Panes ──────────────────────────────────────────────────
+.pane-title {
+  margin: 0 0 0.75rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-color);
+}
+
+.options-grid {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 1rem 1.5rem;
+  margin-bottom: 0.9rem;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  font-size: 0.85rem;
+
+  textarea {
+    width: 100%;
+  }
+
+  &.imperial {
+    flex-direction: row;
+    align-items: center;
+    gap: 0.5rem;
+    padding-bottom: 0.5rem;
+  }
+}
+
+.quantities-pane {
+  border: 1px solid var(--p-content-border-color, #e2e8f0);
+  border-radius: 8px;
+  padding: 0.9rem 1rem;
+
+  &.is-partial {
+    border-color: var(--orange-300, #fdba74);
+    background: var(--orange-50, #fff7ed);
+  }
+}
+
+.quantities-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.reset {
+  border: 0;
+  background: none;
+  padding: 0;
+  font-size: 0.8rem;
+  color: var(--primary-color);
+  cursor: pointer;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+.hint {
+  margin: 0.3rem 0 0.75rem;
+  font-size: 0.75rem;
+  line-height: 1.45;
+  color: var(--text-color-secondary);
+}
+
+.quantities-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8rem;
+
+  th {
+    padding-bottom: 0.35rem;
+    font-weight: 500;
+    text-align: left;
+    color: var(--text-color-secondary);
+  }
+
+  td {
+    padding: 0.2rem 0;
+    vertical-align: middle;
+  }
+
+  .num {
+    text-align: right;
+  }
+
+  .muted {
+    color: var(--text-color-secondary);
+  }
+
+  tr.is-changed td {
+    font-weight: 500;
+  }
+
+  // Left off the slip entirely.
+  tr.is-omitted .product {
+    text-decoration: line-through;
+    color: var(--text-color-secondary);
+  }
+
+  ::ng-deep .quantity-input input {
+    width: 6rem;
+    text-align: right;
+  }
+}
+
+.note {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.35rem;
+  margin: 0.6rem 0 0;
+  font-size: 0.75rem;
+  line-height: 1.45;
+  color: var(--text-color-secondary);
+
+  &.warn {
+    color: var(--orange-700, #c2410c);
+  }
+}
+
+// ── Phone ──────────────────────────────────────────────────
+// Matches the global bottom-sheet breakpoint in `_responsive.scss`.
+@media (max-width: 768px) {
+  .packing-slip {
+    gap: 1rem;
+  }
+
+  .preview-frame,
+  .preview-placeholder {
+    height: 32vh;
+    min-height: 180px;
+  }
+
+  .quantities-table {
+    thead {
+      display: none;
+    }
+
+    tr {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 0.25rem 0.75rem;
+      padding: 0.5rem 0;
+      border-bottom: 1px solid var(--p-content-border-color, #e2e8f0);
+    }
+
+    td.product {
+      grid-column: 1 / -1;
+    }
+
+    td.num::before {
+      content: attr(data-label) ': ';
+      color: var(--text-color-secondary);
+    }
+  }
+}

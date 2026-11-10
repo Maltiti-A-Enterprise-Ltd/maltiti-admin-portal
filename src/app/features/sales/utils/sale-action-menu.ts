@@ -19,6 +19,7 @@ export interface SaleMenuActions {
   viewPayments: (sale: Sale) => void;
   generateInvoice: (sale: Sale) => void;
   generateWaybill: (sale: Sale) => void;
+  generatePackingSlip: (sale: Sale) => void;
   generateReceipt: (sale: Sale) => void;
   updateDeliveryCost: (sale: Sale) => void;
   cancel: (sale: Sale) => void;
@@ -34,8 +35,7 @@ export interface SaleMenuActions {
  * are withheld rather than rendered badly; what to send a customer about an
  * old debt is a separate question.
  */
-const isOpeningBalance = (sale: Sale): boolean =>
-  sale.kind === SaleKind.OPENING_BALANCE;
+const isOpeningBalance = (sale: Sale): boolean => sale.kind === SaleKind.OPENING_BALANCE;
 
 export function buildSaleActionMenu(
   sale: Sale,
@@ -75,6 +75,17 @@ export function buildSaleActionMenu(
       command: (): void => actions.generateWaybill(sale),
     },
   ];
+
+  /* A cancelled order is not going anywhere, so a list of what to pack for
+     it would be an instruction nobody should follow. The API refuses it
+     too; this just stops it being offered. */
+  if (sale.orderStatus !== OrderStatus.CANCELLED) {
+    items.push({
+      label: 'Generate Packing Slip',
+      icon: 'pi pi-box',
+      command: (): void => actions.generatePackingSlip(sale),
+    });
+  }
 
   // A receipt is for money already in; offering one before that invites a
   // document that says something untrue.
@@ -148,11 +159,7 @@ export function buildSaleActionMenu(
  * work. "Correct" opens the opening-balance dialog rather than the sale
  * form, which asks for line items this record will never have.
  */
-function openingBalanceMenu(
-  sale: Sale,
-  isAdmin: boolean,
-  actions: SaleMenuActions,
-): MenuItem[] {
+function openingBalanceMenu(sale: Sale, isAdmin: boolean, actions: SaleMenuActions): MenuItem[] {
   const items: MenuItem[] = [
     {
       label: 'Correct opening balance',
