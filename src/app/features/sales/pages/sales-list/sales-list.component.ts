@@ -345,7 +345,7 @@ export class SalesListComponent implements OnInit {
         viewPayments: (s) => this.onViewPayments(s),
         generateInvoice: (s) => this.onGenerateInvoice(s),
         generateWaybill: (s) => this.waybillModal().open(s.id),
-        generatePackingSlip: (s) => this.packingSlipModal().open(s.id, s.lineItems),
+        generatePackingSlip: (s) => this.packingSlipModal().open(s),
         generateReceipt: (s) => this.onGenerateReceipt(s),
         updateDeliveryCost: (s) => this.onUpdateDeliveryCost(s),
         cancel: (s) => this.onCancelSale(s),

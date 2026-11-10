@@ -73,22 +73,33 @@
       </div>
     </div>
 
-    <!-- A part shipment. Nothing here touches the sale or its stock. -->
+    <!-- What goes in this shipment, and what is already packed. Nothing here
+         touches the sale or its stock. -->
     @if (quantities.lines().length) {
       <div class="quantities-pane" [class.is-partial]="quantities.isPartial()">
         <div class="quantities-header">
-          <h4 class="pane-title">Quantities in this shipment</h4>
-          @if (quantities.isPartial()) {
-            <button class="reset" type="button" (click)="quantities.clear()">
-              Back to the full order
+          <h4 class="pane-title">Lines in this shipment</h4>
+          <div class="header-actions">
+            @if (quantities.isPartial()) {
+              <button class="reset" type="button" (click)="quantities.clear()">
+                Back to the full order
+              </button>
+            }
+            <button
+              class="reset"
+              type="button"
+              [disabled]="generating() || quantities.isEmpty()"
+              (click)="quantities.setAllPacked(!quantities.allPacked())"
+            >
+              {{ quantities.allPacked() ? 'Untick all' : 'Tick all as packed' }}
             </button>
-          }
+          </div>
         </div>
 
         <p class="hint">
-          Leave these alone to pack the whole order. Lower one to send part of a line, or set it to
-          0 to leave the line off. This changes only the slip — the order and its stock are not
-          touched.
+          Leave the quantities alone to pack the whole order. Lower one to send part of a line, or
+          set it to 0 to leave the line off. Tick a line to print its PACKED box ticked. This
+          changes only the slip — the order and its stock are not touched.
         </p>
 
         <table class="quantities-table">
@@ -97,6 +108,7 @@
               <th scope="col">Product</th>
               <th class="num" scope="col">Ordered</th>
               <th class="num" scope="col">This shipment</th>
+              <th class="center" scope="col">Packed</th>
             </tr>
           </thead>
           <tbody>
@@ -121,6 +133,17 @@
                     (onBlur)="quantities.commit()"
                   />
                 </td>
+                <td class="center" data-label="Packed">
+                  <!-- A line left off has no box to tick. -->
+                  <p-checkbox
+                    [ariaLabel]="line.productName + ' packed'"
+                    [binary]="true"
+                    [disabled]="generating() || line.shipping === 0"
+                    [inputId]="'packed-' + line.index"
+                    [ngModel]="line.packed && line.shipping > 0"
+                    (ngModelChange)="quantities.setPacked(line.index, $event)"
+                  />
+                </td>
               </tr>
             }
           </tbody>
@@ -140,15 +163,87 @@
         }
       </div>
     }
+
+    <!-- Send by email. The copy sent is built from the same options as the
+         preview, so it is the slip on screen. -->
+    <div class="send-pane">
+      <h4 class="pane-title">Send by email</h4>
+
+      <div class="recipient-options">
+        @if (customerEmail(); as email) {
+          <div class="recipient-option">
+            <p-radioButton
+              inputId="slipToCustomer"
+              name="slipRecipient"
+              value="customer"
+              [ngModel]="recipient()"
+              (ngModelChange)="recipient.set($event)"
+            />
+            <label for="slipToCustomer">
+              Customer on record
+              <span class="recipient-email">{{ email }}</span>
+            </label>
+          </div>
+        } @else {
+          <p class="no-customer-email">
+            <i class="pi pi-info-circle"></i>
+            This customer has no email on record. Enter one to send the packing slip.
+          </p>
+        }
+
+        <div class="recipient-option">
+          <p-radioButton
+            inputId="slipToOther"
+            name="slipRecipient"
+            value="other"
+            [ngModel]="recipient()"
+            (ngModelChange)="recipient.set($event)"
+          />
+          <label for="slipToOther">Another address (a warehouse or forwarder, say)</label>
+        </div>
+
+        @if (recipient() === 'other') {
+          <div class="other-email">
+            <input
+              id="slipOtherEmail"
+              pInputText
+              placeholder="name@example.com"
+              type="email"
+              [ngModel]="otherEmail()"
+              (blur)="otherEmailTouched.set(true)"
+              (ngModelChange)="otherEmail.set($event)"
+            />
+            @if (showEmailError()) {
+              <small class="email-error">Enter a valid email address</small>
+            }
+          </div>
+        }
+      </div>
+
+      @if (sendError(); as error) {
+        <p class="send-error" role="alert"><i class="pi pi-exclamation-circle"></i>{{ error }}</p>
+      }
+    </div>
   </div>
 
   <ng-template pTemplate="footer">
-    <p-button label="Close" severity="secondary" [outlined]="true" (onClick)="close()" />
-    <p-button
-      icon="pi pi-download"
-      label="Download"
-      [disabled]="generating() || !previewUrl() || quantities.isEmpty()"
-      (onClick)="download()"
-    />
+    <div class="dialog-footer">
+      <p-button label="Close" severity="secondary" [outlined]="true" (onClick)="close()" />
+      <p-button
+        icon="pi pi-download"
+        label="Download"
+        severity="contrast"
+        [disabled]="actionsDisabled()"
+        [outlined]="true"
+        (onClick)="download()"
+      />
+      <p-button
+        icon="pi pi-send"
+        label="Send packing slip"
+        [disabled]="actionsDisabled() || !sendTo()"
+        [loading]="sending()"
+        (onClick)="send()"
+      />
+    </div>
   </ng-template>
 </p-dialog>
