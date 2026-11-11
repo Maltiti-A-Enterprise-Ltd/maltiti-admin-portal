@@ -1,0 +1,32 @@
+/**
+ * Filter bars on the list pages (`.filters-row`).
+ *
+ * Every field — search box or dropdown — takes an equal share of the row, so
+ * none of them is sized by its placeholder text. This lives here rather than
+ * in each page because a page's scoped styles cannot reach a field rendered
+ * inside `<app-select>` or `<app-input>`: the old per-page `.filter-dropdown`
+ * rules matched nothing, and the dropdowns shrank to fit their text while the
+ * search box stretched.
+ *
+ * The flex item is the component host, so that is what is sized here; the
+ * field inside already fills its host.
+ */
+.filters-row {
+  > app-input,
+  > app-select,
+  > input {
+    flex: 1 1 12rem;
+    min-width: 0;
+  }
+}
+
+/* One field per line on a phone. */
+@media (max-width: 768px) {
+  .filters-row {
+    > app-input,
+    > app-select,
+    > input {
+      flex-basis: 100%;
+    }
+  }
+}

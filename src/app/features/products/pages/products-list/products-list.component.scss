@@ -40,16 +40,6 @@
   flex-wrap: wrap;
   gap: variables.$spacing-md;
   align-items: center;
-
-  .search-input {
-    flex: 1;
-    min-width: 200px;
-  }
-
-  .filter-dropdown {
-    min-width: 180px;
-    flex: 1;
-  }
 }
 
 // Table Card
@@ -210,10 +200,6 @@
     ::ng-deep .p-button {
       width: 100%;
     }
-  }
-
-  .filters-row {
-    // Removed width: 100% for search-input and filter-dropdown to allow flex wrapping
   }
 
   .action-buttons {
