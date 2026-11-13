@@ -22,10 +22,7 @@ export class StatementApiService {
    * `responseType: 'blob'` rather than JSON: these come back as a PDF or a
    * workbook, and parsing either as JSON throws before the download starts.
    */
-  public download(
-    query: StatementQuery,
-    format: 'pdf' | 'excel',
-  ): Observable<Blob> {
+  public download(query: StatementQuery, format: 'pdf' | 'excel'): Observable<Blob> {
     return this.http.get(`${this.base}/${format}`, {
       params: this.params(query),
       responseType: 'blob',
@@ -46,6 +43,10 @@ export class StatementApiService {
 
     if (query.to) {
       params = params.set('to', query.to);
+    }
+
+    if (query.owingOnly) {
+      params = params.set('owingOnly', 'true');
     }
 
     return params;
