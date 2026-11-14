@@ -15,6 +15,9 @@
    default — tables, dialogs, toasts. */
 @use 'styles/responsive';
 
+/* Equal-width fields in the list pages' filter bars. */
+@use 'styles/filters';
+
 /* Global Reset */
 * {
   margin: 0;

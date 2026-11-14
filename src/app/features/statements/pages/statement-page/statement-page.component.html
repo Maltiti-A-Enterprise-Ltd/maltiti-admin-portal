@@ -3,9 +3,8 @@
     <div>
       <h1>Statement of account</h1>
       <p>
-        What a customer was charged, what they have paid, and what is left —
-        in the order it happened. Leave the customer blank for every account
-        on one ledger.
+        What a customer was charged, what they have paid, and what is left — in the order it
+        happened. Leave the customer blank to see every customer who owes on one ledger.
       </p>
     </div>
     <div class="page-actions">
@@ -62,6 +61,13 @@
         [showIcon]="true"
       />
     </div>
+
+    @if (!customerControl.value) {
+      <div class="filter-field owing-field">
+        <p-checkbox inputId="owing-only" [binary]="true" [formControl]="owingOnlyControl" />
+        <label for="owing-only">Only customers who owe</label>
+      </div>
+    }
 
     <div class="filter-actions">
       <p-button icon="pi pi-search" label="Show" (onClick)="load()" />
@@ -174,9 +180,11 @@
         <ng-template pTemplate="emptymessage">
           <tr>
             <td class="empty-state" colspan="6">
-              @if (isFiltered()) {
-                Nothing happened on this account in that period. The opening
-                balance above is still what was owed going into it.
+              @if (account.owingOnly) {
+                No customer owes anything as at the end of this period.
+              } @else if (isFiltered()) {
+                Nothing happened on this account in that period. The opening balance above is still
+                what was owed going into it.
               } @else {
                 Nothing on this account yet.
               }
@@ -188,9 +196,8 @@
 
     <p class="ledger-note">
       <i class="pi pi-info-circle"></i>
-      All figures in Ghana Cedis. A sale agreed in another currency is
-      restated at the rate it was agreed at, and a payment at the rate it
-      arrived at. Pending and failed payments are not shown.
+      All figures in Ghana Cedis. A sale agreed in another currency is restated at the rate it was
+      agreed at, and a payment at the rate it arrived at. Pending and failed payments are not shown.
     </p>
   }
 </div>

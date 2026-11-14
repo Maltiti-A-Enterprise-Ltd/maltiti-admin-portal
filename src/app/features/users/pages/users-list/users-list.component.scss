@@ -40,16 +40,6 @@
   flex-wrap: wrap;
   gap: variables.$spacing-md;
   align-items: center;
-
-  .search-input {
-    flex: 1;
-    min-width: 200px;
-  }
-
-  .filter-dropdown {
-    min-width: 180px;
-    flex: 1;
-  }
 }
 
 // Table Card

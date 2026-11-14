@@ -38,7 +38,9 @@
       width: 100%;
     }
   }
+  // Same share of the row as the search box.
   ::ng-deep .filter-dropdown {
+    flex: 1;
     min-width: 200px;
   }
 }

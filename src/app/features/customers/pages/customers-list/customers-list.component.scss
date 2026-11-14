@@ -43,10 +43,6 @@
   flex-wrap: wrap;
   gap: variables.$spacing-md;
   align-items: center;
-
-  .search-input { flex: 2; min-width: 220px; }
-  .filter-dropdown { flex: 1; min-width: 160px; }
-  .sort-order-dropdown { max-width: 160px; }
 }
 
 // ── Advanced filter panel ──────────────────────────────────
@@ -325,12 +321,4 @@ $avatar-colors: (
 // ── Responsive ────────────────────────────────────────────
 @media (max-width: 768px) {
   .page-header { flex-direction: column; align-items: flex-start; }
-
-  .filters-row {
-    flex-direction: column;
-    .search-input, .filter-dropdown, .sort-order-dropdown {
-      width: 100%;
-      max-width: 100%;
-    }
-  }
 }
