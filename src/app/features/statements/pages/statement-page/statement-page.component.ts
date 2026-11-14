@@ -23,15 +23,12 @@ import { TagModule } from 'primeng/tag';
 import { ButtonModule } from 'primeng/button';
 import { DatePickerModule } from 'primeng/datepicker';
 import { SkeletonModule } from 'primeng/skeleton';
+import { CheckboxModule } from 'primeng/checkbox';
 import { MessageService } from 'primeng/api';
 import { CustomerSelectComponent } from '@shared/components/customer-virtual-select/customer-select.component';
 import { downloadBlob } from '@shared/utils/download-blob';
 import { StatementApiService } from '../../services/statement-api.service';
-import {
-  Statement,
-  StatementEntryType,
-  StatementQuery,
-} from '../../models/statement.model';
+import { Statement, StatementEntryType, StatementQuery } from '../../models/statement.model';
 import { asPlainDay, statementFileName } from '../../utils/statement-period';
 
 @Component({
@@ -48,6 +45,7 @@ import { asPlainDay, statementFileName } from '../../utils/statement-period';
     ButtonModule,
     DatePickerModule,
     SkeletonModule,
+    CheckboxModule,
     CustomerSelectComponent,
   ],
   templateUrl: './statement-page.component.html',
@@ -61,8 +59,13 @@ export class StatementPageComponent implements OnInit {
   public readonly loading = signal(false);
   public readonly downloading = signal<'pdf' | 'excel' | null>(null);
 
-  /** Blank means every account, which is the ledger the page opens on. */
+  /** Blank means every account. */
   public readonly customerControl = new FormControl<string | null>(null);
+  /**
+   * With no customer chosen, the page opens on the accounts that still owe —
+   * the list someone is going to chase. Ignored once a customer is picked.
+   */
+  public readonly owingOnlyControl = new FormControl(true, { nonNullable: true });
   public readonly fromControl = new FormControl<Date | null>(null);
   public readonly toControl = new FormControl<Date | null>(null);
 
@@ -70,9 +73,7 @@ export class StatementPageComponent implements OnInit {
   /** Nothing in the future has happened yet. */
   public readonly today = new Date();
 
-  public readonly isEmpty = computed(
-    () => !this.loading() && this.statement()?.rows.length === 0,
-  );
+  public readonly isEmpty = computed(() => !this.loading() && this.statement()?.rows.length === 0);
 
   /**
    * Whether the closing balance is money owed to us.
@@ -81,9 +82,7 @@ export class StatementPageComponent implements OnInit {
    * against an order that was then cancelled — and a figure in red on an
    * account that is actually in hand would be read exactly wrong.
    */
-  public readonly isOwed = computed(
-    () => (this.statement()?.totals.closingBalance ?? 0) > 0,
-  );
+  public readonly isOwed = computed(() => (this.statement()?.totals.closingBalance ?? 0) > 0);
 
   public ngOnInit(): void {
     this.load();
@@ -114,10 +113,7 @@ export class StatementPageComponent implements OnInit {
     this.api.download(this.query(), format).subscribe({
       next: (blob) => {
         this.downloading.set(null);
-        downloadBlob(
-          blob,
-          statementFileName(this.statement(), format === 'pdf' ? 'pdf' : 'xlsx'),
-        );
+        downloadBlob(blob, statementFileName(this.statement(), format === 'pdf' ? 'pdf' : 'xlsx'));
       },
       error: () => {
         this.downloading.set(null);
@@ -134,6 +130,7 @@ export class StatementPageComponent implements OnInit {
     this.customerControl.setValue(null, { emitEvent: false });
     this.fromControl.setValue(null, { emitEvent: false });
     this.toControl.setValue(null, { emitEvent: false });
+    this.owingOnlyControl.setValue(true, { emitEvent: false });
     this.load();
   }
 
@@ -141,7 +138,8 @@ export class StatementPageComponent implements OnInit {
     return !!(
       this.customerControl.value ||
       this.fromControl.value ||
-      this.toControl.value
+      this.toControl.value ||
+      !this.owingOnlyControl.value
     );
   }
 
@@ -150,6 +148,7 @@ export class StatementPageComponent implements OnInit {
       customerId: this.customerControl.value ?? undefined,
       from: asPlainDay(this.fromControl.value) ?? undefined,
       to: asPlainDay(this.toControl.value) ?? undefined,
+      owingOnly: !this.customerControl.value && this.owingOnlyControl.value ? true : undefined,
     };
   }
 }

@@ -41,6 +41,8 @@ export interface Statement {
   };
   /** Null on a ledger covering every account. */
   customerId: string | null;
+  /** Narrowed to the customers who owe; never set for one customer. */
+  owingOnly: boolean;
   customerName: string;
   from: string | null;
   to: string | null;
@@ -51,4 +53,6 @@ export interface StatementQuery {
   customerId?: string;
   from?: string;
   to?: string;
+  /** Only customers who owe at the end of the period. */
+  owingOnly?: boolean;
 }
