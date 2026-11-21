@@ -1,5 +1,4 @@
 /**
- * Sales List Page Component
  * Main page for displaying and managing sales with filters, pagination, and status transitions
  * Uses Angular signals for reactive state management
  */
@@ -79,6 +78,7 @@ import { formatSaleAmount } from '@shared/utils/sale-money';
 import { buildSaleActionMenu } from '../../utils/sale-action-menu';
 import { ArrivalDateModalComponent } from '../arrival-date-modal/arrival-date-modal.component';
 import { saleArrivalStatus } from '../../utils/arrival-date';
+import { RowOpenDirective } from '@shared/directives/row-open.directive';
 @Component({
   selector: 'app-sales-list',
   standalone: true,
@@ -86,6 +86,7 @@ import { saleArrivalStatus } from '../../utils/arrival-date';
   styleUrls: ['./sales-list.component.scss'],
   imports: [
     CommonModule,
+    RowOpenDirective,
     FormsModule,
     ReactiveFormsModule,
     TableModule,

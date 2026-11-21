@@ -96,7 +96,7 @@
       <ng-template #body let-product>
         <tr>
           <!-- Image -->
-          <td data-label="Image">
+          <td class="cell-hide-sm" data-label="Image">
             <img
               class="product-image"
               [alt]="product.name"
@@ -108,7 +108,7 @@
           </td>
 
           <!-- Name -->
-          <td data-label="Name">
+          <td class="cell-primary" data-label="Name">
             <div class="product-name-cell">
               <span class="product-name">{{ product | productName }}</span>
               @if (product.isFeatured) {
@@ -142,12 +142,14 @@
           <td data-label="Status">
             <p-tag
               [severity]="getStatusSeverity(product.status)"
-              [value]="product.status | titlecase"
+              [value]="statusLabel(product.status)"
             />
           </td>
 
           <!-- Actions -->
-          <td class="cell-actions" data-label="">
+          <!-- Five actions: too many for the corner of a card, so on a phone
+               they run along its foot instead. -->
+          <td class="cell-actions cell-actions--row" data-label="">
             <div class="action-buttons">
               <app-button
                 [icon]="'pi pi-eye'"

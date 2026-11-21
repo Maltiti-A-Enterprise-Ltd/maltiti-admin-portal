@@ -280,7 +280,6 @@
                   [control]="getQuantityControl(i)"
                   [maxFractionDigits]="0"
                   [min]="1"
-                  [style]="{'width': '30%'}"
                 />
 
                 @if (batchInfo) {
@@ -295,9 +294,11 @@
                 }
 
                 <app-button
+                  class="batch-remove"
                   icon="pi pi-minus"
                   severity="danger"
                   size="small"
+                  [attr.aria-label]="'Remove this batch'"
                   [outlined]="true"
                   (click)="removeBatchAllocation(i)"
                 />

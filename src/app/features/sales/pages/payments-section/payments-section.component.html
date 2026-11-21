@@ -130,7 +130,7 @@
       </div>
     } @else {
       <p-table
-        styleClass="p-datatable-sm"
+        styleClass="p-datatable-sm table-cards"
         [sortField]="'createdAt'"
         [sortOrder]="1"
         [value]="payments()"
@@ -153,29 +153,31 @@
         </ng-template>
         <ng-template let-i="rowIndex" let-payment pTemplate="body">
           <tr>
-            <td>{{ i + 1 }}</td>
-            <td>{{ formatDate(payment.createdAt) }}</td>
-            <td class="amount-cell">{{ money(payment.amount) }}</td>
-            <td>{{ getMethodLabel(payment.paymentMethod) }}</td>
+            <td class="num cell-hide-sm" data-label="#">{{ i + 1 }}</td>
+            <td class="num" data-label="Date">{{ formatDate(payment.createdAt) }}</td>
+            <td class="amount-cell num cell-primary" data-label="Amount">{{ money(payment.amount) }}</td>
+            <td data-label="Method">{{ getMethodLabel(payment.paymentMethod) }}</td>
             <!-- Resolved server-side, so a payment still names its account after
                  that account has been retired and left the picker. -->
-            <td class="account-cell">{{ payment.paymentAccountLabel || '—' }}</td>
-            <td>
+            <td class="account-cell" data-label="Received into">{{ payment.paymentAccountLabel || '—' }}</td>
+            <td data-label="Status">
               <p-tag
                 [severity]="getRecordStatusSeverity(payment.status)"
                 [value]="getRecordStatusLabel(payment.status)"
               />
             </td>
-            <td>{{ payment.reference || '—' }}</td>
-            <td class="note-cell">{{ payment.note || '—' }}</td>
-            <td>
+            <td data-label="Reference">{{ payment.reference || '—' }}</td>
+            <td class="note-cell cell-wide" data-label="Note">{{ payment.note || '—' }}</td>
+            <td data-label="Source">
               @if (payment.isCustomerInitiated) {
                 <span class="source-badge customer">Customer</span>
               } @else {
                 <span class="source-badge admin">Admin</span>
               }
             </td>
-            <td>
+            <!-- Labelled buttons rather than icons, so on a phone they sit along
+                 the bottom of the card instead of in its corner. -->
+            <td class="cell-wide" data-label="">
               <div class="row-actions">
                 <button
                   aria-label="Edit payment"

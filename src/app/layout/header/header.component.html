@@ -7,9 +7,12 @@
       [text]="true"
       (onClick)="onToggleSidebar()"
     />
-    <div class="header-title">
-      <h2>Maltiti Admin Portal</h2>
-    </div>
+    <!-- The brand on a phone, where the green rail is hidden in the drawer.
+         On a desktop the rail already says whose tool this is. -->
+    <a aria-label="Maltiti dashboard" class="header-brand" routerLink="/dashboard">
+      <img alt="" class="header-logo" src="/assets/images/maltiti-logo.png" width="309" />
+      <span class="header-brand-name">Maltiti</span>
+    </a>
   </div>
 
   <div class="header-right">
@@ -20,17 +23,22 @@
          The header is sticky with z-index 100, which caps anything inside it
          below the bottom tab bar at 1000 — Logout ended up underneath it. -->
     <p-menu #userMenu appendTo="body" [model]="userMenuItems()" [popup]="true" />
-       <p-avatar
-         shape="circle"
-         style="cursor:pointer; margin-left: 0.5rem;"
-         [image]="avatarUrl()"
-         [label]="!avatarUrl ? userInitials() : undefined"
-         [style.background-color]="!avatarUrl() ? '#d9eaff' : null"
-         [style.color]="avatarUrl() ? '#2a3b4d' : null"
-         [style.font-size.px]="18"
-         [style.height.px]="36"
-         [style.width.px]="36"
-         (click)="userMenu.toggle($event)"
-       />
+    <!-- A button, so the menu opens from the keyboard too. The initials used
+         to test `avatarUrl` without calling it — always truthy — so anyone
+         without a photo got an empty blue circle. -->
+    <button
+      aria-haspopup="menu"
+      class="header-avatar"
+      type="button"
+      [attr.aria-label]="'Account menu for ' + (fullName() || 'you')"
+      (click)="userMenu.toggle($event)"
+    >
+      <p-avatar
+        shape="circle"
+        styleClass="header-avatar-image"
+        [image]="avatarUrl() || undefined"
+        [label]="avatarUrl() ? undefined : userInitials() || undefined"
+      />
+    </button>
   </div>
 </header>

@@ -17,6 +17,7 @@ import {
 } from '../../models/report.model';
 import { CurrencyPipe, DecimalPipe } from '@angular/common';
 import { first } from 'rxjs';
+import { CHART_SERIES } from '@shared/utils/chart-palette';
 
 @Component({
   selector: 'app-product-performance',
@@ -118,22 +119,9 @@ export class ProductPerformanceComponent implements OnInit {
       return;
     }
 
-    const documentStyle = getComputedStyle(document.documentElement);
-
     // Take top 10 for pie chart
     const top10 = report.distribution.slice(0, 10);
-    const colors = [
-      documentStyle.getPropertyValue('--p-primary-500'),
-      documentStyle.getPropertyValue('--p-green-500'),
-      documentStyle.getPropertyValue('--p-orange-500'),
-      documentStyle.getPropertyValue('--p-blue-500'),
-      documentStyle.getPropertyValue('--p-purple-500'),
-      documentStyle.getPropertyValue('--p-pink-500'),
-      documentStyle.getPropertyValue('--p-cyan-500'),
-      documentStyle.getPropertyValue('--p-teal-500'),
-      documentStyle.getPropertyValue('--p-indigo-500'),
-      documentStyle.getPropertyValue('--p-yellow-500'),
-    ];
+    const colors = [...CHART_SERIES];
 
     this.chartData.set({
       labels: top10.map((item) => item.productName),
@@ -148,8 +136,7 @@ export class ProductPerformanceComponent implements OnInit {
   }
 
   private initializeChartOptions(): void {
-    const documentStyle = getComputedStyle(document.documentElement);
-    const textColor = documentStyle.getPropertyValue('--p-text-color');
+    const textColor = '#181d1a';
 
     this.chartOptions.set({
       plugins: {

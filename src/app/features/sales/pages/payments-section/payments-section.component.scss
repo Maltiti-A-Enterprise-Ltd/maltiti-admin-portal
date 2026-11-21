@@ -239,6 +239,12 @@
   font-weight: 600;
 }
 
+// Figures and dates line up and stay on one line
+.num {
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
 .note-cell {
   max-width: 160px;
   white-space: nowrap;
@@ -253,6 +259,19 @@
 .account-cell {
   max-width: 220px;
   white-space: normal;
+}
+
+// A card has the width to show the whole note, and an ellipsis does not
+// work on the card's flex cell anyway.
+@media (max-width: 768px) {
+  .note-cell {
+    max-width: none;
+    white-space: normal;
+  }
+
+  .account-cell {
+    max-width: none;
+  }
 }
 
 .source-badge {

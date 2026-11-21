@@ -148,69 +148,118 @@
    */
   .table-cards {
     .p-datatable-thead {
-      /* The labels moved into the cells; the header would repeat them. */
       display: none;
     }
 
     .p-datatable-table,
-    .p-datatable-tbody,
-    .p-datatable-tbody > tr,
-    .p-datatable-tbody > tr > td {
+    .p-datatable-tbody {
       display: block;
       width: 100%;
     }
 
+    /*
+     * A card: the row's headline across the top, everything else in two
+     * columns of label-over-value, and the actions pinned to the corner.
+     *
+     * It used to be one full-width label/value line per column, which put
+     * ten lines and ~520px into every sale — a screen and a half to read
+     * one order. Two columns halve that without dropping a field.
+     */
     .p-datatable-tbody > tr {
-      margin-bottom: 0.75rem;
-      padding: 0.25rem 0.9rem 0.6rem;
-      border: 1px solid var(--p-content-border-color, #e7e5e4);
-      border-radius: 0.75rem;
-      background: var(--p-content-background, #fff);
-      box-shadow: 0 1px 2px rgb(0 0 0 / 4%);
+      position: relative;
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 0.7rem 1rem;
+      margin-bottom: 0.6rem;
+      padding: 0.85rem 0.95rem 0.9rem;
+      border: 1px solid var(--app-line);
+      border-radius: var(--app-radius-card);
+      background: var(--app-card);
     }
 
     .p-datatable-tbody > tr > td {
       display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 1rem;
-
-      padding: 0.45rem 0;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 0.2rem;
+      min-width: 0;
+      padding: 0;
       border: none;
-      text-align: right;
+      text-align: left;
+      font-size: 0.9rem;
+      overflow-wrap: anywhere;
 
       &::before {
         content: attr(data-label);
-        flex: 0 0 auto;
-        font-size: 0.75rem;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.03em;
-        color: var(--p-text-muted-color, #78716c);
-        text-align: left;
+        font-size: 0.72rem;
+        font-weight: 500;
+        color: var(--app-ink-muted);
       }
 
-      /* A cell with nothing to label — the actions row — spans the card. */
       &[data-label='']::before {
         content: none;
       }
-
-      &:not(:last-child) {
-        border-bottom: 1px solid var(--p-content-border-color, #f5f5f4);
-      }
     }
 
-    /* Row actions sit as a full-width strip at the foot of the card. */
-    .p-datatable-tbody > tr > td.cell-actions {
-      justify-content: flex-end;
-      padding-top: 0.6rem;
+    /* Who or what the card is about: full width, no label, and room on the
+       right for the actions button. */
+    .p-datatable-tbody > tr > td.cell-primary {
+      order: -1;
+      grid-column: 1 / -1;
+      padding-right: 2.5rem;
+
+      /* Nothing in the corner to clear when the actions run along the foot. */
+      &:has(~ td.cell-actions--row) {
+        padding-right: 0;
+      }
+      font-size: 0.975rem;
+      font-weight: 600;
 
       &::before {
         content: none;
       }
     }
 
-    /* An empty-state row is a message, not a card. */
+    /* Fields that need the width — a progress bar, an address. */
+    .p-datatable-tbody > tr > td.cell-wide {
+      order: 1;
+      grid-column: 1 / -1;
+    }
+
+    /* Detail a phone can do without; it is one tap away on the record. */
+    .p-datatable-tbody > tr > td.cell-hide-sm {
+      display: none;
+    }
+
+    .p-datatable-tbody > tr > td.cell-actions {
+      position: absolute;
+      top: 0.4rem;
+      right: 0.35rem;
+      width: auto;
+
+      &::before {
+        content: none;
+      }
+    }
+
+    /* More actions than fit in the corner: a row along the foot of the
+       card, right-aligned, separated from the fields above it. */
+    .p-datatable-tbody > tr > td.cell-actions.cell-actions--row {
+      position: static;
+      order: 2;
+      grid-column: 1 / -1;
+      flex-direction: row;
+      justify-content: flex-end;
+      padding-top: 0.5rem;
+      border-top: 1px solid var(--app-line-soft);
+    }
+
+    /* The empty and loading rows span the card rather than sitting in a
+       column of it. */
+    .p-datatable-tbody > tr:has(> td[colspan]) {
+      display: block;
+    }
+
     .p-datatable-tbody > tr > td[colspan] {
       display: block;
       text-align: center;
@@ -218,6 +267,11 @@
       &::before {
         content: none;
       }
+    }
+
+    /* A card that opens a record says so on touch. */
+    .p-datatable-tbody > tr.row-link:active {
+      background: var(--p-surface-50);
     }
   }
 
@@ -319,4 +373,11 @@
   .p-card .p-card-body {
     padding: 0.9rem;
   }
+}
+
+/* The tab bar steps aside while the navigation drawer is open: it sat on top
+   of the drawer's shade, so two menus showed at once and "More" stayed
+   tappable behind the one it had opened. */
+body:has(.p-drawer-mask) .bottom-nav {
+  display: none;
 }

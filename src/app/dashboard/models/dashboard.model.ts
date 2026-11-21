@@ -155,10 +155,16 @@ export interface ProductHighlight {
   productId: string;
   productName: string;
   category: string;
-  revenue: number;
-  quantitySold: number;
-  salesCount: number;
-  growthRate?: number;
+  /**
+   * Revenue in the current period, in cedis.
+   *
+   * Named as the API sends it. This model used to declare `revenue`, which
+   * the API never sent, so every top seller was listed without its figure.
+   */
+  metric: number;
+  /** Against the previous period of the same length. */
+  change: number;
+  changePercentage: number;
 }
 
 /**

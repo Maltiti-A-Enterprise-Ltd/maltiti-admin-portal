@@ -266,6 +266,12 @@
   }
 }
 
+// Figures and dates line up and stay on one line
+.num {
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
 @media (max-width: 768px) {
   .inventory-reports {
     padding: 1rem;

@@ -43,6 +43,7 @@
       <p-table
         class="p-datatable-striped"
         currentPageReportTemplate="Showing {first} to {last} of {totalRecords} entries"
+        styleClass="table-cards"
         [paginator]="true"
         [rows]="pageLimit()"
         [rowsPerPageOptions]="[10, 20, 50, 100]"
@@ -70,14 +71,14 @@
         <ng-template let-log pTemplate="body">
           <tr class="audit-row">
             <!-- Timestamp -->
-            <td>
+            <td class="num" data-label="Timestamp">
               <span class="timestamp">
-                {{ log.timestamp | date: 'short' }}
+                {{ log.timestamp | date: 'd MMM y, HH:mm' }}
               </span>
             </td>
 
             <!-- User -->
-            <td>
+            <td data-label="User">
               <div class="user-info">
                 <strong>{{ log.performedByUserName || 'Unknown' }}</strong>
                 @if (log.performedByUserId) {
@@ -87,7 +88,7 @@
             </td>
 
             <!-- Role -->
-            <td>
+            <td class="cell-hide-sm" data-label="Role">
               <p-tag
                 severity="secondary"
                 [value]="formatEnumLabel(log.performedByRole)"
@@ -95,7 +96,7 @@
             </td>
 
             <!-- Action Type -->
-            <td>
+            <td data-label="Action">
               <p-tag
                 [severity]="getActionSeverity(log.actionType)"
                 [value]="formatEnumLabel(log.actionType)"
@@ -103,7 +104,7 @@
             </td>
 
             <!-- Entity Type -->
-            <td>
+            <td data-label="Entity">
               <p-tag
                 [severity]="getEntitySeverity(log.entityType)"
                 [value]="formatEnumLabel(log.entityType)"
@@ -111,7 +112,7 @@
             </td>
 
             <!-- Description -->
-            <td>
+            <td class="cell-primary" data-label="Description">
               <span
                 class="description"
                 tooltipPosition="top"
@@ -122,7 +123,7 @@
             </td>
 
             <!-- Actions -->
-            <td>
+            <td class="cell-actions" data-label="">
               <p-button
                 icon="pi pi-eye"
                 pTooltip="View Details"

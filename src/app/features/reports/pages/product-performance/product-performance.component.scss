@@ -168,6 +168,12 @@
   }
 }
 
+// Figures and dates line up and stay on one line
+.num {
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
 @media (max-width: 992px) {
   .content-grid {
     grid-template-columns: 1fr;

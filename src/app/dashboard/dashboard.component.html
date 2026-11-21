@@ -6,7 +6,7 @@
         <i class="pi pi-home"></i>
         Dashboard
       </h1>
-      <p class="page-subtitle">Welcome to your executive business overview</p>
+      <p class="page-subtitle">How the business stands today</p>
     </div>
     <div class="header-actions">
       <p-button icon="pi pi-chart-bar" label="View Full Reports" routerLink="/reports" [outlined]="true" />
@@ -224,7 +224,7 @@
               </div>
             </div>
           </ng-template>
-          <p-chart height="220px" type="line" [data]="salesChartData()" [options]="salesChartOptions()" />
+          <p-chart height="220px" type="bar" [data]="salesChartData()" [options]="salesChartOptions()" />
         </p-card>
 
         <!-- Revenue Trend Chart -->
@@ -252,7 +252,7 @@
               </div>
             </div>
           </ng-template>
-          <p-chart height="220px" type="line" [data]="revenueChartData()" [options]="revenueChartOptions()" />
+          <p-chart height="220px" type="bar" [data]="revenueChartData()" [options]="revenueChartOptions()" />
         </p-card>
       </div>
     }
@@ -293,7 +293,7 @@
                 @for (product of highlights()!.topSellers; track product.productId) {
                   <li class="highlight-item">
                     <span class="product-name">{{ product.productName }}</span>
-                    <span class="product-revenue">{{ product.revenue | currency: 'GHS ' }}</span>
+                    <span class="product-revenue">{{ product.metric | currency: 'GHS ' }}</span>
                   </li>
                 }
               </ul>
@@ -313,7 +313,7 @@
                 @for (product of highlights()!.bottomPerformers; track product.productId) {
                   <li class="highlight-item">
                     <span class="product-name">{{ product.productName }}</span>
-                    <span class="product-revenue">{{ product.revenue | currency: 'GHS ' }}</span>
+                    <span class="product-revenue">{{ product.metric | currency: 'GHS ' }}</span>
                   </li>
                 }
               </ul>

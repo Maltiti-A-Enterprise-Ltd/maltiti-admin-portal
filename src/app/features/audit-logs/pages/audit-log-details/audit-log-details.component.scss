@@ -48,7 +48,7 @@
     }
 
     .log-id {
-      font-family: 'Courier New', monospace;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
       font-size: 0.875rem;
       color: var(--text-color-secondary);
       margin: 0;
@@ -101,7 +101,7 @@
   }
 
   .code-value {
-    font-family: 'Courier New', monospace;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
     font-size: 0.875rem;
     background: var(--surface-ground);
     padding: 0.5rem;
@@ -117,7 +117,7 @@
 }
 
 .timestamp {
-  font-family: 'Courier New', monospace;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   font-size: 1rem;
   color: var(--text-color);
 }
@@ -186,7 +186,7 @@
 }
 
 .json-display {
-  font-family: 'Courier New', monospace;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   font-size: 0.875rem;
   background: var(--surface-ground);
   border: 1px solid var(--surface-border);
