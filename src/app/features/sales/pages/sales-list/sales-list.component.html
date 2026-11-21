@@ -226,7 +226,8 @@
         <td class="num" data-label="Total">
           <span class="total-cell">
             {{ money(saleValue(sale), sale) }}
-            @if (sale.deliveryFee) {
+            <!-- Number(): the API sends "0.00", a string, which is truthy. -->
+            @if (+sale.deliveryFee > 0) {
               <span class="total-delivery">+ {{ money(sale.deliveryFee, sale) }} delivery</span>
             }
           </span>
