@@ -53,6 +53,20 @@ export class CustomValidators {
     return /^\d+(\.\d+)?$/.test(String(value).trim()) ? null : { numeric: true };
   }
 
+  /**
+   * A number above zero. Blank fails too, as `{ required }`, so a price
+   * field that starts at 0 cannot be saved untouched.
+   */
+  public static positive(control: AbstractControl): ValidationErrors | null {
+    const value = control.value;
+
+    if (value === null || value === undefined || String(value).trim() === '') {
+      return { required: true };
+    }
+
+    return Number(value) > 0 ? null : { positive: true };
+  }
+
   public static strongPassword(control: AbstractControl): ValidationErrors | null {
     const value = control.value;
     // At least one uppercase letter, one lowercase letter, one number, and one special character
