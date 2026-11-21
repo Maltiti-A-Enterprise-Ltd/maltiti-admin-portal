@@ -75,6 +75,7 @@
           <h3 class="card-title">All Products Performance</h3>
         </ng-template>
         <p-table
+          styleClass="table-cards"
           [globalFilterFields]="['productName', 'category']"
           [paginator]="true"
 
@@ -105,14 +106,14 @@
           </ng-template>
           <ng-template let-product pTemplate="body">
             <tr>
-              <td>{{ product.productName }}</td>
-              <td>
+              <td class="cell-primary" data-label="Product name">{{ product.productName }}</td>
+              <td data-label="Category">
                 <span class="category-badge">{{ product.category }}</span>
               </td>
-              <td>{{ product.totalRevenue | currency: 'GHS ' }}</td>
-              <td>{{ product.totalQuantitySold | number }}</td>
-              <td>{{ product.numberOfSales | number }}</td>
-              <td>{{ product.averagePrice | currency: 'GHS ' }}</td>
+              <td class="num" data-label="Revenue">{{ product.totalRevenue | currency: 'GHS ' }}</td>
+              <td class="num" data-label="Quantity sold">{{ product.totalQuantitySold | number }}</td>
+              <td class="num" data-label="Sales count">{{ product.numberOfSales | number }}</td>
+              <td class="num" data-label="Avg price">{{ product.averagePrice | currency: 'GHS ' }}</td>
             </tr>
           </ng-template>
         </p-table>

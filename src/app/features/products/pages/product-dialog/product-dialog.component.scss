@@ -233,3 +233,9 @@
   background: var(--p-red-50, #fef2f2);
   border: 1px solid var(--p-red-200, #fecaca);
 }
+
+// Figures and dates line up and stay on one line
+.num {
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}

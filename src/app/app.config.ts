@@ -1,6 +1,7 @@
 import {
   ApplicationConfig,
   isDevMode,
+  LOCALE_ID,
   provideBrowserGlobalErrorListeners,
   provideZoneChangeDetection,
 } from '@angular/core';
@@ -14,7 +15,13 @@ import { providePrimeNG } from 'primeng/config';
 import Aura from '@primeng/themes/aura';
 import { definePreset } from '@primeng/themes';
 
+import { registerLocaleData } from '@angular/common';
+import localeEnGb from '@angular/common/locales/en-GB';
 import { routes } from './app.routes';
+
+/* Dates as they are read in Ghana: 20/11/2026, 20 Nov 2026. The default was
+   American, so the 11th of December printed as 12/11 and read as November. */
+registerLocaleData(localeEnGb);
 import { authReducer } from '@auth/store/auth.reducer';
 import { AuthEffects } from '@auth/store/auth.effects';
 import { AuthStorageEffects } from '@auth/store/auth-storage.effects';
@@ -31,61 +38,56 @@ import { customersReducer } from '@features/sales/store/customers.reducer';
 import { CustomersEffects } from '@features/sales/store/customers.effects';
 import { MessageService } from 'primeng/api';
 
+/**
+ * Maltiti green as a real scale, with the brand colour (#0F6938) at 500.
+ *
+ * Every step used to be the same green, so anything PrimeNG paints with a
+ * light step — a selected row, the current page in a paginator, a hovered
+ * option — came out as a solid block of dark green with dark text on it.
+ */
 const MaltitiPreset = definePreset(Aura, {
   semantic: {
     primary: {
-      50: '#0F6938',
-      100: '#0F6938',
-      200: '#0F6938',
-      300: '#0F6938',
-      400: '#0F6938',
-      500: '#0F6938',
-      600: '#0F6938',
-      700: '#0F6938',
-      800: '#0F6938',
-      900: '#0F6938',
+      50: '#eef7f2',
+      100: '#d5ecdf',
+      200: '#abd8bf',
+      300: '#78be97',
+      400: '#3f9967',
+      500: '#0f6938',
+      600: '#0d5b31',
+      700: '#0b4c29',
+      800: '#093d21',
+      900: '#072f1a',
+      950: '#041c10',
     },
   },
   colorScheme: {
     light: {
       primary: {
         color: '{primary.500}',
-        contrastColor: '{surface.0}',
+        contrastColor: '#ffffff',
         hoverColor: '{primary.600}',
-        activeColor: '{surface.0}',
+        activeColor: '{primary.700}',
       },
       highlight: {
-        background: '{primary.500}',
-        focusBackground: '{primary.600}',
-        color: '{surface.0}',
-        focusColor: '{surface.0}',
+        background: '{primary.50}',
+        focusBackground: '{primary.100}',
+        color: '{primary.700}',
+        focusColor: '{primary.800}',
       },
       surface: {
         0: '#ffffff',
-        50: '#f5f5f4',
-        100: '#f5f5f4',
-        200: '#e7e5e4',
-        300: '#d6d3d1',
-        400: '#a8a29e',
-        500: '#78716c',
-        600: '#57534e',
-        700: '#44403c',
-        800: '#292524',
-        900: '#1c1917',
-      },
-    },
-    dark: {
-      primary: {
-        color: '{primary.400}',
-        contrastColor: '{surface.900}',
-        hoverColor: '{primary.300}',
-        activeColor: '{primary.200}',
-      },
-      highlight: {
-        background: 'rgba(15, 105, 56, .16)',
-        focusBackground: 'rgba(15, 105, 56, .24)',
-        color: '{primary.200}',
-        focusColor: '{primary.200}',
+        50: '#f6f7f6',
+        100: '#eef0ee',
+        200: '#e2e6e3',
+        300: '#cdd3cf',
+        400: '#9aa39d',
+        500: '#6b746e',
+        600: '#4d5550',
+        700: '#3a413d',
+        800: '#262c28',
+        900: '#181d1a',
+        950: '#0d110f',
       },
     },
   },
@@ -94,6 +96,7 @@ const MaltitiPreset = definePreset(Aura, {
 export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
+    { provide: LOCALE_ID, useValue: 'en-GB' },
     // Only in production builds: a service worker in development serves stale
     // bundles and makes every change look like it did not apply. The 30s delay
     // keeps registration off the critical path of the first paint.
@@ -109,7 +112,10 @@ export const appConfig: ApplicationConfig = {
         preset: MaltitiPreset,
         options: {
           prefix: 'p',
-          darkModeSelector: 'system',
+          /* A class nothing sets, so the app stays light. Following the OS
+             turned PrimeNG's own parts dark while every hand-written panel
+             stayed light, which left white cards on near-black inputs. */
+          darkModeSelector: '.app-dark',
           cssLayer: false,
         },
       },

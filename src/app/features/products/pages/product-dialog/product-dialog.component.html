@@ -427,7 +427,7 @@
   @if (isViewMode() && productBatches().length > 0) {
     <div class="batches-section">
       <h3 class="section-title">Related Batches</h3>
-      <p-table class="p-datatable-sm" [value]="productBatches()">
+      <p-table class="p-datatable-sm" styleClass="table-cards" [value]="productBatches()">
         <ng-template pTemplate="header">
           <tr>
             <th>Batch Number</th>
@@ -438,10 +438,10 @@
         </ng-template>
         <ng-template let-batch pTemplate="body">
           <tr>
-            <td>{{ batch.batchNumber }}</td>
-            <td>{{ batch.productionDate ? (batch.productionDate | date: 'shortDate') : 'N/A' }}</td>
-            <td>{{ batch.expiryDate ? (batch.expiryDate | date: 'shortDate') : 'N/A' }}</td>
-            <td>
+            <td class="cell-primary" data-label="Batch number">{{ batch.batchNumber }}</td>
+            <td class="num" data-label="Production date">{{ batch.productionDate ? (batch.productionDate | date: 'd MMM y') : 'N/A' }}</td>
+            <td class="num" data-label="Expiry date">{{ batch.expiryDate ? (batch.expiryDate | date: 'd MMM y') : 'N/A' }}</td>
+            <td data-label="Quality status">
               <p-tag
                 [severity]="getQualityStatusSeverity(batch.qualityCheckStatus)"
                 [value]="batch.qualityCheckStatus || 'Pending'"

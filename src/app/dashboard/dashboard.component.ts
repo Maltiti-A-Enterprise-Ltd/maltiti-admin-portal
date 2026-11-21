@@ -25,6 +25,7 @@ import {
   RecentSale,
 } from './models/dashboard.model';
 import { SaleKind } from '@features/sales/models/opening-balance.model';
+import { CHART_COLORS } from '@shared/utils/chart-palette';
 
 @Component({
   selector: 'app-dashboard',
@@ -168,84 +169,78 @@ export class DashboardComponent implements OnInit {
   }
 
   private updateCharts(trendsData: DashboardTrends): void {
-    const documentStyle = getComputedStyle(document.documentElement);
 
-    // Sales Chart Data
+    /* Bars, not curves: these are counts and takings per day. A smoothed
+       line through days of 0 and 1 drew a row of hills, and suggested sales
+       in between the days that had them. */
+    const day = (date: string): string =>
+      new Date(date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+
     this.salesChartData.set({
-      labels: trendsData.sales.data.map((t) =>
-        new Date(t.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-      ),
+      labels: trendsData.sales.data.map((t) => day(t.date)),
       datasets: [
         {
           label: trendsData.sales.label,
           data: trendsData.sales.data.map((t) => t.value),
-          borderColor: documentStyle.getPropertyValue('--p-primary-color'),
-          backgroundColor: documentStyle.getPropertyValue('--p-primary-color') + '20',
-          tension: 0.4,
-          fill: true,
+          backgroundColor: CHART_COLORS.primary,
+          borderRadius: 3,
+          maxBarThickness: 18,
         },
       ],
     });
 
-    // Revenue Chart Data with Production vs Sales
+    /* Money only. Units produced and sold were drawn on the same cedi axis,
+       where a few hundred units lie flat along zero next to GH₵20,000 — and
+       with the legend hidden nobody could tell what the extra lines were.
+       Production against sales has its own report. */
     this.revenueChartData.set({
-      labels: trendsData.revenue.data.map((t) =>
-        new Date(t.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-      ),
+      labels: trendsData.revenue.data.map((t) => day(t.date)),
       datasets: [
         {
           label: trendsData.revenue.label,
           data: trendsData.revenue.data.map((t) => t.value),
-          borderColor: documentStyle.getPropertyValue('--p-green-500'),
-          backgroundColor: documentStyle.getPropertyValue('--p-green-500') + '20',
-          tension: 0.4,
-          fill: true,
-        },
-        {
-          label: 'Produced',
-          data: trendsData.productionVsSales.produced.map((t) => t.value),
-          borderColor: documentStyle.getPropertyValue('--p-blue-500'),
-          backgroundColor: documentStyle.getPropertyValue('--p-blue-500') + '20',
-          tension: 0.4,
-          fill: false,
-        },
-        {
-          label: 'Sold',
-          data: trendsData.productionVsSales.sold.map((t) => t.value),
-          borderColor: documentStyle.getPropertyValue('--p-orange-500'),
-          backgroundColor: documentStyle.getPropertyValue('--p-orange-500') + '20',
-          tension: 0.4,
-          fill: false,
+          backgroundColor: CHART_COLORS.secondary,
+          borderRadius: 3,
+          maxBarThickness: 18,
         },
       ],
     });
   }
 
   private initializeChartOptions(): void {
-    const documentStyle = getComputedStyle(document.documentElement);
-    const textColorSecondary = documentStyle.getPropertyValue('--p-text-muted-color');
-    const surfaceBorder = documentStyle.getPropertyValue('--p-surface-border');
-    const baseOptions = {
+    const axisFont = { size: 11, family: 'IBM Plex Sans' };
+    const options = (wholeNumbers: boolean): Record<string, unknown> => ({
       maintainAspectRatio: false,
-      aspectRatio: 0.6,
       plugins: {
         legend: { display: false },
         tooltip: { mode: 'index', intersect: false },
       },
       scales: {
         x: {
-          ticks: { color: textColorSecondary, font: { size: 11 } },
+          /* A label every few days, flat: thirty slanted dates overlapped
+             and were read as a smudge, worse still on a phone. */
+          ticks: {
+            color: CHART_COLORS.text,
+            font: axisFont,
+            maxRotation: 0,
+            autoSkip: true,
+            maxTicksLimit: 8,
+          },
           grid: { display: false },
         },
         y: {
-          ticks: { color: textColorSecondary, font: { size: 11 } },
-          grid: { color: surfaceBorder },
+          beginAtZero: true,
+          // Sales come whole; an axis at 0.2, 0.4… invites the question.
+          ticks: { color: CHART_COLORS.text, font: axisFont, ...(wholeNumbers ? { precision: 0 } : {}) },
+          grid: { color: CHART_COLORS.grid },
         },
       },
-    };
-    this.salesChartOptions.set(baseOptions);
-    this.revenueChartOptions.set(baseOptions);
+    });
+
+    this.salesChartOptions.set(options(true));
+    this.revenueChartOptions.set(options(false));
   }
+
 
   public getAlertSeverity(severity: AlertSeverity): 'success' | 'warn' | 'danger' {
     switch (severity) {

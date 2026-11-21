@@ -121,16 +121,20 @@
       &.th-index { text-align: center; }
     }
 
-    .p-datatable-tbody > tr > td {
-      padding: variables.$spacing-sm variables.$spacing-lg;
-      border-bottom: 1px solid var(--surface-100);
-      font-size: variables.$font-size-sm;
-      vertical-align: middle;
+    /* Desktop only: on a phone the rows are cards, and these padded,
+       bordered cells drew a rule under every field inside them. */
+    @media (min-width: 769px) {
+      .p-datatable-tbody > tr > td {
+        padding: variables.$spacing-sm variables.$spacing-lg;
+        border-bottom: 1px solid var(--surface-100);
+        font-size: variables.$font-size-sm;
+        vertical-align: middle;
+      }
+
+      .p-datatable-tbody > tr:last-child > td { border-bottom: none; }
+
+      .p-datatable-tbody > tr:hover > td { background: var(--surface-50); }
     }
-
-    .p-datatable-tbody > tr:last-child > td { border-bottom: none; }
-
-    .p-datatable-tbody > tr:hover > td { background: var(--surface-50); }
   }
 }
 

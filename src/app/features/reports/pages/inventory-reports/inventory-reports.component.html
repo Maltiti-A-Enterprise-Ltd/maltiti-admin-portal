@@ -205,6 +205,7 @@
           <h3 class="card-title">Inventory Details</h3>
         </ng-template>
         <p-table
+          styleClass="table-cards"
           [paginator]="true"
           [rows]="15"
           [value]="inventoryReport()!.inventory"
@@ -234,13 +235,13 @@
           </ng-template>
           <ng-template let-item pTemplate="body">
             <tr [class.low-stock-row]="item.isLowStock">
-              <td>{{ item.productName }}</td>
-              <td>{{ item.totalStock | number }}</td>
-              <td>{{ item.numberOfBatches | number }}</td>
-              <td>{{ item.totalValue | currency: 'GHS ' }}</td>
-              <td>{{ item.oldestBatchDate | date }}</td>
-              <td>{{ item.newestBatchDate | date }}</td>
-              <td>
+              <td class="cell-primary" data-label="Product name">{{ item.productName }}</td>
+              <td class="num" data-label="Current stock">{{ item.totalStock | number }}</td>
+              <td class="num" data-label="Number of batches">{{ item.numberOfBatches | number }}</td>
+              <td class="num" data-label="Inventory value">{{ item.totalValue | currency: 'GHS ' }}</td>
+              <td class="num" data-label="Oldest batch date">{{ item.oldestBatchDate | date: 'd MMM y' }}</td>
+              <td class="num" data-label="Newest batch date">{{ item.newestBatchDate | date: 'd MMM y' }}</td>
+              <td data-label="Status">
                 <p-tag
                   [severity]="item.isLowStock ? 'warn' : 'success'"
                   [value]="item.isLowStock ? 'Low Stock' : 'Normal'"
@@ -259,6 +260,7 @@
           <h3 class="card-title">Stock Movement Details</h3>
         </ng-template>
         <p-table
+          styleClass="table-cards"
           [paginator]="true"
           [rows]="15"
           [value]="stockMovementReport()!.movements"
@@ -284,13 +286,13 @@
           </ng-template>
           <ng-template let-item pTemplate="body">
             <tr>
-              <td>{{ item.date | date }}</td>
-              <td>{{ item.produced | number }}</td>
-              <td>{{ item.sold | number }}</td>
-              <td [class]="item.netChange >= 0 ? 'positive' : 'negative'">
+              <td class="num cell-primary" data-label="Date">{{ item.date | date: 'd MMM y' }}</td>
+              <td class="num" data-label="Produced">{{ item.produced | number }}</td>
+              <td class="num" data-label="Sold">{{ item.sold | number }}</td>
+              <td class="num" data-label="Net change" [class]="item.netChange >= 0 ? 'positive' : 'negative'">
                 {{ item.netChange | number }}
               </td>
-              <td>{{ item.closingStock | number }}</td>
+              <td class="num" data-label="Closing stock">{{ item.closingStock | number }}</td>
             </tr>
           </ng-template>
         </p-table>

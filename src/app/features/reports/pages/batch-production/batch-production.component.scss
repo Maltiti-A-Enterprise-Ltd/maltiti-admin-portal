@@ -143,6 +143,12 @@
   }
 }
 
+// Figures and dates line up and stay on one line
+.num {
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
 @media (max-width: 768px) {
   .batch-production {
     padding: 1rem;

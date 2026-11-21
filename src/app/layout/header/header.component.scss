@@ -2,10 +2,10 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 1.5rem;
+  padding: 0 1.5rem 0 1rem;
   height: 60px;
-  background-color: var(--p-surface-card);
-  border-bottom: 1px solid var(--p-surface-border);
+  background-color: var(--app-card);
+  border-bottom: 1px solid var(--app-line);
   position: sticky;
   top: 0;
   z-index: 100;
@@ -14,22 +14,37 @@
 .header-left {
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: 0.5rem;
 }
 
-.header-title {
-  h2 {
-    margin: 0;
-    font-size: 1.25rem;
-    font-weight: 600;
-    color: var(--p-text-color);
+/* Only on a phone: on a desktop the green rail carries the brand. */
+.header-brand {
+  display: none;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--app-ink);
+  text-decoration: none;
+
+  &:hover {
+    color: var(--app-ink);
   }
+}
+
+.header-logo {
+  width: 30px;
+  height: 30px;
+  object-fit: contain;
+}
+
+.header-brand-name {
+  font-size: 1.05rem;
+  font-weight: 700;
 }
 
 .header-right {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: 0.5rem;
 
   app-notification-badge {
     display: flex;
@@ -37,23 +52,39 @@
   }
 }
 
-// Responsive Design
+.header-avatar {
+  display: inline-flex;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: none;
+  cursor: pointer;
+
+  ::ng-deep .header-avatar-image {
+    width: 36px;
+    height: 36px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    background: var(--primary-50);
+    color: var(--primary-700);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--primary-400);
+    outline-offset: 2px;
+  }
+}
+
 @media (max-width: 768px) {
   .header {
     padding: 0 0.75rem;
-
     /* Paints up into the status bar area while keeping the controls below it.
        Needs viewport-fit=cover in index.html, or env() resolves to 0px. */
     padding-top: env(safe-area-inset-top, 0px);
     height: calc(56px + env(safe-area-inset-top, 0px));
   }
 
-  .header-title {
-    display: block;
-
-    h2 {
-      font-size: 1.05rem;
-      font-weight: 600;
-    }
+  .header-brand {
+    display: inline-flex;
   }
 }

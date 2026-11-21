@@ -67,6 +67,7 @@
   <div class="table-card">
     <p-table
       class="p-datatable-sm"
+      styleClass="table-cards"
       [loading]="loading()"
       [value]="batches()"
     >
@@ -94,27 +95,27 @@
       <ng-template let-batch pTemplate="body">
         <tr>
           <!-- Batch Number -->
-          <td>
+          <td class="cell-primary" data-label="Batch number">
             <span class="batch-number">{{ batch.batchNumber }}</span>
           </td>
 
           <!-- Product -->
-          <td>{{ batch.product | productName }}</td>
+          <td data-label="Product">{{ batch.product | productName }}</td>
 
           <!-- Quantity -->
-          <td>{{ batch.quantity }}</td>
+          <td class="num" data-label="Quantity">{{ batch.quantity }}</td>
 
           <!-- Production Date -->
-          <td>{{ formatDate(batch.productionDate) }}</td>
+          <td class="num" data-label="Production date">{{ formatDate(batch.productionDate) }}</td>
 
           <!-- Expiry Date -->
-          <td>{{ formatDate(batch.expiryDate) }}</td>
+          <td class="num" data-label="Expiry date">{{ formatDate(batch.expiryDate) }}</td>
 
           <!-- Manufacturing Location -->
-          <td>{{ batch.manufacturingLocation || 'N/A' }}</td>
+          <td data-label="Manufacturing location">{{ batch.manufacturingLocation || 'N/A' }}</td>
 
           <!-- Quality Status -->
-          <td>
+          <td data-label="Quality status">
             <p-tag
               [severity]="getQualityStatusSeverity(batch.qualityCheckStatus)"
               [value]="batch.qualityCheckStatus || 'Pending'"
@@ -122,7 +123,7 @@
           </td>
 
           <!-- Actions -->
-          <td>
+          <td class="cell-actions" data-label="">
             <div class="action-buttons">
               <p-button
                 icon="pi pi-eye"

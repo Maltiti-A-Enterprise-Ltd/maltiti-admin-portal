@@ -19,6 +19,7 @@ import {
 } from '../../models/report.model';
 import { CurrencyPipe, DecimalPipe } from '@angular/common';
 import { first } from 'rxjs';
+import { CHART_COLORS } from '@shared/utils/chart-palette';
 
 @Component({
   selector: 'app-comparative-reports',
@@ -131,7 +132,6 @@ export class ComparativeReportsComponent implements OnInit {
   }
 
   private updateChartData(report: ComparativeReport): void {
-    const documentStyle = getComputedStyle(document.documentElement);
 
     this.chartData.set({
       labels: ['Revenue', 'Sales Count', 'Avg Order Value'],
@@ -144,7 +144,7 @@ export class ComparativeReportsComponent implements OnInit {
             report.previous.averageOrderValue,
             report.previous.totalSales,
           ],
-          backgroundColor: documentStyle.getPropertyValue('--p-surface-400'),
+          backgroundColor: CHART_COLORS.grey,
         },
         {
           label: 'Current Period',
@@ -154,17 +154,16 @@ export class ComparativeReportsComponent implements OnInit {
             report.current.averageOrderValue,
             report.current.totalSales,
           ],
-          backgroundColor: documentStyle.getPropertyValue('--p-primary-500'),
+          backgroundColor: CHART_COLORS.primary,
         },
       ],
     });
   }
 
   private initializeChartOptions(): void {
-    const documentStyle = getComputedStyle(document.documentElement);
-    const textColor = documentStyle.getPropertyValue('--p-text-color');
-    const textColorSecondary = documentStyle.getPropertyValue('--p-text-muted-color');
-    const surfaceBorder = documentStyle.getPropertyValue('--p-surface-border');
+    const textColor = '#181d1a';
+    const textColorSecondary = CHART_COLORS.text;
+    const surfaceBorder = CHART_COLORS.grid;
 
     this.chartOptions.set({
       maintainAspectRatio: false,

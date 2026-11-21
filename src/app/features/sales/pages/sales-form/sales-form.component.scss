@@ -149,19 +149,34 @@
   align-items: center;
 }
 
+/*
+ * The details as a grid that packs itself.
+ *
+ * This was one flex row of fields capped at 300px, with Payment terms — by
+ * far the tallest — at the end of it. Every field before it stood over a
+ * tall empty column, and the Total ended up a screen away from the figures
+ * it adds up. Terms and the email option now take two tracks each, and the
+ * total closes the section on its own line.
+ */
 .sales-details {
-  display: flex;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(210px, 100%), 1fr));
+  gap: variables.$spacing-md variables.$spacing-lg;
+  align-items: start;
 
-  .form-field {
-    max-width: 300px;
+  .payment-terms-field,
+  .notify-customer-field {
+    grid-column: span 2;
   }
+
   .total-wrapper {
+    grid-column: 1 / -1;
     display: flex;
     flex-direction: column;
     align-items: flex-end;
     gap: variables.$spacing-xs;
-    align-self: flex-end;
+    padding-top: variables.$spacing-md;
+    border-top: 1px solid var(--app-line-soft);
 
     .total-amount {
       font-size: variables.$font-size-xl;
@@ -265,4 +280,19 @@
   margin-top: 0.5rem;
   cursor: pointer;
   font-weight: 600;
+}
+
+/* One column on a phone: a two-track span there would invent a second
+   column and push the form off the side of the screen. */
+@media (max-width: 768px) {
+  .sales-details {
+    .payment-terms-field,
+    .notify-customer-field {
+      grid-column: 1 / -1;
+    }
+
+    .total-wrapper {
+      align-items: flex-start;
+    }
+  }
 }

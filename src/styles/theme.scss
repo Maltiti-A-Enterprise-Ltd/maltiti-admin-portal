@@ -1,28 +1,104 @@
 :root {
-  /* Primary Color Palette */
-  --primary-100: #0F6938;
-  --primary-200: #0F6938;
-  --primary-300: #0F6938;
-  --primary-400: #0F6938;
-  --primary-500: #0F6938;
-  --primary-600: #0F6938;
-  --primary-700: #0F6938;
-  --primary-800: #0F6938;
-  --primary-900: #0F6938;
+  /* Maltiti green, the same scale the PrimeNG preset uses (app.config.ts).
+     The brand colour sits at 500. Every step used to be that same green, so
+     the light steps — meant for tints behind text — painted solid blocks. */
+  --primary-50: #eef7f2;
+  --primary-100: #d5ecdf;
+  --primary-200: #abd8bf;
+  --primary-300: #78be97;
+  --primary-400: #3f9967;
+  --primary-500: #0f6938;
+  --primary-600: #0d5b31;
+  --primary-700: #0b4c29;
+  --primary-800: #093d21;
+  --primary-900: #072f1a;
 
-  /* Secondary Color Palette - Warm Neutral Gray */
-  --secondary-100: #f5f5f4;
-  --secondary-200: #e7e5e4;
-  --secondary-300: #d6d3d1;
-  --secondary-400: #a8a29e;
-  --secondary-500: #78716c;
-  --secondary-600: #57534e;
-  --secondary-700: #44403c;
-  --secondary-800: #292524;
-  --secondary-900: #1c1917;
+  /* Neutral grey with a trace of the green in it, so the greys sit with the
+     brand instead of beside it. */
+  --secondary-100: #eef0ee;
+  --secondary-200: #e2e6e3;
+  --secondary-300: #cdd3cf;
+  --secondary-400: #9aa39d;
+  --secondary-500: #6b746e;
+  --secondary-600: #4d5550;
+  --secondary-700: #3a413d;
+  --secondary-800: #262c28;
+  --secondary-900: #181d1a;
+
+  /* The page, the things on it, and the lines between them. */
+  --app-ground: #f3f5f3;
+  --app-card: #ffffff;
+  --app-line: #e2e6e3;
+  --app-line-soft: #eef0ee;
+  --app-ink: #181d1a;
+  --app-ink-muted: #5c655f;
+  --app-sidebar: #0f6938;
+  --app-sidebar-deep: #0a4f2a;
+  --app-radius-card: 0.875rem;
+  --app-radius-control: 0.5rem;
+  --app-font: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+
+  /* Names from PrimeNG 3, still used across the component styles. PrimeNG 21
+     defines none of them, so every `var(--surface-card)` resolved to nothing:
+     the sidebar had no background, panels had no borders, and the page had no
+     ground for the cards to sit on. Defined here once rather than rewritten in
+     forty places. */
+  --surface-ground: var(--app-ground);
+  --surface-section: var(--app-card);
+  --surface-card: var(--app-card);
+  --surface-overlay: var(--app-card);
+  --surface-border: var(--app-line);
+  --surface-hover: var(--p-surface-100);
+  --surface-0: #ffffff;
+  --surface-50: var(--p-surface-50);
+  --surface-100: var(--p-surface-100);
+  --surface-200: var(--p-surface-200);
+  --surface-300: var(--p-surface-300);
+  --surface-400: var(--p-surface-400);
+  --surface-500: var(--p-surface-500);
+  --text-color: var(--app-ink);
+  --text-color-secondary: var(--app-ink-muted);
+  --p-surface-ground: var(--app-ground);
+  --p-surface-section: var(--app-card);
+  --p-surface-card: var(--app-card);
+  --p-surface-border: var(--app-line);
+  --p-surface-hover: var(--p-surface-100);
 }
 
-/* Override button primary styles */
+body {
+  font-family: var(--app-font);
+  color: var(--app-ink);
+  background: var(--app-ground);
+}
+
+/* Amounts line up down a column, and a figure does not change width as it
+   updates. */
+.p-datatable,
+.money,
+[class*='amount'],
+[class*='total'],
+[class*='balance'] {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Every PrimeNG part carries its own font declaration. */
+.p-component,
+.p-inputtext,
+.p-button,
+.p-select-label,
+.p-tag {
+  font-family: var(--app-font);
+}
+
+/* Cards: a hairline and a ground to sit on, instead of a shadow on white. */
+.p-card {
+  border: 1px solid var(--app-line);
+  border-radius: var(--app-radius-card);
+  box-shadow: none;
+}
+
+/* Outlined primary buttons fill on hover; the label has to turn white with
+   them or it disappears into the green. */
 .p-button {
   &.p-button-outlined:not(.p-button-secondary):not(.p-button-success):not(.p-button-info):not(.p-button-warn):not(.p-button-danger):not(.p-button-help):not(.p-button-contrast) {
     &:hover {
@@ -30,42 +106,27 @@
     }
   }
 
-  //&:not(.p-button-outlined):not(.p-button-text) {
-  //  background: var(--primary-500);
-  //  border-color: var(--primary-500);
-  //
-  //  &:hover {
-  //    background: var(--primary-600);
-  //    border-color: var(--primary-600);
-  //  }
-  //
-  //  &:active {
-  //    background: var(--primary-700);
-  //    border-color: var(--primary-700);
-  //    color: white;
-  //  }
-  //
-  //  &:focus-visible {
-  //    box-shadow: 0 0 0 0.2rem rgba(15, 105, 56, 0.25);
-  //  }
-  //}
-
-  &.p-button-secondary {
-    background: var(--secondary-500);
-    border-color: var(--secondary-500);
+  /* Solid secondary buttons only. This used to match outlined and text
+     secondary buttons too, which put their grey label on a grey fill —
+     "Clear filters" and "Reset" were close to unreadable. */
+  &.p-button-secondary:not(.p-button-outlined):not(.p-button-text):not(.p-button-link) {
+    background: var(--secondary-600);
+    border-color: var(--secondary-600);
+    color: #ffffff;
 
     &:hover {
-      background: var(--secondary-600);
-      border-color: var(--secondary-600);
+      background: var(--secondary-700);
+      border-color: var(--secondary-700);
+      color: #ffffff;
     }
 
     &:active {
-      background: var(--secondary-700);
-      border-color: var(--secondary-700);
+      background: var(--secondary-800);
+      border-color: var(--secondary-800);
     }
 
     &:focus-visible {
-      box-shadow: 0 0 0 0.2rem rgba(120, 113, 108, 0.25);
+      box-shadow: 0 0 0 0.2rem rgba(77, 85, 80, 0.25);
     }
   }
 }
@@ -74,13 +135,19 @@
 .p-inputtext:focus,
 .p-inputtextarea:focus {
   border-color: var(--primary-500);
-  box-shadow: 0 0 0 0.2rem rgba(15, 105, 56, 0.25);
+  box-shadow: 0 0 0 0.2rem rgba(15, 105, 56, 0.2);
 }
 
 /* Password Input Override */
 .p-password input:focus {
   border-color: var(--primary-500);
-  box-shadow: 0 0 0 0.2rem rgba(15, 105, 56, 0.25);
+  box-shadow: 0 0 0 0.2rem rgba(15, 105, 56, 0.2);
+}
+
+/* Keyboard focus that can be seen on every control, not just inputs. */
+:where(a, button, [tabindex]):focus-visible {
+  outline: 2px solid var(--primary-400);
+  outline-offset: 2px;
 }
 
 /* Link Colors */
@@ -88,7 +155,7 @@ a {
   color: var(--primary-500);
 
   &:hover {
-    color: var(--primary-600);
+    color: var(--primary-700);
   }
 }
 
@@ -98,11 +165,11 @@ a {
   color: white;
 }
 
-::-moz-selection {
-  background: var(--primary-500);
-  color: white;
-}
-
-.p-paginator-page.p-paginator-page-selected, .p-select-option.p-select-option-selected {
-  color: white !important;
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
 }

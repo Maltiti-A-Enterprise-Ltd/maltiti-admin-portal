@@ -17,9 +17,10 @@
 
   <!-- Colours the status bar and browser chrome. Matched to the header, not
        the brand swatch, so the bar blends into the top of the page. -->
-  <meta name="theme-color" media="(prefers-color-scheme: light)" content="#ffffff">
-  <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#1c1917">
-  <meta name="color-scheme" content="light dark">
+  <meta name="theme-color" content="#ffffff">
+  <!-- Light only: the theme does not follow the OS into dark mode
+       (app.config.ts), so the browser should not either. -->
+  <meta name="color-scheme" content="light">
 
   <meta name="description" content="Manage products, sales, customers and invoices for Maltiti A. Enterprise Ltd.">
 
@@ -34,6 +35,12 @@
   <link href="favicon-32x32.png" rel="icon" sizes="32x32" type="image/png">
   <link href="favicon-16x16.png" rel="icon" sizes="16x16" type="image/png">
   <link href="site.webmanifest" rel="manifest">
+
+  <!-- IBM Plex Sans: open, legible at small sizes, and with tabular figures,
+       which a screen made mostly of amounts needs. -->
+  <link href="https://fonts.googleapis.com" rel="preconnect">
+  <link crossorigin href="https://fonts.gstatic.com" rel="preconnect">
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
   <app-root></app-root>
