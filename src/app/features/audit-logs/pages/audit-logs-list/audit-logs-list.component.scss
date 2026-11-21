@@ -76,7 +76,7 @@
 }
 
 .timestamp {
-  font-family: 'Courier New', monospace;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   font-size: 0.875rem;
   color: var(--text-color);
   white-space: nowrap;
@@ -93,7 +93,7 @@
   }
 
   .user-id {
-    font-family: 'Courier New', monospace;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
     font-size: 0.75rem;
     color: var(--text-color-secondary);
   }
@@ -104,18 +104,28 @@
   line-height: 1.5;
 }
 
+// Figures and dates line up and stay on one line
+.num {
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
 // Responsive adjustments
+// The table is in card mode on a phone (.table-cards in styles/_responsive.scss),
+// which sets its own cell spacing; the user's id repeats the name above it.
 @media (max-width: 768px) {
-  ::ng-deep .p-datatable {
-    font-size: 0.875rem;
+  .user-info .user-id {
+    display: none;
+  }
 
-    .p-datatable-tbody > tr > td {
-      padding: 0.75rem 0.5rem;
-    }
+  // Half a card is narrower than a monospaced date and time on one line.
+  .num,
+  .timestamp {
+    white-space: normal;
+  }
 
-    .p-datatable-thead > tr > th {
-      padding: 0.75rem 0.5rem;
-    }
+  .timestamp {
+    font-family: inherit;
   }
 }
 

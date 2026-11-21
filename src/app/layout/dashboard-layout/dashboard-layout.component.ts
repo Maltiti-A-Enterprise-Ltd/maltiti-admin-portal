@@ -19,6 +19,13 @@ import { distinctUntilChanged, filter, map } from 'rxjs/operators';
 import { SidebarComponent } from '../sidebar/sidebar.component';
 import { HeaderComponent } from '../header/header.component';
 import { BottomNavComponent } from '../bottom-nav/bottom-nav.component';
+import { MOBILE_BREAKPOINT_PX } from '@shared/services/viewport.service';
+
+/** Whether the desktop rail was last left open, so it stays the way it was set. */
+const SIDEBAR_EXPANDED_KEY = 'sidebar_expanded';
+
+/** Wide enough that the labelled rail costs the page nothing it needs. */
+const EXPANDED_BY_DEFAULT_PX = 1200;
 
 @Component({
   selector: 'app-dashboard-layout',
@@ -35,8 +42,15 @@ export class DashboardLayoutComponent {
      arrive before the view exists, and there is nothing to scroll yet anyway. */
   private readonly content = viewChild<ElementRef<HTMLElement>>('content');
 
-  // Signal for sidebar collapsed state
-  public readonly sidebarCollapsed = signal(true);
+  /**
+   * On a phone: whether the drawer is closed. On a desktop: whether the rail
+   * shows icons only.
+   *
+   * The desktop rail used to start as bare icons every time, so finding
+   * Statements meant hovering down a column of pictures. It now opens with
+   * its labels where there is room, and keeps whichever way it was last set.
+   */
+  public readonly sidebarCollapsed = signal(this.initiallyCollapsed());
 
   constructor() {
     /*
@@ -65,5 +79,35 @@ export class DashboardLayoutComponent {
 
   public onToggleSidebar(): void {
     this.sidebarCollapsed.update((value) => !value);
+
+    if (!this.isPhone()) {
+      try {
+        localStorage.setItem(SIDEBAR_EXPANDED_KEY, this.sidebarCollapsed() ? '0' : '1');
+      } catch {
+        /* Private mode or storage blocked: the choice just is not kept. */
+      }
+    }
+  }
+
+  private isPhone(): boolean {
+    return typeof window !== 'undefined' && window.innerWidth <= MOBILE_BREAKPOINT_PX;
+  }
+
+  private initiallyCollapsed(): boolean {
+    if (typeof window === 'undefined' || this.isPhone()) {
+      return true;
+    }
+
+    try {
+      const saved = localStorage.getItem(SIDEBAR_EXPANDED_KEY);
+
+      if (saved !== null) {
+        return saved !== '1';
+      }
+    } catch {
+      /* Fall through to the default for the width. */
+    }
+
+    return window.innerWidth < EXPANDED_BY_DEFAULT_PX;
   }
 }

@@ -155,6 +155,7 @@
             <h3 class="card-title">Batch Aging & Expiry</h3>
           </ng-template>
           <p-table
+            styleClass="table-cards"
             [paginator]="true"
 
             [rows]="10"
@@ -182,12 +183,12 @@
             </ng-template>
             <ng-template let-batch pTemplate="body">
               <tr>
-                <td>{{ batch.batchNumber }}</td>
-                <td>{{ batch.productName }}</td>
-                <td>{{ batch.ageInDays | number }}</td>
-                <td>{{ batch.daysUntilExpiry | number }}</td>
-                <td>{{ batch.remainingQuantity | number }}</td>
-                <td>
+                <td class="cell-primary" data-label="Batch number">{{ batch.batchNumber }}</td>
+                <td data-label="Product">{{ batch.productName }}</td>
+                <td class="num" data-label="Age (days)">{{ batch.ageInDays | number }}</td>
+                <td class="num" data-label="Days to expiry">{{ batch.daysUntilExpiry | number }}</td>
+                <td class="num" data-label="Remaining">{{ batch.remainingQuantity | number }}</td>
+                <td data-label="Status">
                   <p-tag [severity]="getUrgencySeverity(batch.status)" [value]="batch.status" />
                 </td>
               </tr>

@@ -19,6 +19,7 @@ import {
 } from '../../models/report.model';
 import { DecimalPipe } from '@angular/common';
 import { first } from 'rxjs';
+import { CHART_COLORS } from '@shared/utils/chart-palette';
 
 @Component({
   selector: 'app-batch-production',
@@ -109,8 +110,6 @@ export class BatchProductionComponent implements OnInit {
       this.chartData.set(null);
       return;
     }
-
-    const documentStyle = getComputedStyle(document.documentElement);
     const top10 = report.batches.slice(0, 10);
 
     this.chartData.set({
@@ -119,27 +118,26 @@ export class BatchProductionComponent implements OnInit {
         {
           label: 'Produced',
           data: top10.map((b) => b.initialQuantity),
-          backgroundColor: documentStyle.getPropertyValue('--p-primary-500'),
+          backgroundColor: CHART_COLORS.primary,
         },
         {
           label: 'Sold',
           data: top10.map((b) => b.soldQuantity),
-          backgroundColor: documentStyle.getPropertyValue('--p-green-500'),
+          backgroundColor: CHART_COLORS.secondary,
         },
         {
           label: 'Remaining',
           data: top10.map((b) => b.remainingQuantity),
-          backgroundColor: documentStyle.getPropertyValue('--p-orange-500'),
+          backgroundColor: CHART_COLORS.ochre,
         },
       ],
     });
   }
 
   private initializeChartOptions(): void {
-    const documentStyle = getComputedStyle(document.documentElement);
-    const textColor = documentStyle.getPropertyValue('--p-text-color');
-    const textColorSecondary = documentStyle.getPropertyValue('--p-text-muted-color');
-    const surfaceBorder = documentStyle.getPropertyValue('--p-surface-border');
+    const textColor = '#181d1a';
+    const textColorSecondary = CHART_COLORS.text;
+    const surfaceBorder = CHART_COLORS.grid;
 
     this.chartOptions.set({
       maintainAspectRatio: false,

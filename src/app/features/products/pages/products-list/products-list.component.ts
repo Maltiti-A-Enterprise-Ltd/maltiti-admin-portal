@@ -273,6 +273,13 @@ export class ProductsListComponent {
     });
   }
 
+  /** "Out of stock", not "Out_of_stock": the stored value, made readable. */
+  public statusLabel(status: ProductStatus): string {
+    const words = String(status ?? '').replace(/_/g, ' ');
+
+    return words.charAt(0).toUpperCase() + words.slice(1);
+  }
+
   public getStatusSeverity(status: ProductStatus): 'success' | 'warn' | 'danger' | 'secondary' {
     switch (status) {
       case 'active':

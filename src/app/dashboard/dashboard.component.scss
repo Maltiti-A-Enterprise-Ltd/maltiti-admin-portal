@@ -1,103 +1,179 @@
 @use '../../styles/mixins' as mixins;
 
 .dashboard {
-  padding: 2rem;
-  max-width: 1600px;
-  margin: 0 auto;
+  /* The shell already pads the page; this only spaced it twice. */
+  padding: 0;
 }
 .dashboard-header {
   @include mixins.flex-between;
-  margin-bottom: 2rem;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
 }
 .page-title {
-  font-size: 2rem;
+  font-size: 1.75rem;
   font-weight: 700;
-  color: var(--p-text-color);
+  letter-spacing: -0.01em;
+  color: var(--app-ink);
   margin: 0;
-  @include mixins.flex-start(0.75rem);
+  @include mixins.flex-start(0.6rem);
+
+  i {
+    display: none;
+  }
 }
 .kpi-section {
   margin-bottom: 2rem;
 }
+
+/*
+ * Figures first, decoration second.
+ *
+ * The cards used to be a row of rainbow gradient tiles with the amount
+ * wrapping onto a second line ("GHS" over "160,023.00"). An amount is now one
+ * unbroken line, the icon is a small green mark beside its label, and the two
+ * money cards that matter most — booked and collected — are wider.
+ */
 .kpi-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(250px, 100%), 1fr));
-  gap: 1.5rem;
+  /* Ten tracks: the money pair takes five each, and the five smaller
+     figures sit in one row of two tracks apiece beneath them. */
+  grid-template-columns: repeat(10, minmax(0, 1fr));
+  gap: 1rem;
+
+  > .kpi-card {
+    grid-column: span 2;
+  }
+
+  > .kpi-card.revenue,
+  > .kpi-card.collected {
+    grid-column: span 5;
+  }
 }
 .kpi-card {
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: border-color 0.15s ease;
+
   &:hover {
-    transform: translateY(-2px);
-    @include mixins.elevation(4);
-  }
-  ::ng-deep .p-card-body {
-    padding: 1.5rem;
-  }
-  .kpi-content {
-    @include mixins.flex-start(1rem);
-  }
-  .kpi-icon {
-    width: 56px;
-    height: 56px;
-    border-radius: 12px;
-    @include mixins.flex-center;
-    i {
-      font-size: 1.5rem;
-      color: white;
+    ::ng-deep .p-card {
+      border-color: var(--primary-200);
     }
   }
+
+  ::ng-deep .p-card {
+    height: 100%;
+  }
+
+  ::ng-deep .p-card-body {
+    padding: 1.1rem 1.25rem;
+  }
+
+  .kpi-content {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    column-gap: 0.6rem;
+    align-items: center;
+  }
+
+  .kpi-icon {
+    width: 2rem;
+    height: 2rem;
+    border-radius: 0.5rem;
+    background: var(--primary-50);
+    @include mixins.flex-center;
+
+    i {
+      font-size: 0.95rem;
+      color: var(--primary-500);
+    }
+  }
+
+  /* Label beside the icon; everything else runs the full width below. */
   .kpi-details {
-    @include mixins.flex-column(0.25rem);
+    display: contents;
   }
+
   .kpi-label {
-    font-size: 0.875rem;
-    color: var(--p-text-muted-color);
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--app-ink-muted);
   }
-  .kpi-value {
-    font-size: 1.75rem;
-    font-weight: 700;
-    color: var(--p-text-color);
-  }
-  .kpi-info {
-    font-size: 0.75rem;
-    color: var(--p-text-muted-color);
-  }
+
+  .kpi-value,
+  .kpi-info,
   .kpi-trend {
-    font-size: 0.875rem;
+    grid-column: 1 / -1;
+  }
+
+  .kpi-value {
+    margin-top: 0.6rem;
+    font-size: 1.6rem;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    line-height: 1.15;
+    color: var(--app-ink);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-variant-numeric: tabular-nums;
+  }
+
+  &.revenue .kpi-value,
+  &.collected .kpi-value {
+    font-size: 2rem;
+  }
+
+  /* The small tiles are a fifth of the row; a full cedi amount has to fit
+     in one at a size that still reads as the figure. */
+  &.inventory .kpi-value {
+    font-size: 1.3rem;
+  }
+
+  .kpi-info {
+    margin-top: 0.2rem;
+    font-size: 0.8rem;
+    color: var(--app-ink-muted);
+  }
+
+  .kpi-trend {
+    margin-top: 0.35rem;
+    font-size: 0.8rem;
     font-weight: 600;
     @include mixins.flex-start(0.25rem);
-    &.positive {
-      color: var(--p-green-600);
+
+    i {
+      font-size: 0.7rem;
     }
+
+    &.positive {
+      color: var(--p-green-700);
+    }
+
     &.negative {
       color: var(--p-red-600);
     }
   }
-  &.revenue .kpi-icon {
-    background: linear-gradient(135deg, #10b981, #059669);
-  }
-  /* A deeper green than revenue: the same family, because the two cards are
-     read together, but plainly the settled one of the pair. */
-  &.collected .kpi-icon {
-    background: linear-gradient(135deg, #059669, #047857);
-  }
-  &.sales .kpi-icon {
-    background: linear-gradient(135deg, #3b82f6, #2563eb);
-  }
-  &.inventory .kpi-icon {
-    background: linear-gradient(135deg, #8b5cf6, #7c3aed);
-  }
+
+  /* Stock running low is the one tile that asks for action. */
   &.stock .kpi-icon {
-    background: linear-gradient(135deg, #f59e0b, #d97706);
-  }
-  &.products .kpi-icon {
-    background: linear-gradient(135deg, #ec4899, #db2777);
-  }
-  &.batches .kpi-icon {
-    background: linear-gradient(135deg, #06b6d4, #0891b2);
+    background: var(--p-amber-50);
+
+    i {
+      color: var(--p-amber-700);
+    }
   }
 }
+
+@media (max-width: 1100px) {
+  .kpi-grid {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+
+    > .kpi-card.revenue,
+    > .kpi-card.collected {
+      grid-column: span 3;
+    }
+  }
+}
+
 section {
   margin-bottom: 2rem;
 }
@@ -189,14 +265,41 @@ section {
   }
 }
 @media (max-width: 768px) {
-  .dashboard {
-    padding: 1rem;
+  .dashboard-header {
+    align-items: flex-start;
+    margin-bottom: 1rem;
   }
+  /* Two small tiles a row on a phone, with the money pair across the full
+     width: the screen holds the whole summary instead of three cards. */
   .kpi-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.6rem;
+
+    > .kpi-card {
+      grid-column: span 1;
+    }
+
+    > .kpi-card.revenue,
+    > .kpi-card.collected {
+      grid-column: 1 / -1;
+    }
+  }
+  .kpi-card {
+    ::ng-deep .p-card-body {
+      padding: 0.85rem 0.9rem;
+    }
+
+    .kpi-value {
+      font-size: 1.3rem;
+    }
+
+    &.revenue .kpi-value,
+    &.collected .kpi-value {
+      font-size: 1.6rem;
+    }
   }
   .page-title {
-    font-size: 1.5rem;
+    font-size: 1.35rem;
   }
 }
 // Highlights Card Styles
@@ -230,6 +333,7 @@ section {
   }
   .highlight-item {
     @include mixins.flex-between;
+    gap: 1rem;
     padding: 0.75rem 0;
     border-bottom: 1px solid var(--p-surface-50);
     &:last-child { border-bottom: none; }
@@ -241,8 +345,10 @@ section {
     }
     .product-revenue {
       font-size: 0.875rem;
-      color: var(--p-text-muted-color);
+      color: var(--app-ink);
       font-weight: 600;
+      white-space: nowrap;
+      font-variant-numeric: tabular-nums;
     }
   }
   .empty-message {

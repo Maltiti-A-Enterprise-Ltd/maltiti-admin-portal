@@ -13,6 +13,7 @@ import { ReportsApiService } from '../../services/reports-api.service';
 import { ReportQueryParams, SalesReport, TimeSeriesDataPoint } from '../../models/report.model';
 import { CurrencyPipe, DatePipe, DecimalPipe } from '@angular/common';
 import { first } from 'rxjs';
+import { CHART_COLORS, withAlpha } from '@shared/utils/chart-palette';
 
 @Component({
   selector: 'app-sales-reports',
@@ -86,27 +87,27 @@ export class SalesReportsComponent implements OnInit {
       return;
     }
 
-    const documentStyle = getComputedStyle(document.documentElement);
-
     this.chartData.set({
       labels: report.timeSeries.map((item) => item.date),
       datasets: [
         {
           label: 'Revenue',
           data: report.timeSeries.map((item) => item.revenue),
-          borderColor: documentStyle.getPropertyValue('--p-primary-color'),
-          backgroundColor: documentStyle.getPropertyValue('--p-primary-color') + '20',
-          tension: 0.4,
+          borderColor: CHART_COLORS.primary,
+          backgroundColor: withAlpha(CHART_COLORS.primary, 0.12),
+          tension: 0.3,
           fill: true,
           yAxisID: 'y',
         },
         {
           label: 'Sales Count',
           data: report.timeSeries.map((item) => item.salesCount),
-          borderColor: documentStyle.getPropertyValue('--p-green-500'),
-          backgroundColor: documentStyle.getPropertyValue('--p-green-500') + '20',
-          tension: 0.4,
-          fill: true,
+          /* Ochre and unfilled: two green fills on two axes overlapped into
+             one shape, and it was not clear which curve was which. */
+          borderColor: CHART_COLORS.ochre,
+          backgroundColor: CHART_COLORS.ochre,
+          tension: 0.3,
+          fill: false,
           yAxisID: 'y1',
         },
       ],
@@ -114,10 +115,9 @@ export class SalesReportsComponent implements OnInit {
   }
 
   private initializeChartOptions(): void {
-    const documentStyle = getComputedStyle(document.documentElement);
-    const textColor = documentStyle.getPropertyValue('--p-text-color');
-    const textColorSecondary = documentStyle.getPropertyValue('--p-text-muted-color');
-    const surfaceBorder = documentStyle.getPropertyValue('--p-surface-border');
+    const textColor = '#181d1a';
+    const textColorSecondary = CHART_COLORS.text;
+    const surfaceBorder = CHART_COLORS.grid;
 
     this.chartOptions.set({
       maintainAspectRatio: false,

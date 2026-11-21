@@ -56,9 +56,13 @@
       border-bottom: 2px solid var(--surface-border);
     }
 
-    .p-datatable-tbody > tr > td {
-      padding: variables.$spacing-md;
-      border-bottom: 1px solid var(--surface-border);
+    // Desktop only: on a phone the rows are cards (see .table-cards in
+    // styles/_responsive.scss) and a cell padding/rule here would win over it.
+    @media (min-width: 769px) {
+      .p-datatable-tbody > tr > td {
+        padding: variables.$spacing-md;
+        border-bottom: 1px solid var(--surface-border);
+      }
     }
 
     .p-datatable-tbody > tr {
@@ -102,6 +106,12 @@
   gap: variables.$spacing-xs;
 }
 
+// Figures and dates line up and stay on one line
+.num {
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
 // Empty State
 .empty-state {
   padding: variables.$spacing-3xl variables.$spacing-md !important;
@@ -132,5 +142,13 @@
     font-size: variables.$font-size-base;
     color: var(--text-color-secondary);
     max-width: 400px;
+  }
+}
+
+// On a phone the four row actions sit in the card's top-right corner, so the
+// name beside them needs room for all four rather than the default one.
+@media (max-width: 768px) {
+  .table-card td.cell-primary {
+    padding-right: 10.5rem;
   }
 }

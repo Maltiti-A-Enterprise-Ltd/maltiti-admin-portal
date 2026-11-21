@@ -61,6 +61,7 @@
     <p-table
       class="p-datatable-sm"
       currentPageReportTemplate="Showing {first} to {last} of {totalRecords} users"
+      styleClass="table-cards"
       [loading]="loading()"
       [paginator]="true"
       [rows]="10"
@@ -85,24 +86,24 @@
       <ng-template #body let-user>
         <tr>
           <!-- Name -->
-          <td>
+          <td class="cell-primary" data-label="Name">
             <div class="user-name-cell">
               <span class="user-name">{{ user.name }}</span>
             </div>
           </td>
 
           <!-- Email -->
-          <td>
+          <td class="cell-wide" data-label="Email">
             <span class="user-email">{{ user.email }}</span>
           </td>
 
           <!-- Phone -->
-          <td>
+          <td class="num" data-label="Phone">
             <span class="user-phone">{{ user.phoneNumber || 'N/A' }}</span>
           </td>
 
           <!-- Role -->
-          <td>
+          <td data-label="Role">
             <p-tag
               [severity]="getRoleSeverity(user.userType)"
               [value]="user.userType | titlecase"
@@ -110,7 +111,7 @@
           </td>
 
           <!-- Status -->
-          <td>
+          <td data-label="Status">
             <p-tag
               [severity]="getStatusSeverity(user.status)"
               [value]="user.status | titlecase"
@@ -118,12 +119,12 @@
           </td>
 
           <!-- Created At -->
-          <td>
-            <span class="created-at">{{ user.createdAt | date:'short' }}</span>
+          <td class="num" data-label="Created">
+            <span class="created-at">{{ user.createdAt | date: 'd MMM y' }}</span>
           </td>
 
           <!-- Actions -->
-          <td>
+          <td class="cell-actions" data-label="">
             <div class="action-buttons">
               <app-button
                 [icon]="'pi pi-pencil'"

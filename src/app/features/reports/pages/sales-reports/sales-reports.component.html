@@ -139,7 +139,7 @@
         <ng-template pTemplate="header">
           <h3 class="card-title">Detailed Sales Data</h3>
         </ng-template>
-        <p-table [paginator]="true" [rows]="10" [value]="tableData()">
+        <p-table styleClass="table-cards" [paginator]="true" [rows]="10" [value]="tableData()">
           <ng-template pTemplate="header">
             <tr>
               <th pSortableColumn="date">
@@ -155,9 +155,9 @@
           </ng-template>
           <ng-template let-item pTemplate="body">
             <tr>
-              <td>{{ item.date | date: 'mediumDate' }}</td>
-              <td>{{ item.revenue | currency: 'GHS ' }}</td>
-              <td>{{ item.salesCount | number }}</td>
+              <td class="num cell-primary" data-label="Date">{{ item.date | date: 'd MMM y' }}</td>
+              <td class="num" data-label="Revenue">{{ item.revenue | currency: 'GHS ' }}</td>
+              <td class="num" data-label="Sales count">{{ item.salesCount | number }}</td>
             </tr>
           </ng-template>
         </p-table>

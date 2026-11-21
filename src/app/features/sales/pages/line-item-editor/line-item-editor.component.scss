@@ -248,3 +248,52 @@
   align-items: center;
   gap: 0.35rem;
 }
+
+/*
+ * A batch on a phone: the batch on its own line, the quantity and the remove
+ * button beneath it, and what is left in stock under those.
+ *
+ * On one line the dropdown, a quantity box fixed at 30% of the row, the
+ * stock note and the button could not fit at 390px: the quantity shrank to
+ * nothing and "Available … Expires …" ran off the right of the screen.
+ */
+.batch-allocation {
+  app-number-input {
+    flex: 0 0 8rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .line-item-form .batch-section .batch-allocation {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      'batch batch'
+      'quantity remove'
+      'info info';
+    align-items: center;
+
+    app-select {
+      grid-area: batch;
+      min-width: 0;
+    }
+
+    app-number-input {
+      grid-area: quantity;
+      min-width: 0;
+    }
+
+    .batch-remove {
+      grid-area: remove;
+    }
+
+    .batch-info {
+      grid-area: info;
+    }
+  }
+
+  .editor-header {
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+}

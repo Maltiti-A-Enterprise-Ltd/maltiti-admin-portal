@@ -12,7 +12,7 @@ import {
   output,
 } from '@angular/core';
 import { Store } from '@ngrx/store';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { MenuModule } from 'primeng/menu';
 import { AvatarModule } from 'primeng/avatar';
@@ -30,7 +30,7 @@ import { NotificationService } from '@features/notifications/services/notificati
 @Component({
   selector: 'app-header',
   standalone: true,
-  imports: [ButtonModule, MenuModule, AvatarModule, NotificationPanelComponent],
+  imports: [ButtonModule, MenuModule, AvatarModule, NotificationPanelComponent, RouterLink],
   templateUrl: './header.component.html',
   styleUrl: './header.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

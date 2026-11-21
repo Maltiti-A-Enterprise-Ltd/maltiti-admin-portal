@@ -1,73 +1,61 @@
-@if (isMobile()) {
-  <p-drawer
-    [visible]="visible"
-    (onHide)="toggleSidebar.emit()"
-  >
-    <!-- Logo Section -->
-    <div class="sidebar-logo">
-      <img alt="Maltiti Logo" class="logo-image" src="/assets/images/maltiti-logo.png" width="309" />
-      @if (!isCollapsed()) {
-        <span class="logo-text">Maltiti Admin</span>
-      }
-    </div>
+<!-- One menu for both shells: the drawer on a phone, the rail on a desktop. -->
+<ng-template #navigation let-collapsed="collapsed">
+  <div class="sidebar-logo">
+    <span class="logo-mark">
+      <img alt="" class="logo-image" src="/assets/images/maltiti-logo.png" width="309" />
+    </span>
+    @if (!collapsed) {
+      <span class="logo-text">
+        Maltiti
+        <span class="logo-sub">Admin</span>
+      </span>
+    }
+  </div>
 
-    <!-- Navigation Menu -->
-    <nav class="sidebar-nav">
-      <ul class="nav-list">
-        @for (item of menuItems(); track item.route) {
-          <li class="nav-item">
-            <a
-              class="nav-link"
-              routerLinkActive="active"
-              [routerLink]="item.route"
-              [title]="item.label"
-              (click)="onNavigate()"
-            >
-              <i [class]="item.icon + ' nav-icon'"></i>
-              @if (!isCollapsed()) {
-                <span class="nav-label">{{ item.label }}</span>
-              }
-              @if (item.badge && !isCollapsed()) {
-                <span class="nav-badge">{{ item.badge }}</span>
-              }
-            </a>
-          </li>
+  <nav aria-label="Main" class="sidebar-nav">
+    @for (group of menuGroups(); track group.label) {
+      <div class="nav-group">
+        @if (!collapsed) {
+          <span class="nav-group-label">{{ group.label }}</span>
+        } @else {
+          <span aria-hidden="true" class="nav-group-rule"></span>
         }
-      </ul>
-    </nav>
+        <ul class="nav-list">
+          @for (item of group.items; track item.route) {
+            <li class="nav-item">
+              <a
+                class="nav-link"
+                routerLinkActive="active"
+                tooltipPosition="right"
+                [attr.aria-label]="collapsed ? item.label : null"
+                [pTooltip]="collapsed ? item.label : undefined"
+                [routerLink]="item.route"
+                (click)="onNavigate()"
+              >
+                <i aria-hidden="true" [class]="item.icon + ' nav-icon'"></i>
+                @if (!collapsed) {
+                  <span class="nav-label">{{ item.label }}</span>
+                }
+                @if (item.badge && !collapsed) {
+                  <span class="nav-badge">{{ item.badge }}</span>
+                }
+              </a>
+            </li>
+          }
+        </ul>
+      </div>
+    }
+  </nav>
+</ng-template>
+
+@if (isMobile()) {
+  <p-drawer styleClass="sidebar-drawer" [visible]="visible" (onHide)="toggleSidebar.emit()">
+    <div class="sidebar sidebar--drawer">
+      <ng-container *ngTemplateOutlet="navigation; context: { collapsed: false }" />
+    </div>
   </p-drawer>
 } @else {
   <aside class="sidebar" [class.collapsed]="isCollapsed()">
-    <!-- Logo Section -->
-    <div class="sidebar-logo">
-      <img alt="Maltiti Logo" class="logo-image" src="/assets/images/maltiti-logo.png" width="309" />
-      @if (!isCollapsed()) {
-        <span class="logo-text">Maltiti Admin</span>
-      }
-    </div>
-
-    <!-- Navigation Menu -->
-    <nav class="sidebar-nav">
-      <ul class="nav-list">
-        @for (item of menuItems(); track item.route) {
-          <li class="nav-item">
-            <a
-              class="nav-link"
-              routerLinkActive="active"
-              [routerLink]="item.route"
-              [title]="item.label"
-            >
-              <i [class]="item.icon + ' nav-icon'"></i>
-              @if (!isCollapsed()) {
-                <span class="nav-label">{{ item.label }}</span>
-              }
-              @if (item.badge && !isCollapsed()) {
-                <span class="nav-badge">{{ item.badge }}</span>
-              }
-            </a>
-          </li>
-        }
-      </ul>
-    </nav>
+    <ng-container *ngTemplateOutlet="navigation; context: { collapsed: isCollapsed() }" />
   </aside>
 }

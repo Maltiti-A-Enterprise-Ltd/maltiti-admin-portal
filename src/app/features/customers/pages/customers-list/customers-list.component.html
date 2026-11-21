@@ -202,10 +202,10 @@
       <ng-template #body let-customer let-rowIndex="rowIndex">
         <tr>
           <!-- Index -->
-          <td class="row-index" data-label="#">{{ (currentPage() - 1) * limit() + rowIndex + 1 }}</td>
+          <td class="row-index cell-hide-sm" data-label="#">{{ (currentPage() - 1) * limit() + rowIndex + 1 }}</td>
 
           <!-- Customer: avatar + name + organization/email -->
-          <td data-label="Customer">
+          <td class="cell-primary" data-label="Customer">
             <div class="customer-cell">
               <div class="avatar" [class]="'avatar-' + (rowIndex % 6)">
                 {{ getAvatarInitials(customer) }}
@@ -262,7 +262,7 @@
           </td>
 
           <!-- Address -->
-          <td data-label="Address">
+          <td class="cell-wide" data-label="Address">
             <span class="address-cell" [title]="customer.address || ''">
               {{ customer.address || '—' }}
             </span>

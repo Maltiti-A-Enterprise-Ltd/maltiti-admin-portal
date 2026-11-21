@@ -13,7 +13,9 @@ import {
   output,
   signal,
 } from '@angular/core';
+import { NgTemplateOutlet } from '@angular/common';
 import { RouterLink, RouterLinkActive } from '@angular/router';
+import { Tooltip } from 'primeng/tooltip';
 
 import { ButtonModule } from 'primeng/button';
 import { Drawer } from 'primeng/drawer';
@@ -29,10 +31,15 @@ interface MenuItem {
   badge?: string;
 }
 
+interface MenuGroup {
+  label: string;
+  items: MenuItem[];
+}
+
 @Component({
   selector: 'app-sidebar',
   standalone: true,
-  imports: [RouterLink, ButtonModule, Drawer, RouterLinkActive],
+  imports: [RouterLink, ButtonModule, Drawer, RouterLinkActive, NgTemplateOutlet, Tooltip],
   templateUrl: './sidebar.component.html',
   styleUrl: './sidebar.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -72,83 +79,57 @@ export class SidebarComponent {
     }
   }
 
-  public readonly menuItems = computed<MenuItem[]>(() => {
-    const baseItems: MenuItem[] = [
+  /**
+   * The destinations, in the groups they are shown under.
+   *
+   * Grouped by the job rather than listed flat: twelve links in a single
+   * column read as a wall, and someone chasing a payment should find
+   * Statements next to Sales and Customers rather than below Batches.
+   */
+  public readonly menuGroups = computed<MenuGroup[]>(() => {
+    const superAdmin = this.isSuperAdmin();
+
+    return [
       {
-        label: 'Dashboard',
-        icon: 'pi pi-home',
-        route: APP_ROUTES.dashboard.fullPath,
+        label: 'Overview',
+        items: [
+          { label: 'Dashboard', icon: 'pi pi-home', route: APP_ROUTES.dashboard.fullPath },
+          { label: 'Reports', icon: 'pi pi-chart-bar', route: '/reports' },
+        ],
       },
       {
-        label: 'Products',
-        icon: 'pi pi-box',
-        route: '/products',
+        label: 'Selling',
+        items: [
+          { label: 'Sales', icon: 'pi pi-shopping-bag', route: APP_ROUTES.sales.fullPath },
+          { label: 'Customers', icon: 'pi pi-users', route: APP_ROUTES.customers.fullPath },
+          { label: 'Statements', icon: 'pi pi-book', route: APP_ROUTES.statements.fullPath },
+          { label: 'Documents', icon: 'pi pi-folder', route: APP_ROUTES.documents.fullPath },
+          {
+            label: 'Payment accounts',
+            icon: 'pi pi-credit-card',
+            route: APP_ROUTES.paymentAccounts.fullPath,
+          },
+        ],
       },
       {
-        label: 'Batches',
-        icon: 'pi pi-tag',
-        route: '/batches',
+        label: 'Stock',
+        items: [
+          { label: 'Products', icon: 'pi pi-box', route: '/products' },
+          { label: 'Batches', icon: 'pi pi-tag', route: '/batches' },
+        ],
       },
       {
-        label: 'Sales',
-        icon: 'pi pi-shopping-bag',
-        route: APP_ROUTES.sales.fullPath,
-      },
-      {
-        label: 'Customers',
-        icon: 'pi pi-users',
-        route: APP_ROUTES.customers.fullPath,
-      },
-      {
-        label: 'Payment Accounts',
-        icon: 'pi pi-credit-card',
-        route: APP_ROUTES.paymentAccounts.fullPath,
-      },
-      {
-        label: 'Documents',
-        icon: 'pi pi-folder',
-        route: APP_ROUTES.documents.fullPath,
-      },
-      {
-        label: 'Statements',
-        icon: 'pi pi-book',
-        route: APP_ROUTES.statements.fullPath,
-      },
-      // {
-      //   label: 'Orders',
-      //   icon: 'pi pi-shopping-cart',
-      //   route: '/orders',
-      // },
-      // {
-      //   label: 'Cooperatives',
-      //   icon: 'pi pi-users',
-      //   route: '/cooperatives',
-      // },
-      {
-        label: 'Reports',
-        icon: 'pi pi-chart-bar',
-        route: '/reports',
-      },
-      {
-        label: 'Settings',
-        icon: 'pi pi-cog',
-        route: '/settings',
+        label: 'Admin',
+        items: [
+          ...(superAdmin
+            ? [
+                { label: 'Users', icon: 'pi pi-user', route: APP_ROUTES.users.fullPath },
+                { label: 'Audit logs', icon: 'pi pi-history', route: APP_ROUTES.auditLogs.fullPath },
+              ]
+            : []),
+          { label: 'Settings', icon: 'pi pi-cog', route: '/settings' },
+        ],
       },
     ];
-
-    if (this.isSuperAdmin()) {
-      baseItems.splice(5, 0, {
-        label: 'Users',
-        icon: 'pi pi-user',
-        route: APP_ROUTES.users.fullPath,
-      });
-      baseItems.splice(5, 0, {
-        label: 'Audit Logs',
-        icon: 'pi pi-history',
-        route: APP_ROUTES.auditLogs.fullPath,
-      });
-    }
-
-    return baseItems;
   });
 }
