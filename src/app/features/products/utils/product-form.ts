@@ -35,14 +35,16 @@ export function createProductForm(fb: FormBuilder): ProductFormGroup {
     status: fb.control<ProductStatus>('active', { validators: [Validators.required] }),
 
     // Pricing
-    wholesale: fb.control(0, { validators: [Validators.required, Validators.min(0)] }),
-    retail: fb.control(0, { validators: [Validators.required, Validators.min(0)] }),
+    /* Above zero, all three. A product saved at 0 sells for nothing, or
+       reports every sale of it as pure profit. */
+    wholesale: fb.control(0, { validators: [CustomValidators.positive] }),
+    retail: fb.control(0, { validators: [CustomValidators.positive] }),
     inBoxPrice: fb.control(0, { validators: [Validators.min(0)] }),
     /* Not sent to the API — it describes how the price above was arrived at,
        not the product. `buildProductPayload` lists its fields explicitly, so
        this simply never reaches the request. */
     inBoxPriceOverride: fb.control(false),
-    costPrice: fb.control(0, { validators: [Validators.min(0)] }),
+    costPrice: fb.control(0, { validators: [CustomValidators.positive] }),
 
     // Inventory
     quantityInBox: fb.control(1, { validators: [Validators.min(1)] }),
@@ -56,9 +58,9 @@ export function createProductForm(fb: FormBuilder): ProductFormGroup {
     // joined for display ("500" + Gram → "500g"). A unit typed in here would
     // show up twice.
     weight: fb.control('', { validators: [CustomValidators.numeric] }),
-    ingredients: fb.control<string[]>([], {
-      validators: [Validators.required, Validators.minLength(1)],
-    }),
+    // Optional: not every product has a list worth printing (a packaging
+    // line, a bundle), and the admin should not have to invent one.
+    ingredients: fb.control<string[]>([]),
 
     // Opt-in notification. Describes the save action, not the product, so it
     // is never seeded from the loaded product and resets with the form.
